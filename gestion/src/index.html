@@ -405,6 +405,29 @@ function empresaSheet() {
 }
 
 /* ---------- Vistas ---------- */
+/* ---------- Datos de ejemplo (para enseñar la aplicación) ---------- */
+// Son ejemplo los documentos marcados como tales y todo lo hecho por operarios o para clientes de ejemplo.
+function ejemplos() {
+  const ops = new Set(Object.entries(S.operarios).filter(([, o]) => o.ejemplo).map(([id]) => id));
+  const cli = new Set(Object.entries(S.clientes).filter(([, c]) => c.ejemplo).map(([id]) => id));
+  const lista = [];
+  for (const col of COLS) for (const [id, d] of Object.entries(S[col] || {}))
+    if (d.ejemplo || ops.has(d.operarioId) || ops.has(d.autorId) || cli.has(d.clienteId)) lista.push([col, id]);
+  // Operarios y clientes al final: si se corta a medias, lo que queda se sigue reconociendo como ejemplo.
+  const ultimo = c => c === 'operarios' || c === 'clientes';
+  return lista.sort((a, b) => ultimo(a[0]) - ultimo(b[0]));
+}
+async function borrarEjemplos(el) {
+  const lista = ejemplos();
+  if (!lista.length) return;
+  if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = '¿Seguro? Pulsa otra vez'; return; }
+  el.disabled = true;
+  try {
+    for (const [i, [col, id]] of lista.entries()) { el.textContent = 'Borrando… ' + (i + 1) + ' de ' + lista.length; await del(col, id); }
+    toast('Ejemplos borrados. Tus datos siguen igual.');
+  } catch (e) { toast(e.message, true); el.disabled = false; delete el.dataset.sure; el.textContent = 'Borrar ejemplos'; }
+}
+
 function vResumen() {
   const P = Object.values(S.presupuestos);
   const tot = p => totalsOf(p.lineas, ivaDe(p)).total;
@@ -435,6 +458,9 @@ function vResumen() {
   const sum = arr => arr.reduce((a, p) => a + tot(p), 0);
   return `
   <header class="pagehead"><div><h1>Resumen</h1><p class="sub">Clientes, presupuestos, notas y horas de un vistazo</p></div></header>
+  ${ejemplos().length ? `<section class="panel" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-color:var(--sand)">
+    <div><b>Hay datos de ejemplo cargados</b><p class="meta" style="margin:2px 0 0">Todo lo marcado «(Ejemplo)» sirve para enseñar la aplicación. Cuando ya no lo necesites, bórralo de una vez; tus datos reales no se tocan.</p></div>
+    <button class="btn danger" data-act="borrar-ejemplos">Borrar ejemplos</button></section>` : ''}
   <div class="kpis">
     <div class="kpi"><span>Clientes</span><b>${Object.keys(S.clientes).length}</b></div>
     <div class="kpi"><span>Aceptado en total</span><b>${eur(sum(acept))}</b></div>
@@ -714,6 +740,7 @@ document.addEventListener('click', e => {
     case 'close': closeSheet(); break;
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
+    case 'borrar-ejemplos': borrarEjemplos(el); break;
     case 'new-operario': operarioSheet(null); break;
     case 'edit-operario': operarioSheet(id); break;
     case 'pdf-jornada': pdfJornada(); break;
