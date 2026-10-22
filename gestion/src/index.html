@@ -1123,7 +1123,7 @@ function generarPDF(kind, id) {
 }
 
 /* ---------- PDF de partes (para adjuntar a una factura o archivar en papel) ---------- */
-// Un parte: todos sus datos, fotos y firmas. Varios: tabla con el total de horas y firmas.
+// Un parte: todos sus datos y fotos. Varios: tabla con el total de horas. Ambos con la firma de la empresa.
 // Los avisos para la oficina no salen: son internos.
 const blobADatos = b => new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); });
 async function fotoParaPDF(id) {
@@ -1230,11 +1230,9 @@ async function pdfPartes(ids) {
     txt('Total de horas: ' + horasTxt(partes.reduce((a, p) => a + num(p.horas), 0)), R, y + 2, {align: 'right'}); y += 8;
   }
 
-  // Firmas, para archivar en papel
+  // Firma de la empresa, para archivar en papel (el cliente no firma: puede no llegar a ver el parte)
   sitio(36); y += 10; d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setDrawColor(150);
-  const anchoF = (R - L - 10) / 2;
-  const firmas = clientes.length === 1 ? [['Conforme del cliente (nombre y firma)', L], ['Por ' + (e.nombre || 'la empresa'), L + anchoF + 10]] : [['Revisado por ' + (e.nombre || 'la empresa'), L]];
-  firmas.forEach(([t, x]) => { d.rect(x, y, anchoF, 22); txt(t, x + 3, y + 5); });
+  d.rect(L, y, (R - L - 10) / 2, 22); txt((clientes.length === 1 ? 'Por ' : 'Revisado por ') + (e.nombre || 'la empresa'), L + 3, y + 5);
 
   // Pie con número de página
   const n = d.getNumberOfPages();
