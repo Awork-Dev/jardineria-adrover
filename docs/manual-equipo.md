@@ -27,12 +27,12 @@ Puedes usar la app sin cobertura: todo se guarda en el móvil y se envía solo c
 1. **+ Nuevo gasto.**
 2. **Haz una foto del ticket** (que se lea el total).
 3. Elige el tipo (gasolina, material, comida, peaje o parking, otros) y pon el **importe**.
-4. **Guardar gasto.** Verás si está **Pendiente de pago** o **Pagado**.
+4. **Guardar gasto.** Verás si está **Pendiente de pago** o **Pagado**, y la nota de la oficina si la hay.
 
 ## Fotos del trabajo
 
 1. **+ Enviar fotos.**
-2. Elige el **cliente**, haz o elige las fotos y añade un comentario si quieres.
+2. Elige el **cliente** (sale **Cómo llegar** para abrir el mapa), haz o elige las fotos y añade un comentario si quieres.
 3. **Enviar fotos.**
 
 ## Partes (jefes de cuadrilla)
@@ -43,7 +43,8 @@ Puedes usar la app sin cobertura: todo se guarda en el móvil y se envía solo c
 4. Añade detalles, **avisos para la oficina** (plagas, averías, lo que pida el cliente) y fotos.
 5. **Guardar parte.**
 
-- Puedes corregir un parte tocándolo en la lista. Si la oficina ya lo ha revisado, llámales para cambiarlo.
+- Puedes corregir un parte tocándolo en la lista. Si pone **Revisado por la oficina**, ya no se puede cambiar desde la app: llama a la oficina.
+- Cuando la oficina atiende uno de tus avisos, el parte lo indica.
 
 ## Si pierdes el móvil
 

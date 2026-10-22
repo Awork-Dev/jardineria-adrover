@@ -13,8 +13,10 @@
 <h3 id="ay3">Resumen</h3>
 <p>El Resumen enseña cómo va el negocio: clientes, lo aceptado, lo pendiente de respuesta, las notas por cobrar y las horas del mes.</p>
 <ul>
+<li><b>Hoy en el equipo:</b> quién está trabajando ahora y los <b>avisos del equipo</b> (plagas, averías, encargos). Pulsa <b>Atendido</b> cuando lo resuelvas: el jefe de cuadrilla lo verá en su app. Si hay gastos por pagar, sale un botón que te lleva a ellos.</li>
 <li><b>Gráfico:</b> lo aceptado en los últimos 6 meses.</li>
-<li><b>Datos de la empresa:</b> salen en los PDF. Se cambian con <b>Editar</b>, donde también van las <b>condiciones</b> del pie de los presupuestos.</li>
+<li><b>Al día:</b> arriba a la izquierda pone cuándo se actualizó por última vez. Se actualiza sola cada minuto; púlsalo para hacerlo al momento.</li>
+<li><b>Datos de la empresa:</b> salen en los PDF. Se cambian con <b>Editar</b>, donde también van las <b>condiciones</b> del pie de los presupuestos y el <b>precio por hora</b> de mano de obra (para pasar partes a notas).</li>
 <li><b>Datos de ejemplo:</b> mientras haya ejemplos sale un aviso con <b>Borrar ejemplos</b>. Pulsa dos veces y se borra todo lo marcado «(Ejemplo)»; tus datos reales no se tocan.</li>
 </ul>
 <h3 id="ay4">Clientes y proveedores</h3>
@@ -55,7 +57,8 @@
 <ul>
 <li>Traen cliente, horas, quién ha ido, tareas, detalles, fotos y <b>avisos para la oficina</b> (en amarillo).</li>
 <li><b>Horas por persona:</b> 2 personas durante 2,5 h cuentan 5 h.</li>
-<li><b>Corregir:</b> ábrelo, cambia y <b>Guardar</b>. Desde entonces el jefe ya no puede modificarlo desde su app.</li>
+<li><b>Corregir:</b> ábrelo y cambia lo que haga falta. La ficha es igual que la del jefe en la app: horario, quién ha ido y tareas, y las horas se calculan solas. Al guardar, el jefe ya no puede modificarlo desde su app.</li>
+<li><b>Pasar a nota:</b> dentro del parte, <b>Crear nota</b>; o en <b>Partes</b> elige cliente y mes y pulsa <b>Crear nota con estos partes</b>. Cada parte sale como una línea de mano de obra con sus horas y el precio por hora. Los partes quedan marcados con el número de la nota para no cobrarlos dos veces.</li>
 <li><b>PDF de un parte:</b> ábrelo y pulsa <b>Descargar PDF</b>. Sale con los datos del cliente, horas, tareas, fotos y un recuadro para la firma de la empresa. Los avisos para la oficina no salen.</li>
 <li><b>PDF del mes de un cliente</b> (para adjuntar a la factura o archivar): en <b>Partes</b> elige <b>cliente</b> y <b>mes</b> y pulsa <b>PDF de estos partes</b>. Sale una tabla con todos los partes y el total de horas.</li>
 </ul>
@@ -69,7 +72,7 @@
 <ul>
 <li><b>Si pierde el móvil o se va:</b> cámbiale el PIN o ponlo <b>De baja</b>. Pierde el acceso al momento; sus datos se conservan.</li>
 <li><b>Jornada:</b> elige persona y mes; sale cada día con entradas, salidas y total. <b>Descargar PDF</b> para firmar. Hay que guardarlo 4 años.</li>
-<li><b>Gastos:</b> cada uno con la foto del ticket. Al pagarlo, ábrelo, pon <b>Pagado</b> y <b>Guardar</b>.</li>
+<li><b>Gastos:</b> cada uno con la foto del ticket. Al pagarlo, ábrelo, pon <b>Pagado</b> y, si quieres, una <b>nota de la oficina</b> (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.</li>
 <li><b>Fotos:</b> las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.</li>
 </ul>
 <h3 id="ay9">Copias de seguridad</h3>
@@ -79,5 +82,5 @@
 <li><b>Descargar copia / Cargar copia:</b> baja todo a un archivo o lo vuelve a subir.</li>
 </ul>
 <h3 id="ay10">Si algo falla</h3>
-<div class="ay-tabla"><table><thead><tr><th>Qué pasa</th><th>Qué hacer</th></tr></thead><tbody><tr><td>No carga en el ordenador</td><td>Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador</td></tr><tr><td>No llega un parte o un gasto</td><td>Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse <b>Sincronizar</b></td></tr><tr><td>Un operario no puede entrar</td><td>Revisa su PIN en <b>Equipo → Personas</b> y que no esté <b>De baja</b></td></tr><tr><td>El icono del móvil sale antiguo</td><td>Borra el acceso y vuelve a añadirlo</td></tr></tbody></table></div>
+<div class="ay-tabla"><table><thead><tr><th>Qué pasa</th><th>Qué hacer</th></tr></thead><tbody><tr><td>No carga en el ordenador</td><td>Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador</td></tr><tr><td>No llega un parte o un gasto</td><td>Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse <b>Sincronizar</b></td></tr><tr><td>Un operario no puede entrar</td><td>Revisa su PIN en <b>Equipo → Personas</b> y que no esté <b>De baja</b></td></tr><tr><td>El icono del móvil sale antiguo</td><td>Borra el acceso y vuelve a añadirlo</td></tr><tr><td>«No se ha guardado: mientras lo editabas…»</td><td>Otra persona o la app del equipo lo cambió a la vez. Vuelve a abrirlo, verás lo último, y repite tu cambio</td></tr></tbody></table></div>
 <p><b>Dónde están los datos:</b> en Cloudflare, en una base de datos con jurisdicción de la Unión Europea, con copia cada noche.</p>

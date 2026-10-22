@@ -28,7 +28,7 @@
   color-scheme: dark;
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif;
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;
   padding-left:0;padding-right:0}
 h1,h2,b.h{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
 h1{font-size:1.9rem;margin:0}
@@ -43,8 +43,11 @@ nav .corto{display:none}
 @media (max-width:760px){nav .largo{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}nav .corto{display:inline}}
 @media (max-width:760px){.side .backup{display:none}.solo-movil{display:block}.solo-movil .backup{margin-top:4px;flex-direction:row;flex-wrap:wrap}}
 .brand{display:flex;gap:12px;align-items:center}
-.mark{width:40px;height:40px;border-radius:12px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
-  font:600 1.25rem "Fraunces",Georgia,serif}
+.sync{all:unset;cursor:pointer;font-size:.8rem;color:var(--muted);margin-top:-10px}
+.sync:before{content:"● ";color:var(--muted)}.sync.ok:before{color:var(--brand)}.sync.mal:before{color:var(--rej-ink)}
+.sync:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+@media (max-width:760px){.side .sync{display:none}}
+.mark{width:40px;height:40px;border-radius:12px;display:block}
 .brand b{display:block;font-family:"Fraunces",Georgia,serif;font-size:1rem}
 .brand small{color:var(--muted);font-size:.8rem}
 nav{display:flex;flex-direction:column;gap:4px}
@@ -75,6 +78,12 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
 .panel h2{margin-bottom:12px}
 .panel a{color:var(--brand)}
+.marcas{display:flex;flex-wrap:wrap;gap:8px}
+.marcas label{position:relative;cursor:pointer}
+.marcas input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.marcas span{display:inline-block;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg);font-size:.9rem;color:var(--ink)}
+.marcas input:checked+span{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.marcas input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
 .galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
 .galeria img,.mini-foto{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--soft);cursor:zoom-in;display:block}
 .mini-foto{width:48px;height:48px;flex:none}
@@ -173,9 +182,10 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <span class="mark">J</span>
+      <img class="mark" src="/icon-192.png" alt="">
       <div><b>Jardinería Adrover</b><small>Zones Verdes S.L.</small></div>
     </div>
+    <button class="sync" id="sync" data-act="sincronizar" title="Actualizar ahora"><span id="sync-txt">Cargando…</span></button>
     <nav aria-label="Secciones">
       <button data-act="nav" data-view="resumen"><span class="largo">Resumen</span><span class="corto" aria-hidden="true">Inicio</span></button>
       <button data-act="nav" data-view="clientes">Clientes</button>
@@ -204,7 +214,7 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 </div>
 <div id="login" class="overlay" hidden>
   <form class="sheet" id="login-form" autocomplete="on">
-    <div class="brand"><span class="mark">J</span><div><b>Jardinería Adrover</b><small>Gestión</small></div></div>
+    <div class="brand"><img class="mark" src="/icon-192.png" alt=""><div><b>Jardinería Adrover</b><small>Gestión</small></div></div>
     <input type="text" name="usuario" value="gestion" autocomplete="username" hidden>
     <label class="fld"><span>Clave de acceso</span><input type="password" name="clave" autocomplete="current-password" required></label>
     <p id="login-err" role="alert"></p>
@@ -216,6 +226,7 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 <div id="toast" class="toast" role="status"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>/*CONSTANTES*/</script>
 <script>
 (function(){
 const $ = (s, r = document) => r.querySelector(s);
@@ -337,13 +348,14 @@ function updateTotals(form) {
 // «base» rellena un documento nuevo con las líneas de otro (Duplicar, o crear una nota desde un presupuesto).
 function docSheet(kind, id, base) {
   const K = DOCS[kind];
-  const v = id ? S[kind][id] || {} : {fecha: today(), estado: K.inicial, ...(base ? {clienteId: base.clienteId, lineas: base.lineas, notas: base.notas, origen: base.origen, iva: base.iva} : {})};
+  const v = id ? S[kind][id] || {} : {fecha: today(), estado: K.inicial, ...(base ? {clienteId: base.clienteId, lineas: base.lineas, notas: base.notas, origen: base.origen, iva: base.iva, partes: base.partes} : {})};
   const ls = v.lineas && v.lineas.length ? v.lineas : [{concepto:'', cantidad:1, precio:0}];
   const botones = id ? `<div class="actions" style="margin:0">
       <button type="button" class="btn small" data-act="pdf" data-k="${kind}" data-id="${esc(id)}">Descargar PDF</button>
       <button type="button" class="btn small ghost" data-act="dup" data-k="${kind}" data-id="${esc(id)}">Duplicar</button>
       ${kind === 'presupuestos' ? `<button type="button" class="btn small ghost" data-act="a-nota" data-id="${esc(id)}">Crear nota</button>` : ''}</div>` : '';
-  const html = `${botones}${v.origen ? `<p class="meta" style="margin:0">Hecha a partir del presupuesto ${esc(v.origen)}</p>` : ''}<div class="grid2">
+  const deDonde = [v.origen && 'Hecha a partir del presupuesto ' + v.origen, (v.partes || []).length && 'Incluye ' + (v.partes.length === 1 ? '1 parte' : v.partes.length + ' partes') + ' de trabajo'].filter(Boolean).join(' · ');
+  const html = `${botones}${deDonde ? `<p class="meta" style="margin:0">${esc(deDonde)}</p>` : ''}<div class="grid2">
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
       ${fld('estado', 'Estado', {options:Object.entries(K.estados), value:v.estado || K.inicial})}
@@ -370,37 +382,61 @@ function docSheet(kind, id, base) {
     }
     // Se guarda una copia de los datos del cliente: el documento sigue igual aunque luego se cambie la ficha.
     const cliente = Object.fromEntries(['nombre', 'cif', 'direccion', 'cp', 'poblacion', 'provincia', 'telefono', 'email', 'contacto'].map(k => [k, String(cli[k] || '').trim()]));
+    const {id: _, ...antes} = v, numero = v.numero || nextNumero(kind, fecha);
     await put(kind, id || uid(K.pref.toLowerCase()), {
-      numero: v.numero || nextNumero(kind, fecha), clienteId: fd.get('clienteId'), cliente, fecha,
-      estado: fd.get('estado'), iva: Number(fd.get('iva')), lineas, notas: String(fd.get('notas') || '').trim(), ...(v.origen ? {origen: v.origen} : {})
+      ...antes, numero, clienteId: fd.get('clienteId'), cliente, fecha,
+      estado: fd.get('estado'), iva: Number(fd.get('iva')), lineas, notas: String(fd.get('notas') || '').trim()
     });
+    // Los partes incluidos quedan marcados con el número de la nota, para no cobrarlos dos veces.
+    if (!id) for (const pid of v.partes || []) { const p = S.partes[pid]; if (p && !p.nota) { const {id: __, ...dp} = p; await put('partes', pid, {...dp, nota: numero}); } }
   }, id ? () => del(kind, id) : null);
   updateTotals($('#sheet-form'));
 }
+// Misma ficha que la del jefe de cuadrilla en la app: horario, quién ha ido y tareas, con el mismo cálculo
+// de horas (duración × personas). Los partes antiguos sin horario guardan las horas a mano.
+const aMin = h => +h.slice(0, 2) * 60 + +h.slice(3);
 function parteSheet(id) {
-  const v = id ? S.partes[id] || {} : {fecha: today(), horas: 1};
+  const v = id ? S.partes[id] || {} : {fecha: today()};
   const deApp = v.origen === 'equipo';
-  const info = deApp ? `<div class="empresa" style="margin:0">
-      <span class="meta">Enviado desde la app del equipo por ${esc(v.autor || '')} · ${esc(v.inicio)}–${esc(v.fin)} (${num(v.duracion).toLocaleString('es-ES')} h × ${(v.operarios || []).length} pers.)</span>
-      ${(v.tareas || []).length ? `<span class="line"><b>Tareas:</b> ${esc(v.tareas.join(', '))}</span>` : ''}
-      ${v.incidencias ? `<span class="line" style="color:var(--pend-ink);background:var(--pend-bg);padding:8px 10px;border-radius:10px"><b>Aviso para la oficina:</b> ${esc(v.incidencias)}</span>` : ''}
-      ${miniaturas(v.fotos)}
-    </div>` : '';
-  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button></div>` : ''}${info}<div class="grid2">
+  const quien = new Set(v.operarios || []);
+  const personas = Object.entries(S.operarios).filter(([k, o]) => o.activo !== false || quien.has(k)).sort(byNombre);
+  const marcas = (name, items, sel) => `<div class="marcas">${items.map(([val, txt]) => `<label><input type="checkbox" name="${name}" value="${esc(val)}"${sel(val) ? ' checked' : ''}><span>${esc(txt)}</span></label>`).join('')}</div>`;
+  const info = deApp ? `<p class="meta" style="margin:0">Enviado desde la app del equipo por ${esc(v.autor || '')}${v.editadoOficina ? ' · corregido por la oficina' : ''}</p>` : '';
+  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button>
+      <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}
+    <div class="grid2">
+      ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
-      ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId})}
-      ${fld('operario', 'Operario', {value:v.operario})}
-      ${fld('horas', 'Horas', {type:'number', step:'0.25', value:v.horas})}
+      <span></span>
+      ${fld('inicio', 'Empezamos', {type:'time', value:v.inicio})}
+      ${fld('fin', 'Terminamos', {type:'time', value:v.fin})}
+    </div>
+    <div class="fld"><span>Quién ha ido</span>${personas.length ? marcas('operarios', personas.map(([k, o]) => [k, o.nombre]), k => quien.has(k)) : '<span class="meta">Da de alta al equipo en Equipo → Personas.</span>'}</div>
+    <div class="grid2">
+      ${fld('otros', 'Otras personas (opcional)', {value: deApp || (v.operarios || []).length ? '' : v.operario})}
+      ${fld('horas', 'Horas en total (solo si no hay horario)', {type:'number', step:'0.25', value: v.inicio ? '' : v.horas})}
+    </div>
+    <div class="fld"><span>Qué se ha hecho</span>${marcas('tareas', TAREAS.map(t => [t, t]), t => (v.tareas || []).includes(t))}</div>
+    <div class="grid2">
       ${fld('descripcion', 'Trabajo realizado', {area:1, value:v.descripcion, wide:1})}
-    </div>`;
-  openSheet(id ? 'Editar parte' : 'Nuevo parte de trabajo', html, async fd => {
+      ${fld('incidencias', 'Avisos para la oficina', {area:1, value:v.incidencias, wide:1})}
+    </div>
+    ${miniaturas(v.fotos)}`;
+  openSheet(id ? 'Parte de trabajo' : 'Nuevo parte de trabajo', html, async fd => {
     if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
+    const inicio = fd.get('inicio') || '', fin = fd.get('fin') || '';
+    if (!!inicio !== !!fin) throw new Error('Pon la hora de inicio y la de fin, o ninguna de las dos.');
+    if (inicio && aMin(fin) <= aMin(inicio)) throw new Error('La hora de fin debe ser posterior a la de inicio.');
+    const ops = fd.getAll('operarios'), otros = String(fd.get('otros') || '').trim();
+    const nombres = [...ops.map(k => (S.operarios[k] || {}).nombre).filter(Boolean), ...(otros ? [otros] : [])];
+    const duracion = inicio ? (aMin(fin) - aMin(inicio)) / 60 : null;
+    const horas = duracion !== null ? Math.round(duracion * Math.max(1, ops.length + (otros ? otros.split(',').length : 0)) * 100) / 100 : num(fd.get('horas'));
     const {id: _, ...antes} = v;
     await put('partes', id || uid('t'), {
       ...antes, ...(deApp ? {editadoOficina: Date.now()} : {}),
-      fecha: fd.get('fecha') || today(), clienteId: fd.get('clienteId'),
-      operario: String(fd.get('operario') || '').trim(), horas: num(fd.get('horas')),
-      descripcion: String(fd.get('descripcion') || '').trim()
+      fecha: fd.get('fecha') || today(), clienteId: fd.get('clienteId'), inicio, fin, duracion,
+      operarios: ops, operario: nombres.join(', '), horas,
+      tareas: fd.getAll('tareas'), descripcion: String(fd.get('descripcion') || '').trim(), incidencias: String(fd.get('incidencias') || '').trim()
     });
   }, id ? () => del('partes', id) : null);
 }
@@ -414,8 +450,9 @@ function empresaSheet() {
       ${fld('direccion', 'Dirección', {value:v.direccion, wide:1})}
       ${fld('cp', 'C.P.', {value:v.cp})}
       ${fld('poblacion', 'Población', {value:v.poblacion})}
+      ${fld('precioHora', 'Precio por hora de mano de obra, sin IVA (para pasar partes a notas)', {type:'number', step:'0.01', value:v.precioHora})}
       ${fld('condiciones', 'Condiciones y validez (salen en el PDF)', {area:1, value:v.condiciones, wide:1})}
-    </div>`, async fd => { await put('ajustes', 'empresa', readObj(fd)); }, null);
+    </div>`, async fd => { const {id: _, ...antes} = v; await put('ajustes', 'empresa', {...antes, ...readObj(fd)}); }, null);
 }
 
 /* ---------- Vistas ---------- */
@@ -440,6 +477,31 @@ async function borrarEjemplos(el) {
     for (const [i, [col, id]] of lista.entries()) { el.textContent = 'Borrando… ' + (i + 1) + ' de ' + lista.length; await del(col, id); }
     toast('Ejemplos borrados. Tus datos siguen igual.');
   } catch (e) { toast(e.message, true); el.disabled = false; delete el.dataset.sure; el.textContent = 'Borrar ejemplos'; }
+}
+
+// Lo que llega de la app del equipo y pide atención de la oficina.
+function hoyEquipo() {
+  const hoy = today(), ultimo = {};
+  for (const f of Object.values(S.fichajes)) if (diaDe(f.ts) === hoy && (!ultimo[f.operarioId] || f.ts > ultimo[f.operarioId].ts)) ultimo[f.operarioId] = f;
+  const dentro = Object.values(ultimo).filter(f => f.tipo === 'entrada').sort((a, b) => a.ts - b.ts);
+  const avisos = Object.entries(S.partes).filter(([, p]) => p.incidencias && !p.avisoAtendido).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
+  const gastos = Object.values(S.gastos).filter(g => g.estado !== 'pagado');
+  if (!Object.keys(S.operarios).length) return '';
+  return `<section class="panel" style="margin-bottom:18px">
+    <div class="pagehead" style="margin-bottom:10px"><h2>Hoy en el equipo</h2>${gastos.length ? `<button class="btn small" data-act="ir-gastos">${gastos.length} ${gastos.length === 1 ? 'gasto' : 'gastos'} por pagar · ${eur(gastos.reduce((a, g) => a + num(g.importe), 0))}</button>` : ''}</div>
+    <p style="margin:0 0 ${avisos.length ? 14 : 0}px">${dentro.length ? '<b>Trabajando ahora:</b> ' + dentro.map(f => esc((S.operarios[f.operarioId] || {}).nombre || f.operario) + ' <span class="meta">desde las ' + horaDe(f.ts) + '</span>').join(' · ') : '<span class="meta">Ahora mismo nadie ha fichado la entrada.</span>'}
+      <span class="meta"> · ${Object.keys(ultimo).length} de ${Object.values(S.operarios).filter(o => o.activo !== false).length} han fichado hoy</span></p>
+    ${avisos.length ? `<h3 style="margin:0 0 8px;font-size:1rem">Avisos del equipo (${avisos.length})</h3><div class="rows">${avisos.slice(0, 6).map(([id, p]) => `<div class="row" style="cursor:default">
+      <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))} · ${esc(p.autor || p.operario || '')}</span><span class="line">${esc(p.incidencias)}</span></div>
+      <div class="rowr"><button class="btn small ghost" data-act="edit-parte" data-id="${esc(id)}">Ver parte</button><button class="btn small" data-act="aviso-ok" data-id="${esc(id)}">Atendido</button></div></div>`).join('')}</div>` : ''}
+  </section>`;
+}
+async function avisoAtendido(id, el) {
+  const p = S.partes[id]; if (!p) return;
+  el.disabled = true;
+  const {id: _, ...d} = p;
+  try { await put('partes', id, {...d, avisoAtendido: Date.now()}); toast('Aviso marcado como atendido'); }
+  catch (e) { toast(e.message, true); el.disabled = false; }
 }
 
 function vResumen() {
@@ -475,6 +537,7 @@ function vResumen() {
   ${ejemplos().length ? `<section class="panel" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-color:var(--sand)">
     <div><b>Hay datos de ejemplo cargados</b><p class="meta" style="margin:2px 0 0">Todo lo marcado «(Ejemplo)» sirve para enseñar la aplicación. Cuando ya no lo necesites, bórralo de una vez; tus datos reales no se tocan.</p></div>
     <button class="btn danger" data-act="borrar-ejemplos">Borrar ejemplos</button></section>` : ''}
+  ${hoyEquipo()}
   <div class="kpis">
     <div class="kpi"><span>Clientes</span><b>${Object.keys(S.clientes).length}</b></div>
     <div class="kpi"><span>Aceptado en total</span><b>${eur(sum(acept))}</b></div>
@@ -561,15 +624,36 @@ function vPartes() {
       <label class="fld"><span>Cliente</span><select id="pf-cli">${[['', 'Todos los clientes'], ...clienteOpts().slice(1)].map(([k, t]) => `<option value="${esc(k)}"${k === partesCli ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
       <label class="fld"><span>Mes</span><input id="pf-mes" type="month" value="${esc(partesMes)}"></label></div>
     ${all.length ? `<div class="actions" style="margin:0 0 14px"><button class="btn small" data-act="pdf-partes">PDF de ${all.length === 1 ? 'este parte' : 'estos ' + all.length + ' partes'}</button>
+      ${partesCli ? `<button class="btn small ghost" data-act="partes-nota">Crear nota con ${all.length === 1 ? 'este parte' : 'estos partes'}</button>` : ''}
       <span class="meta">Para adjuntar a la factura o archivar en papel. Elige cliente y mes para el resumen mensual.</span></div>` : ''}`;
   const body = !Object.keys(S.partes).length ? empty('Aún no hay partes de trabajo.', 'Registra aquí las horas y los trabajos hechos en cada cliente.')
     : !all.length ? '<div class="empty">No hay partes con estos filtros.</div>'
     : `<div class="rows">${all.map(([id, p]) => `<button class="row" data-act="edit-parte" data-id="${esc(id)}">
-        <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}${p.inicio ? ' · ' + esc(p.inicio) + '–' + esc(p.fin) : ''} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc([(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join(' · '))}</span>${p.incidencias ? `<span class="pill enviado" style="align-self:flex-start;margin-top:4px">Aviso: ${esc(p.incidencias.slice(0, 60))}</span>` : ''}</div>
-        <div class="rowr"><b class="amt">${num(p.horas).toLocaleString('es-ES')} h</b></div>
+        <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}${p.inicio ? ' · ' + esc(p.inicio) + '–' + esc(p.fin) : ''} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc([(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join(' · '))}</span>${p.incidencias ? `<span class="pill ${p.avisoAtendido ? '' : 'enviado'}" style="align-self:flex-start;margin-top:4px">${p.avisoAtendido ? 'Aviso atendido' : 'Aviso'}: ${esc(p.incidencias.slice(0, 60))}</span>` : ''}</div>
+        <div class="rowr">${p.nota ? `<span class="pill cobrada" title="Incluido en la nota ${esc(p.nota)}">${esc(p.nota)}</span>` : ''}<b class="amt">${num(p.horas).toLocaleString('es-ES')} h</b></div>
       </button>`).join('')}</div>`;
   return `<header class="pagehead"><div><h1>Partes de trabajo</h1><p class="sub">${num(h).toLocaleString('es-ES')} h en ${all.length} ${all.length === 1 ? 'parte' : 'partes'}</p></div>
     <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${filtros}${body}`;
+}
+
+/* ---------- Partes → nota ---------- */
+// Cada parte se convierte en una línea de mano de obra (horas × precio por hora de los datos de la empresa).
+function notaDePartes(ids) {
+  const partes = ids.map(id => [id, S.partes[id]]).filter(([, p]) => p).sort((a, b) => (a[1].fecha + (a[1].inicio || '')).localeCompare(b[1].fecha + (b[1].inicio || '')));
+  if (!partes.length) return;
+  const clientes = new Set(partes.map(([, p]) => p.clienteId));
+  if (clientes.size > 1) return toast('Elige un solo cliente para hacer la nota.', true);
+  const ya = partes.filter(([, p]) => p.nota);
+  if (ya.length && !confirm((ya.length === 1 ? 'Un parte ya está' : ya.length + ' partes ya están') + ' en una nota (' + [...new Set(ya.map(([, p]) => p.nota))].join(', ') + '). ¿Incluirlos igualmente?')) return;
+  const precio = num((S.ajustes.empresa || {}).precioHora);
+  if (!precio) toast('Consejo: pon el precio por hora en Resumen → Datos de la empresa y saldrá solo.');
+  const corta = t => t.length > 110 ? t.slice(0, 107) + '…' : t;
+  const lineas = partes.map(([, p]) => ({
+    concepto: corta('Mano de obra ' + fmtFecha(p.fecha) + (p.inicio ? ' (' + p.inicio + '–' + p.fin + ')' : '') + ': ' + ([(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join('. ') || 'trabajos de jardinería')),
+    cantidad: num(p.horas), precio}));
+  closeSheet();
+  view = 'notas'; estadoF = 'todos'; q = ''; render();
+  docSheet('notas', null, {clienteId: [...clientes][0], lineas, notas: '', partes: partes.map(([id]) => id)});
 }
 
 /* ---------- Fotos del equipo ---------- */
@@ -783,7 +867,7 @@ document.addEventListener('click', e => {
     case 'copia-bajar': bajarCopia(el.dataset.f); break;
     case 'copia-recuperar': recuperarCopia(el.dataset.f, el); break;
     case 'pdf': generarPDF(el.dataset.k, id); break;
-    case 'dup': { const k = el.dataset.k, b = S[k][id]; closeSheet(); if (b) docSheet(k, null, {...b, origen: undefined}); break; }
+    case 'dup': { const k = el.dataset.k, b = S[k][id]; closeSheet(); if (b) docSheet(k, null, {...b, origen: undefined, partes: undefined}); break; }
     case 'a-nota': { const b = S.presupuestos[id]; closeSheet(); if (b) { view = 'notas'; estadoF = 'todos'; q = ''; render(); docSheet('notas', null, {...b, origen: b.numero}); } break; }
     case 'new-clientes': contactSheet('clientes', null); break;
     case 'edit-clientes': contactSheet('clientes', id); break;
@@ -794,6 +878,11 @@ document.addEventListener('click', e => {
     case 'new-parte': parteSheet(null); break;
     case 'edit-parte': parteSheet(id); break;
     case 'pdf-parte': pdfPartes([id]); break;
+    case 'parte-nota': notaDePartes([id]); break;
+    case 'aviso-ok': avisoAtendido(id, el); break;
+    case 'sincronizar': sincronizar().then(() => toast('Todo al día')).catch(() => toast('Sin conexión: no se ha podido actualizar.', true)); break;
+    case 'ir-gastos': view = 'equipo'; equipoTab = 'gastos'; estadoG = 'pendiente'; mesJ = mesActual(); render(); break;
+    case 'partes-nota': notaDePartes(partesFiltrados().map(([k]) => k)); break;
     case 'pdf-partes': pdfPartes(partesFiltrados().map(([k]) => k)); break;
     case 'edit-empresa': empresaSheet(); break;
     case 'filter': estadoF = el.dataset.v; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === estadoF)); $('#list').innerHTML = listaDocs(view); break;
@@ -821,6 +910,7 @@ form.addEventListener('submit', async e => {
     closeSheet();
     toast('Guardado');
   } catch (err) {
+    if (err.conflicto) closeSheet();
     toast(err.message || 'No se pudo guardar. Inténtalo de nuevo.', true);
   } finally {
     btn.disabled = false;
@@ -874,19 +964,20 @@ function salir() {
   try { localStorage.removeItem('clave'); sessionStorage.removeItem('clave'); } catch (e) {}
   location.reload();
 }
-async function api(method, path, body) {
+async function api(method, path, body, cabeceras = {}) {
   // Si la clave guardada deja de valer, se vuelve a pedir; si la acaban de escribir mal, se avisa.
   let tecleada = false;
   for (;;) {
     if (!clave) { await pedirClave(); tecleada = true; }
     let r;
     try {
-      r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave},
+      r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave, ...cabeceras},
         body: body ? JSON.stringify(body) : undefined});
     } catch (e) { throw new Error('Sin conexión. Revisa internet e inténtalo de nuevo.'); }
     if (r.status === 503) throw new Error('Falta configurar la clave de la gestión en Cloudflare.');
     if (r.status === 429) throw new Error('Demasiados intentos con una clave incorrecta. Espera unos minutos.');
     if (r.status === 401) { clave = ''; await pedirClave(tecleada ? 'Clave incorrecta. Inténtalo de nuevo.' : ''); tecleada = true; continue; }
+    if (r.status === 409) { const e = new Error('No se ha guardado: mientras lo editabas, la app del equipo u otro ordenador lo cambió. Ábrelo de nuevo para ver lo último.'); e.conflicto = true; throw e; }
     if (!r.ok) throw new Error('El servidor no pudo guardar. Revisa la conexión e inténtalo de nuevo.');
     return r.json();
   }
@@ -901,9 +992,14 @@ function cargarEnPantalla() {
 db = {
   collection: col => ({
     doc: id => ({
-      set: async d => {
-        await api('PUT', '/api/doc/' + encodeURIComponent(col) + '/' + encodeURIComponent(id), d);
-        mem[col] = mem[col] || {}; mem[col][id] = d;
+      // Se manda la versión cargada (_v): si alguien lo cambió entretanto, el servidor no lo pisa.
+      // «forzar» es para recuperar copias, que deben escribir sí o sí.
+      set: async (d, forzar) => {
+        const {id: _, _v: __, ...datos} = d, v = !forzar && mem[col] && mem[col][id] && mem[col][id]._v;
+        let r;
+        try { r = await api('PUT', '/api/doc/' + encodeURIComponent(col) + '/' + encodeURIComponent(id), datos, v ? {'If-Match': v} : {}); }
+        catch (e) { if (e.conflicto) { await sincronizar().catch(() => {}); } throw e; }
+        mem[col] = mem[col] || {}; mem[col][id] = {...datos, _v: r._v};
         cargarEnPantalla();
       },
       delete: async () => {
@@ -915,7 +1011,8 @@ db = {
   })
 };
 function exportarCopia() {
-  const blob = new Blob([JSON.stringify(mem, null, 2)], {type: 'application/json'});
+  const sinVersion = Object.fromEntries(Object.entries(mem).map(([c, docs]) => [c, Object.fromEntries(Object.entries(docs).map(([id, {_v, ...d}]) => [id, d]))]));
+  const blob = new Blob([JSON.stringify(sinVersion, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'copia-jardineria-adrover-' + today() + '.json';
@@ -931,7 +1028,7 @@ async function importarCopia(file) {
     if (!d || typeof d !== 'object') throw new Error();
     for (const col of Object.keys(d)) {
       if (!COLS.includes(col)) continue;
-      for (const [id, data] of Object.entries(d[col] || {})) await db.collection(col).doc(id).set(data);
+      for (const [id, data] of Object.entries(d[col] || {})) await db.collection(col).doc(id).set(data, true);
     }
     toast('Datos cargados');
   } catch (e) { toast('El archivo no es una copia válida.', true); }
@@ -980,7 +1077,7 @@ async function recuperarCopia(f, el) {
     const d = await api('GET', '/api/copias/' + f);
     for (const col of Object.keys(d)) {
       if (!COLS.includes(col)) continue;
-      for (const [id, data] of Object.entries(d[col] || {})) await db.collection(col).doc(id).set(data);
+      for (const [id, data] of Object.entries(d[col] || {})) await db.collection(col).doc(id).set(data, true);
     }
     closeSheet();
     toast('Datos del ' + fmtFecha(f) + ' recuperados');
@@ -1182,7 +1279,7 @@ async function pdfPartes(ids) {
 
   if (uno) {
     // Un parte: datos con etiqueta
-    const personas = (p0.operarios || []).map(o => (S.operarios[o] || {}).nombre).filter(Boolean).join(', ') || p0.operario || '';
+    const personas = p0.operario || (p0.operarios || []).map(o => (S.operarios[o] || {}).nombre).filter(Boolean).join(', ');
     const filas = [['Personas', personas],
       ['Horas', p0.duracion ? horasTxt(p0.duracion) + ' por persona · ' + horasTxt(p0.horas) + ' en total' : horasTxt(p0.horas)],
       ['Tareas', (p0.tareas || []).join(', ')], ['Trabajo realizado', p0.descripcion]].filter(([, v]) => v);
@@ -1251,6 +1348,30 @@ async function pdfPartes(ids) {
   } else d.save(nombre);
 }
 
+/* ---------- Sincronización con el servidor ---------- */
+// Solo se piden los cambios desde la última vez (con 2 minutos de solape, por si algo se guardaba
+// justo en ese momento: recibir dos veces lo mismo no estropea nada).
+let marca = null;
+let ultimaSync = 0, syncFallo = false;
+function pintarSync() {
+  const el = $('#sync'); if (!el || !ultimaSync) return;
+  const min = Math.round((Date.now() - ultimaSync) / 60e3);
+  el.className = 'sync ' + (syncFallo ? 'mal' : 'ok');
+  $('#sync-txt').textContent = (syncFallo ? 'Sin conexión' : 'Al día') + ' · actualizado ' + (min < 1 ? 'ahora mismo' : min < 60 ? 'hace ' + min + ' min' : 'a las ' + horaDe(ultimaSync));
+}
+setInterval(pintarSync, 30e3);
+async function sincronizar() {
+  if (!marca) return;
+  let r;
+  try { r = await api('GET', '/api/datos?desde=' + encodeURIComponent(marca)); }
+  catch (e) { syncFallo = true; pintarSync(); throw e; }
+  ultimaSync = Date.now(); syncFallo = false; pintarSync();
+  for (const [col, id, d] of r.cambios) (mem[col] ||= {})[id] = d;
+  for (const [col, id] of r.borrados) if (mem[col]) delete mem[col][id];
+  marca = new Date(Date.parse(r.hasta) - 120e3).toISOString();
+  if (r.cambios.length || r.borrados.length) cargarEnPantalla();
+}
+
 /* ---------- Arranque ---------- */
 (async function init() {
   $('#view').innerHTML = empty('Cargando…', 'Conectando con el servidor.');
@@ -1269,19 +1390,12 @@ async function pdfPartes(ids) {
   // Lo que llega de la app del equipo aparece solo: al volver a la gestión y cada minuto mientras está
   // a la vista. No se recarga con una ficha abierta, para no perder lo que se está escribiendo.
   let ultima = Date.now();
-  // Solo se piden los cambios desde la última vez (con 2 minutos de solape, por si algo se guardaba
-  // justo en ese momento: recibir dos veces lo mismo no estropea nada).
-  let marca = new Date(Date.now() - 120e3).toISOString();
+  marca = new Date(Date.now() - 120e3).toISOString();
+  ultimaSync = Date.now(); pintarSync();
   const refrescar = async (minimo) => {
     if (document.hidden || Date.now() - ultima < minimo || !$('#overlay').hidden || !$('#login').hidden) return;
     ultima = Date.now();
-    try {
-      const r = await api('GET', '/api/datos?desde=' + encodeURIComponent(marca));
-      for (const [col, id, d] of r.cambios) (mem[col] ||= {})[id] = d;
-      for (const [col, id] of r.borrados) if (mem[col]) delete mem[col][id];
-      marca = new Date(Date.parse(r.hasta) - 120e3).toISOString();
-      if (r.cambios.length || r.borrados.length) cargarEnPantalla();
-    } catch (e) {}
+    try { await sincronizar(); } catch (e) {}
   };
   document.addEventListener('visibilitychange', () => refrescar(30e3));
   setInterval(() => refrescar(55e3), 60e3);

@@ -22,8 +22,10 @@ La gestión pide la clave la primera vez y la recuerda en ese aparato hasta que 
 
 El Resumen enseña cómo va el negocio: clientes, lo aceptado, lo pendiente de respuesta, las notas por cobrar y las horas del mes.
 
+- **Hoy en el equipo:** quién está trabajando ahora y los **avisos del equipo** (plagas, averías, encargos). Pulsa **Atendido** cuando lo resuelvas: el jefe de cuadrilla lo verá en su app. Si hay gastos por pagar, sale un botón que te lleva a ellos.
 - **Gráfico:** lo aceptado en los últimos 6 meses.
-- **Datos de la empresa:** salen en los PDF. Se cambian con **Editar**, donde también van las **condiciones** del pie de los presupuestos.
+- **Al día:** arriba a la izquierda pone cuándo se actualizó por última vez. Se actualiza sola cada minuto; púlsalo para hacerlo al momento.
+- **Datos de la empresa:** salen en los PDF. Se cambian con **Editar**, donde también van las **condiciones** del pie de los presupuestos y el **precio por hora** de mano de obra (para pasar partes a notas).
 - **Datos de ejemplo:** mientras haya ejemplos sale un aviso con **Borrar ejemplos**. Pulsa dos veces y se borra todo lo marcado «(Ejemplo)»; tus datos reales no se tocan.
 
 ## Clientes y proveedores
@@ -69,7 +71,8 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 
 - Traen cliente, horas, quién ha ido, tareas, detalles, fotos y **avisos para la oficina** (en amarillo).
 - **Horas por persona:** 2 personas durante 2,5 h cuentan 5 h.
-- **Corregir:** ábrelo, cambia y **Guardar**. Desde entonces el jefe ya no puede modificarlo desde su app.
+- **Corregir:** ábrelo y cambia lo que haga falta. La ficha es igual que la del jefe en la app: horario, quién ha ido y tareas, y las horas se calculan solas. Al guardar, el jefe ya no puede modificarlo desde su app.
+- **Pasar a nota:** dentro del parte, **Crear nota**; o en **Partes** elige cliente y mes y pulsa **Crear nota con estos partes**. Cada parte sale como una línea de mano de obra con sus horas y el precio por hora. Los partes quedan marcados con el número de la nota para no cobrarlos dos veces.
 - **PDF de un parte:** ábrelo y pulsa **Descargar PDF**. Sale con los datos del cliente, horas, tareas, fotos y un recuadro para la firma de la empresa. Los avisos para la oficina no salen.
 - **PDF del mes de un cliente** (para adjuntar a la factura o archivar): en **Partes** elige **cliente** y **mes** y pulsa **PDF de estos partes**. Sale una tabla con todos los partes y el total de horas.
 
@@ -83,7 +86,7 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
 - **Jornada:** elige persona y mes; sale cada día con entradas, salidas y total. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
-- **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y **Guardar**.
+- **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y, si quieres, una **nota de la oficina** (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.
 - **Fotos:** las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.
 
 ## Copias de seguridad
@@ -101,5 +104,6 @@ Cada noche se guarda sola una copia de todo y se conserva 60 días.
 | No llega un parte o un gasto | Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse **Sincronizar** |
 | Un operario no puede entrar | Revisa su PIN en **Equipo → Personas** y que no esté **De baja** |
 | El icono del móvil sale antiguo | Borra el acceso y vuelve a añadirlo |
+| «No se ha guardado: mientras lo editabas…» | Otra persona o la app del equipo lo cambió a la vez. Vuelve a abrirlo, verás lo último, y repite tu cambio |
 
 **Dónde están los datos:** en Cloudflare, en una base de datos con jurisdicción de la Unión Europea, con copia cada noche.

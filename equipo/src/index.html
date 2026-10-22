@@ -12,7 +12,7 @@
 html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
 body{padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
 main{max-width:560px;margin:0 auto}
-h1,h2{margin:0;font-weight:700;letter-spacing:-.01em}
+h1,h2{margin:0;font-weight:700;letter-spacing:-.01em;font-family:Fraunces,Georgia,serif}
 h1{font-size:1.5rem}h2{font-size:1.15rem}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
@@ -69,6 +69,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .importe input{font-size:1.5rem;font-weight:700}
 .estado-g{font-size:.82rem;font-weight:700;border-radius:999px;padding:3px 10px;background:#3a2f12;color:#ffd98a}
 .estado-g.pagado{background:var(--lima);color:var(--lima-ink)}
+.llegar{display:inline-block;margin:-6px 0 16px;color:var(--lima);font-weight:700;text-decoration:none}
 .sync{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.88rem;margin:-4px 0 12px}
 .sync.ok #sync-txt:before{content:"● ";color:var(--lima)}
 .fallidos{border:2px solid var(--rojo)}
@@ -174,6 +175,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <form id="hoja" class="hoja" hidden autocomplete="off">
   <header class="top"><h1 id="hoja-titulo">Nuevo parte</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
   <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
+  <a class="llegar" hidden target="_blank" rel="noopener">📍 Cómo llegar</a>
   <div class="fila">
     <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
     <span></span>
@@ -205,6 +207,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <form id="hoja-fotos" class="hoja" hidden autocomplete="off">
   <header class="top"><h1>Fotos del trabajo</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
   <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
+  <a class="llegar" hidden target="_blank" rel="noopener">📍 Cómo llegar</a>
   <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
   <div class="campo"><span>Fotos</span><div class="fotos" data-fotos><label class="btn">📷 Hacer o elegir fotos<input type="file" accept="image/*" multiple hidden></label><div class="miniaturas"></div></div></div>
   <label class="campo"><span>Comentario</span><textarea name="nota" rows="2" placeholder="Opcional: antes, después, algo que deba ver la oficina…"></textarea></label>
@@ -452,7 +455,7 @@ function pintar() {
   const gIds = new Set(gPend.map((g) => g.id));
   const gastos = [...gPend, ...(D.gastos || []).filter((g) => !gIds.has(g.id))].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20);
   $('#gastos').innerHTML = gastos.map((g) => `<div class="parte"><b>${esc(g.tipo)} · ${eur(g.importe)}</b>
-    <span class="meta">${esc(fecha(g.fecha))}${g.nota ? ' · ' + esc(g.nota) : ''}</span>
+    <span class="meta">${esc(fecha(g.fecha))}${g.nota ? ' · ' + esc(g.nota) : ''}</span>${g.notaOficina ? `<span class="meta" style="color:var(--lima)">Oficina: ${esc(g.notaOficina)}</span>` : ''}
     <div style="margin-top:6px">${g.pendiente ? '<span class="pend">Pendiente de enviar</span>' : `<span class="estado-g ${g.estado === 'pagado' ? 'pagado' : ''}">${g.estado === 'pagado' ? 'Pagado' : 'Pendiente de pago'}</span>`}</div></div>`).join('');
   const cliN = Object.fromEntries((D.clientes || []).map((c) => [c.id, c.nombre]));
   const ePend = cola.filter((c) => c.ruta === '/api/fotos-trabajo').map((c) => ({...c.cuerpo, pendiente: true}));
@@ -468,7 +471,7 @@ function pintar() {
     const lista = [...pend, ...(D.partes || []).filter((p) => !ids.has(p.id))].sort((a, b) => (b.fecha + b.inicio).localeCompare(a.fecha + a.inicio));
     const cli = Object.fromEntries((D.clientes || []).map((c) => [c.id, c.nombre]));
     $('#partes').innerHTML = lista.length ? lista.map((p) => `<button class="parte" data-parte="${esc(p.id)}"><b>${esc(cli[p.clienteId] || 'Cliente')}</b>
-      <span class="meta">${esc(fecha(p.fecha))} · ${esc(p.inicio)}–${esc(p.fin)} · ${(p.operarios || []).length} pers.${(p.fotos || []).length ? ' · 📷 ' + p.fotos.length : ''}</span>${p.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</button>`).join('')
+      <span class="meta">${esc(fecha(p.fecha))} · ${esc(p.inicio)}–${esc(p.fin)} · ${(p.operarios || []).length} pers.${(p.fotos || []).length ? ' · 📷 ' + p.fotos.length : ''}</span>${p.pendiente ? '<div class="pend">Pendiente de enviar</div>' : p.revisado ? '<div class="meta">Revisado por la oficina</div>' : p.incidencias && p.avisoAtendido ? '<div class="meta">La oficina ha atendido el aviso</div>' : ''}</button>`).join('')
       : '<p class="meta" style="margin:12px 0 0">Los partes de las últimas dos semanas aparecerán aquí.</p>';
   }
 }
@@ -498,6 +501,7 @@ function abrirParte(p) {
   $('#quien').innerHTML = (D.equipo || []).map((o) => `<label><input type="checkbox" name="operarios" value="${esc(o.id)}"${quien.includes(o.id) ? ' checked' : ''}><span>${esc(o.nombre)}</span></label>`).join('');
   $('#tareas').innerHTML = (D.tareas || []).map((t) => `<label><input type="checkbox" name="tareas" value="${esc(t)}"${p && (p.tareas || []).includes(t) ? ' checked' : ''}><span>${esc(t)}</span></label>`).join('');
   hoja.descripcion.value = p ? p.descripcion || '' : '';
+  pintarLlegar(hoja);
   hoja.incidencias.value = p ? p.incidencias || '' : '';
   limpiarFotos(hoja);
   hoja.hidden = false; scrollTo(0, 0);
@@ -512,6 +516,7 @@ $('#partes').onclick = (e) => {
   const b = e.target.closest('[data-parte]'); if (!b) return;
   const id = b.dataset.parte;
   const p = cola.map((c) => c.cuerpo).find((x) => x.id === id && x.clienteId !== undefined) || (D.partes || []).find((x) => x.id === id);
+  if (p && p.revisado) return toast('La oficina ya ha revisado este parte. Para cambiarlo, llama a la oficina.');
   if (p) abrirParte(p);
 };
 document.addEventListener('click', (e) => {
@@ -564,6 +569,7 @@ $('#nuevas-fotos').onclick = async () => {
   if (!D.clientes) return toast('Sin conexión. La primera vez hace falta cobertura para cargar los clientes.', true);
   hFotos.reset(); limpiarFotos(hFotos); hFotos.fecha.value = hoyISO();
   hFotos.clienteId.innerHTML = '<option value="">Elige un cliente</option>' + D.clientes.map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}${c.lugar ? ' · ' + esc(c.lugar) : ''}</option>`).join('');
+  pintarLlegar(hFotos);
   hFotos.hidden = false; scrollTo(0, 0);
 };
 hFotos.onsubmit = async (e) => {
@@ -622,6 +628,15 @@ function mostrar() {
   $('#acceso').hidden = !!token; $('#app').hidden = !token;
   if (token) { pintar(); pintarCola(); pintarFallidos(); }
 }
+
+// ---------- Cómo llegar: al elegir cliente, enlace al mapa con su dirección ----------
+function pintarLlegar(form) {
+  const a = form.querySelector('.llegar'); if (!a) return;
+  const c = ((D && D.clientes) || []).find((x) => x.id === form.clienteId.value);
+  a.hidden = !(c && c.mapa);
+  if (c && c.mapa) a.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(c.mapa);
+}
+document.addEventListener('change', (e) => { if (e.target.name === 'clienteId') pintarLlegar(e.target.closest('form')); });
 
 // ---------- Ayuda ----------
 document.addEventListener('click', (e) => {

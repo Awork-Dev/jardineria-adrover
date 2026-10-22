@@ -11,11 +11,13 @@
     "local:equipo": "cd equipo && wrangler dev --port 8789 --persist-to ../.wrangler/local",
     "local:gestion": "cd gestion && wrangler dev --port 8788 --persist-to ../.wrangler/local",
     "local:web": "cd web && wrangler dev",
+    "pruebas": "bash pruebas/correr.sh",
     "publicar:equipo": "cd equipo && wrangler deploy",
     "publicar:gestion": "cd gestion && wrangler deploy",
     "publicar:web": "cd web && wrangler deploy"
   },
   "devDependencies": {
+    "playwright": "1.56.1",
     "wrangler": "4.152.0"
   }
 }

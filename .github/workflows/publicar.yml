@@ -10,6 +10,7 @@ on:
       - "web/**"
       - "gestion/**"
       - "equipo/**"
+      - "pruebas/**"
       - "compartido/**"
       - ".github/workflows/publicar.yml"
   workflow_dispatch:
@@ -36,8 +37,23 @@ jobs:
           fi
           c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || printf 'web/\ngestion/\nequipo/\n')
           echo "$c" | grep -qE '^(web/|compartido/|\.github/)' && echo "web=true" >> "$GITHUB_OUTPUT" || true
-          echo "$c" | grep -qE '^(gestion/|compartido/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
-          echo "$c" | grep -qE '^(equipo/|compartido/|\.github/)' && echo "equipo=true" >> "$GITHUB_OUTPUT" || true
+          echo "$c" | grep -qE '^(gestion/|compartido/|pruebas/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
+          echo "$c" | grep -qE '^(equipo/|compartido/|pruebas/|\.github/)' && echo "equipo=true" >> "$GITHUB_OUTPUT" || true
+
+  # Antes de publicar la gestión o la app del equipo, se pasan todas las pruebas (pruebas/correr.sh).
+  # Si alguna falla, no se publica nada de esas dos apps.
+  pruebas:
+    needs: cambios
+    if: needs.cambios.outputs.gestion == 'true' || needs.cambios.outputs.equipo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: bash pruebas/correr.sh
 
   web:
     needs: cambios
@@ -54,7 +70,7 @@ jobs:
           command: deploy
 
   gestion:
-    needs: cambios
+    needs: [cambios, pruebas]
     if: needs.cambios.outputs.gestion == 'true'
     runs-on: ubuntu-latest
     steps:
@@ -68,7 +84,7 @@ jobs:
           command: deploy
 
   equipo:
-    needs: cambios
+    needs: [cambios, pruebas]
     if: needs.cambios.outputs.equipo == 'true'
     runs-on: ubuntu-latest
     steps:

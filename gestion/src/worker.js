@@ -1,7 +1,8 @@
 import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
+import { constantesJS } from '../../compartido/constantes.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
-const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA);
+const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
 import { icono, manifiesto } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
@@ -34,10 +35,11 @@ const json = (obj, status = 200) => new Response(JSON.stringify(obj), {status, h
 
 // ---------- Copias de seguridad ----------
 const DIAS_COPIA = 60;
-async function todosLosDatos(env) {
-  const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs').all();
+// Con «version», cada documento lleva _v (su fecha de última modificación) para detectar ediciones cruzadas.
+async function todosLosDatos(env, version = false) {
+  const {results} = await env.DB.prepare('SELECT coleccion, id, data, actualizado FROM docs').all();
   const out = {};
-  for (const r of results) (out[r.coleccion] ||= {})[r.id] = JSON.parse(r.data);
+  for (const r of results) (out[r.coleccion] ||= {})[r.id] = version ? {...JSON.parse(r.data), _v: r.actualizado} : JSON.parse(r.data);
   return out;
 }
 async function hacerCopia(env) {
@@ -71,11 +73,11 @@ export default {
     // Con ?desde=<fecha ISO> devuelve solo lo cambiado y lo borrado desde entonces (usa índices).
     if (url.pathname === '/api/datos' && req.method === 'GET') {
       const desde = url.searchParams.get('desde');
-      if (!desde) return json(await todosLosDatos(env));
+      if (!desde) return json(await todosLosDatos(env, true));
       const hasta = new Date().toISOString();
-      const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs WHERE actualizado > ?').bind(desde).all();
+      const {results} = await env.DB.prepare('SELECT coleccion, id, data, actualizado FROM docs WHERE actualizado > ?').bind(desde).all();
       const {results: fuera} = await env.DB.prepare('SELECT coleccion, id FROM borrados WHERE cuando > ?').bind(desde).all();
-      return json({cambios: results.map(r => [r.coleccion, r.id, JSON.parse(r.data)]), borrados: fuera.map(r => [r.coleccion, r.id]), hasta});
+      return json({cambios: results.map(r => [r.coleccion, r.id, {...JSON.parse(r.data), _v: r.actualizado}]), borrados: fuera.map(r => [r.coleccion, r.id]), hasta});
     }
 
     // Fotos del equipo (tickets y trabajos): /api/fotos/<id> o /api/fotos/<id>?mini=1
@@ -104,12 +106,21 @@ export default {
       if (req.method === 'PUT') {
         const body = await req.json().catch(() => null);
         if (!body || typeof body !== 'object' || Array.isArray(body)) return json({error: 'cuerpo'}, 400);
-        await env.DB.batch([
-          env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET data = excluded.data, actualizado = excluded.actualizado')
-            .bind(col, id, JSON.stringify(body), new Date().toISOString()),
-          env.DB.prepare('DELETE FROM borrados WHERE coleccion = ? AND id = ?').bind(col, id),
-        ]);
-        return json({ok: true});
+        const {_v, id: _id, ...data} = body;
+        const ahora = new Date().toISOString(), version = req.headers.get('if-match');
+        if (version) {
+          // Solo se guarda si nadie lo ha cambiado desde que se cargó (la app del equipo u otro ordenador).
+          const r = await env.DB.prepare('UPDATE docs SET data = ?, actualizado = ? WHERE coleccion = ? AND id = ? AND actualizado = ?')
+            .bind(JSON.stringify(data), ahora, col, id, version).run();
+          if (!r.meta.changes) return json({error: 'cambiado'}, 409);
+        } else {
+          await env.DB.batch([
+            env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET data = excluded.data, actualizado = excluded.actualizado')
+              .bind(col, id, JSON.stringify(data), ahora),
+            env.DB.prepare('DELETE FROM borrados WHERE coleccion = ? AND id = ?').bind(col, id),
+          ]);
+        }
+        return json({ok: true, _v: ahora});
       }
       if (req.method === 'DELETE') {
         const cuando = new Date().toISOString();

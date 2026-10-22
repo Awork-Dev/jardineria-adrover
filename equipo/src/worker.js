@@ -4,12 +4,11 @@ import AYUDA from './ayuda.html';
 const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA);
 import { icono, manifiesto } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
+import { TAREAS, TIPOS_GASTO } from '../../compartido/constantes.js';
 
 // Los datos se guardan en la tabla «docs» de la gestión (colecciones operarios, fichajes, partes, gastos,
 // fotos y clientes), las sesiones de los móviles en la tabla «sesiones» y las imágenes en el KV FOTOS.
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), {status, headers: {'content-type': 'application/json;charset=utf-8', 'cache-control': 'no-store'}});
-const TAREAS = ['Corte de césped', 'Poda', 'Desbroce', 'Riego', 'Plantación', 'Limpieza', 'Retirada de restos', 'Tratamiento'];
-const TIPOS_GASTO = ['Gasolina', 'Material', 'Comida', 'Peaje o parking', 'Otros'];
 const MAX_FOTO = 3 * 1024 * 1024, MAX_FOTOS = 12;
 const DIA = 86400e3;
 
@@ -126,7 +125,8 @@ export default {
       if (previo && previo.operarioId !== yo.id) return json({error: 'datos'}, 400);
       const fotos = await fotosDe(env, yo, b.fotos);
       if (!fotos.length) return json({error: 'Falta la foto del ticket.'}, 400);
-      await guardar(env, 'gastos', b.id, {operarioId: yo.id, operario: yo.nombre, fecha: b.fecha, tipo: b.tipo, importe, nota: texto(b.nota, 500), fotos,
+      // Lo que haya puesto la oficina (estado de pago, su nota…) se conserva: la app solo cambia lo suyo.
+      await guardar(env, 'gastos', b.id, {...previo, operarioId: yo.id, operario: yo.nombre, fecha: b.fecha, tipo: b.tipo, importe, nota: texto(b.nota, 500), fotos,
         estado: previo?.estado || 'pendiente', creado: previo?.creado || Date.now()});
       return json({ok: true});
     }
@@ -140,7 +140,7 @@ export default {
       if (previo && previo.operarioId !== yo.id) return json({error: 'datos'}, 400);
       const fotos = await fotosDe(env, yo, b.fotos);
       if (!fotos.length) return json({error: 'Añade al menos una foto.'}, 400);
-      await guardar(env, 'fotos', b.id, {operarioId: yo.id, operario: yo.nombre, clienteId: String(b.clienteId), fecha: b.fecha, nota: texto(b.nota, 1000), fotos, creado: previo?.creado || Date.now()});
+      await guardar(env, 'fotos', b.id, {...previo, operarioId: yo.id, operario: yo.nombre, clienteId: String(b.clienteId), fecha: b.fecha, nota: texto(b.nota, 1000), fotos, creado: previo?.creado || Date.now()});
       return json({ok: true});
     }
 
@@ -151,16 +151,18 @@ export default {
         .map(({id, tipo, ts}) => ({id, tipo, ts})).sort((a, b) => a.ts - b.ts);
       const hace62 = new Date(desde).toISOString().slice(0, 10);
       const gastos = (await deOperario(env, 'gastos', yo.id)).filter(g => g.fecha >= hace62)
-        .map(({id, fecha, tipo, importe, nota, estado, fotos}) => ({id, fecha, tipo, importe, nota, estado, fotos: (fotos || []).length}));
+        .map(({id, fecha, tipo, importe, nota, estado, notaOficina, fotos}) => ({id, fecha, tipo, importe, nota, estado, notaOficina, fotos: (fotos || []).length}));
       // Los clientes los ven todos para poder mandar fotos de un trabajo; sin precios ni datos de contacto.
-      const clientes = (await coleccion(env, 'clientes')).map(c => ({id: c.id, nombre: c.nombre || '', lugar: [c.direccion, c.poblacion].filter(Boolean).join(', ')}))
+      const clientes = (await coleccion(env, 'clientes')).map(c => ({id: c.id, nombre: c.nombre || '', lugar: [c.direccion, c.poblacion].filter(Boolean).join(', '),
+        mapa: [c.direccion, c.cp, c.poblacion, c.provincia].filter(Boolean).join(', ')}))
         .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
       const out = {yo: publico(yo), fichajes, gastos, clientes, tareas: TAREAS, tiposGasto: TIPOS_GASTO, servidor: Date.now()};
       if (jefe) {
         out.equipo = (await coleccion(env, 'operarios')).filter(o => o.activo !== false).map(publico).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
         const hace14 = new Date(Date.now() - 14 * DIA).toISOString().slice(0, 10);
         out.partes = (await deOperario(env, 'partes', yo.id, 'autorId')).filter(p => p.fecha >= hace14)
-          .map(({id, fecha, clienteId, operarios, inicio, fin, tareas, descripcion, incidencias, fotos}) => ({id, fecha, clienteId, operarios, inicio, fin, tareas, descripcion, incidencias, fotos: fotos || []}));
+          .map(({id, fecha, clienteId, operarios, inicio, fin, tareas, descripcion, incidencias, fotos, avisoAtendido, editadoOficina}) =>
+            ({id, fecha, clienteId, operarios, inicio, fin, tareas, descripcion, incidencias, fotos: fotos || [], avisoAtendido: !!avisoAtendido, revisado: !!editadoOficina}));
       }
       return json(out);
     }
@@ -194,6 +196,7 @@ export default {
       // Si la oficina ya lo ha corregido, no se pisa su corrección.
       if (previo && previo.editadoOficina) return json({error: 'La oficina ya ha revisado este parte. Para cambiarlo, llama a la oficina.'}, 409);
       await guardar(env, 'partes', b.id, {
+        ...previo, // conserva lo que haya añadido la oficina (aviso atendido, nota hecha con el parte…)
         fecha: b.fecha, clienteId: cliente === null ? '' : String(b.clienteId), inicio: b.inicio, fin: b.fin,
         operarios: ids, operario: ids.map(id => activos.get(id).nombre).join(', '),
         duracion, horas: Math.round(duracion * ids.length * 100) / 100,
