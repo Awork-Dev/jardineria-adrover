@@ -65,7 +65,7 @@ const phead = (foto, x) => `<section class="phead"><img src="${img(foto, 1600)}"
 const cab = (x) => `<div class="cab rv"><div><div class="eyebrow">${x[0]}</div><h2>${x[1]}</h2></div><p>${x[2]}</p></div>`;
 
 const CUERPOS = {
-  "/": (t, lang) => `<section class="hero" style="padding:0"><img src="${img(FOTOS.hero, 1600)}" alt="Jardinería Adrover">
+  "/": (t, lang) => `<section class="hero" style="padding:0"><img src="${img(FOTOS.hero, 1600)}" alt="Jardinería Adrover" fetchpriority="high">
 <div class="wrap"><div class="eyebrow">${t.hero[0]}</div><h1>${t.hero[1]}</h1><p>${t.hero[2]}</p>
 <a class="btn" href="${u(lang, "/contacto")}">${t.hero[3]}</a><a class="btn lin" href="${u(lang, "/servicios")}">${t.hero[4]}</a></div></section>
 <div class="wrap"><div class="cifras rv">${t.cifras.map((c) => `<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join("")}</div></div>
@@ -252,15 +252,33 @@ async function fuentes(path, env) {
 }
 
 function newsJs(t) {
-  const nj = JSON.stringify(t.nj);
+  const nj = JSON.stringify(t.nj).replace(/</g, "\\u003c");
   return `const NJ=${nj};let D=null,cat='jardineria',n=9;const L=document.getElementById('lista');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const hace=t=>{const m=(Date.now()-t)/6e4;if(m<60)return NJ.hace[0].replace('#',Math.max(1,m|0));const h=m/60;if(h<24)return NJ.hace[1].replace('#',h|0);const d=h/24;return d<30?NJ.hace[2].replace('#',d|0):new Date(t).toLocaleDateString(NJ.loc)};
-function pinta(){const a=(D&&D[cat])||[];L.innerHTML=a.length?a.slice(0,n).map(x=>'<a class="n" target="_blank" rel="noopener" href="'+esc(x.enlace)+'"><div class="meta"><span class="chip'+(x.idioma==='en'?' en':'')+'">'+(x.idioma==='en'?'EN':(cat==='ciencia'?NJ.tabs[1]:cat==='baleares'?NJ.tabs[2]:NJ.tabs[0]))+'</span><span>'+esc(x.fuente)+'</span><span>· '+hace(x.fecha)+'</span></div><h3>'+esc(x.titulo)+'</h3>'+(x.resumen?'<p>'+esc(x.resumen)+'</p>':'')+'</a>').join(''):'<p>'+NJ.vacio+'</p>';
+function pinta(){const a=(D&&D[cat])||[];L.innerHTML=a.length?a.slice(0,n).map(x=>'<a class="n" target="_blank" rel="noopener" href="'+(/^https?:\/\//.test(x.enlace)?esc(x.enlace):'#')+'"><div class="meta"><span class="chip'+(x.idioma==='en'?' en':'')+'">'+(x.idioma==='en'?'EN':(cat==='ciencia'?NJ.tabs[1]:cat==='baleares'?NJ.tabs[2]:NJ.tabs[0]))+'</span><span>'+esc(x.fuente)+'</span><span>· '+hace(x.fecha)+'</span></div><h3>'+esc(x.titulo)+'</h3>'+(x.resumen?'<p>'+esc(x.resumen)+'</p>':'')+'</a>').join(''):'<p>'+NJ.vacio+'</p>';
 document.getElementById('mas').style.display=a.length>n?'':'none'}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));b.classList.add('on');cat=b.dataset.c;n=9;pinta()});
 document.getElementById('mas').onclick=()=>{n+=9;pinta()};
 fetch('/api/noticias').then(r=>r.json()).then(d=>{D=d;document.getElementById('act').textContent=NJ.activo+hace(d.actualizado);pinta()}).catch(()=>{document.getElementById('act').textContent=NJ.error;});`;
+}
+
+// Vista previa al compartir el enlace (WhatsApp, Facebook…) y ficha de la empresa para Google.
+const DOMINIO = "https://jardineriaadrover.es";
+const OG_LOCALE = { es: "es_ES", ca: "ca_ES", en: "en_GB", de: "de_DE" };
+const NEGOCIO = JSON.stringify({
+  "@context": "https://schema.org", "@type": ["LocalBusiness", "GardenStore"], "@id": DOMINIO + "/#empresa",
+  name: "Jardinería Adrover", legalName: "Zones Verdes S.L.", url: DOMINIO + "/", email: EMAIL,
+  telephone: ["+34 " + TEL_FIJO, "+" + TEL], image: DOMINIO + img(FOTOS.hero, 1600), logo: DOMINIO + "/icon-512.png",
+  address: { "@type": "PostalAddress", streetAddress: "Ctra. Son Servera-Capdepera, km 11,600", postalCode: "07580", addressLocality: "Capdepera", addressRegion: "Illes Balears", addressCountry: "ES" },
+  areaServed: "Mallorca",
+}).replace(/</g, "\\u003c");
+function compartir(lang, ruta, titulo, desc) {
+  const url = DOMINIO + u(lang, ruta);
+  return `<meta property="og:type" content="website"><meta property="og:site_name" content="Jardinería Adrover"><meta property="og:locale" content="${OG_LOCALE[lang]}">
+<meta property="og:title" content="${titulo}"><meta property="og:description" content="${desc}"><meta property="og:url" content="${url}">
+<meta property="og:image" content="${DOMINIO}${img(FOTOS.hero, 1600)}"><meta name="twitter:card" content="summary_large_image">
+${ruta === "/" ? `<script type="application/ld+json">${NEGOCIO}</script>` : ""}`;
 }
 
 function pagina(lang, ruta, origin) {
@@ -271,13 +289,14 @@ function pagina(lang, ruta, origin) {
 <title>${titulo}</title>
 <meta name="description" content="${desc}">${alt}<link rel="canonical" href="https://jardineriaadrover.es${u(lang, ruta)}">
 ${cabeceraIconos("Adrover")}
+${compartir(lang, ruta, titulo, desc)}
 <link href="/fonts/css" rel="stylesheet">
 <style>
 :root{--verde:#1f3d2b;--verde2:#2f5d3f;--hoja:#7fae6a;--crema:#f6f2ea;--arena:#e9e1d1;--tinta:#1b1f1c;--gris:#5d665f;--blanco:#fff}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--tinta);background:var(--crema);line-height:1.6}
 img{max-width:100%;display:block}a{color:inherit}
 .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
-h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;margin:0}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;margin:0;overflow-wrap:break-word;hyphens:auto}
 .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:600;color:var(--verde2)}
 header.nav{position:fixed;inset:0 0 auto;z-index:50;transition:.3s;color:#fff}
 header.nav.solid{background:rgba(246,242,234,.96);backdrop-filter:blur(8px);color:var(--tinta);box-shadow:0 1px 0 rgba(0,0,0,.06)}
@@ -325,6 +344,7 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 @media(max-width:600px){.serv,.news{grid-template-columns:1fr}section{padding:72px 0}.contacto>div{padding:34px 24px}.galeria{grid-template-columns:repeat(2,1fr);grid-auto-rows:140px}.g7,.g0{grid-column:span 2}.btn.lin{margin:10px 0 0}}
 .phead{min-height:56vh;position:relative;display:flex;align-items:flex-end;color:#fff;overflow:hidden;padding:0}.phead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.phead:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,25,15,.45),rgba(10,25,15,.25) 45%,rgba(10,25,15,.82))}.phead .wrap{position:relative;z-index:2;padding-bottom:56px;padding-top:120px}.phead h1{font-size:clamp(2.4rem,6vw,4.4rem);margin:12px 0 16px;max-width:16ch}.phead p{max-width:58ch;font-size:1.1rem;opacity:.92;margin:0}.phead .eyebrow{color:#cfe6c2}nav a.on{color:var(--hoja);opacity:1}nav{display:flex;align-items:center}.menu{display:none;background:none;border:0;color:inherit;cursor:pointer;padding:8px;margin-right:-8px}.menu svg{width:30px;height:30px}.accesos{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.acceso{text-decoration:none;display:flex;flex-direction:column}.acceso>div{flex:1;display:flex;flex-direction:column}.acceso p{flex:1}.acceso .ver{align-self:flex-start}.acceso .ver{display:inline-block;margin-top:14px;font-weight:600;color:var(--verde2)}.cta{background:var(--verde);color:#fff;border-radius:28px;padding:56px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}.cta h2{font-size:clamp(1.9rem,4vw,2.8rem);margin:10px 0 14px}.cta p{color:#c5d3c8;margin:0}.cta .eyebrow{color:#a9d39a}@media(max-width:980px){.menu{display:flex}nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--crema);color:var(--tinta);flex-direction:column;align-items:stretch;padding:8px 20px 22px;box-shadow:0 20px 40px rgba(0,0,0,.12)}header.abierto nav{display:flex}nav a{margin:0;padding:13px 0;border-bottom:1px solid var(--arena);font-size:1.05rem}nav a.btn{margin-top:14px;text-align:center;border:0;padding:14px!important}.accesos{grid-template-columns:1fr}.cta{grid-template-columns:1fr;padding:36px 26px}}footer{padding:70px 0 40px}footer .wrap{display:block}.cita{margin:0 auto 40px;max-width:620px;text-align:center;font-family:Fraunces,serif;font-style:italic;font-size:1.3rem;line-height:1.6;color:var(--verde)}.cita cite{display:block;margin-top:14px;font-family:Inter,sans-serif;font-style:normal;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gris)}.pie{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid var(--arena);padding-top:22px}@media(max-width:600px){.cita{font-size:1.1rem}}.langs{display:inline-flex;gap:2px;margin-left:22px;background:rgba(255,255,255,.14);border-radius:999px;padding:3px}.langs a{margin:0!important;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:600;opacity:.85}.langs a.on{background:var(--hoja);color:#10220f;opacity:1}header.nav.solid .langs{background:var(--arena)}.pie{padding-right:70px}@media(max-width:980px){.langs{margin:14px 0 0;justify-content:center;background:var(--arena)}.langs a{padding:10px 16px!important;border:0!important;font-size:.95rem!important}}.hero .wrap{padding-top:130px}
 [hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.rv{opacity:1;transform:none;transition:none}.dot{animation:none}}
 .legal .wrap{max-width:860px}
 .legal h2{font-size:clamp(1.6rem,3vw,2.1rem);margin:44px 0 16px}
 .legal h2:first-of-type{margin-top:0}
@@ -388,8 +408,8 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 @media(min-width:981px) and (max-width:1280px){nav a{margin-left:15px;font-size:.88rem}.langs{margin-left:12px}}
 @media(max-width:980px){.plantas,.xero{grid-template-columns:repeat(2,1fr)}.mes ul{grid-template-columns:1fr}.tools,.pre{grid-template-columns:1fr}}
 @media(max-width:600px){.plantas,.xero,.campos{grid-template-columns:1fr}.subnav{top:72px}.pre{padding:30px 22px}.tool{padding:22px}.mes{padding:24px 20px}}
-</style></head><body>
-<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}" aria-label="Jardinería Adrover"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
+</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
+<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}" aria-label="Jardinería Adrover"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
 
 ${CUERPOS[ruta](t, lang)}
 
@@ -399,7 +419,9 @@ ${flotante(t)}
 const nav=document.getElementById('nav');addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>40));
 const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.12});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
-document.getElementById('menu').onclick=()=>{nav.classList.toggle('abierto');nav.classList.add('solid')};
+const menuBtn=document.getElementById('menu'),cierra=()=>{nav.classList.remove('abierto');menuBtn.setAttribute('aria-expanded','false');nav.classList.toggle('solid',scrollY>40)};
+menuBtn.onclick=()=>{if(nav.classList.contains('abierto'))return cierra();nav.classList.add('abierto','solid');menuBtn.setAttribute('aria-expanded','true')};
+addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('abierto'))cierra()});
 ${ruta === "/noticias" ? newsJs(t) : ""}${ruta === "/guia" ? guiaJs() : ""}${ruta === "/herramientas" ? herrJs(lang) : ""}${ruta === "/contacto" ? preJs(lang) : ""}
 </script></body></html>`;
 }
@@ -491,14 +513,9 @@ const AV_T = {
     <script>document.querySelectorAll('[data-c]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('t-'+b.dataset.c).innerText);b.textContent='¡Copiado!';setTimeout(()=>b.textContent='Copiar',1800)}catch(e){alert('No se pudo copiar: selecciona el texto y cópialo a mano.')}})</script></body></html>`;
     return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "x-robots-tag": "noindex" } });
     }
-    const ACENTO = (m) => [11, 0, 1].includes(m) ? ["#e7a6b4", "#f0bcc7", "#9c4f62", "#2b1218"]
-: m <= 4 ? ["#a8cf7c", "#bcdc95", "#6b4a8a", "#10220f"]
-: m <= 7 ? ["#f0b84a", "#f5c86c", "#9a5f14", "#2a1a03"]
-: ["#e09155", "#eaa673", "#a4512a", "#2a1407"];
-{
+    {
 const base = pagina;
 pagina = (lang, ruta, origin) => {
-const [h, hv, eb, tx] = ACENTO(mesHoy());
 const css = `<style>.cta{background:none;color:var(--tinta);border-radius:0;padding:40px 0 0;border-top:1px solid var(--arena)}.cta p{color:var(--gris)}.cta .eyebrow{color:var(--verde2)}.cta .canal{border:1.5px solid var(--arena)}.hero .eyebrow,.phead .eyebrow{color:#f4e3cc}</style>`;
 return base(lang, ruta, origin).replace("</head>", css + "</head>");
 };
@@ -510,29 +527,13 @@ function temporadaHtml(lang) {
 const m = mesHoy(), s = TEMPORADA(m);
 let f = new Date().toLocaleDateString(LOC[lang], { timeZone: "Europe/Madrid", weekday: "long", day: "numeric", month: "long" });
 f = f.charAt(0).toUpperCase() + f.slice(1);
-const otono = m >= 8 && m <= 10, inv = [11, 0, 1].includes(m), prim = m >= 2 && m <= 4;
-const forma = otono ? HOJA_CAE : PETALO;
-const cols = otono ? ["#e09155", "#c8693a", "#d9a441", "#b5562b", "#e8a35f"] : inv ? ["#f6d3dc", "#ffffff", "#efb7c4"] : prim ? ["#d9b8e8", "#f2d6f0", "#c7e3a6"] : [];
-let caen = "";
-if (cols.length) {
-for (let i = 0; i < 14; i++) {
-const izq = (i * 7.3 + (i % 3) * 11) % 100, dur = 9 + (i * 1.7) % 7, ret = -((i * 2.3) % dur), tam = otono ? 22 + (i * 5) % 22 : 12 + (i * 5) % 14;
-caen += `<i style="left:${izq.toFixed(1)}%;width:${tam}px;animation-duration:${dur.toFixed(1)}s;animation-delay:${ret.toFixed(1)}s"><b style="color:${cols[i % cols.length]};animation-duration:${(2.5 + (i % 4) * .7).toFixed(1)}s">${forma}</b></i>`;
-}
-}
+const forma = m >= 8 && m <= 10 ? HOJA_CAE : PETALO;
 const css = `<style>
-.caen{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-.caen i{position:absolute;top:-8%;display:block;animation:caeY linear infinite}
-.caen b{display:block;animation:caeX ease-in-out infinite alternate;filter:drop-shadow(0 3px 4px rgba(0,0,0,.25))}
-.caen svg{display:block;width:100%;height:auto}
-@keyframes caeY{to{transform:translateY(118vh)}}
-@keyframes caeX{from{transform:translateX(-26px) rotate(-35deg)}to{transform:translateX(26px) rotate(40deg)}}
 .tfecha{display:inline-flex;align-items:center;gap:10px;margin-bottom:16px;padding:8px 16px 8px 10px;border-radius:999px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(6px);color:#fff;font-size:.9rem;font-weight:500}
 .tfecha em{font-style:normal;font-weight:700;color:var(--verde);background:#fff;padding:3px 10px;border-radius:999px;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
 .tfecha svg{width:20px;height:20px;color:${s.a}}
-@media(prefers-reduced-motion:reduce){.caen{display:none}}
 </style>`;
-return { css, caen: caen ? `<div class="caen" aria-hidden="true">${caen}</div>` : "", fecha: `<div class="tfecha">${forma}<span>${f}</span><em>${s.n[lang]}</em></div>` };
+return { css, fecha: `<div class="tfecha">${forma}<span>${f}</span><em>${s.n[lang]}</em></div>` };
 }
 {
 const base = pagina;
@@ -563,7 +564,12 @@ export default {
     if (lm) { lang = lm[1]; p = lm[2] || "/"; }
     if (url.pathname.startsWith("/fonts/")) return fuentes(url.pathname, env);
     if (RUTAS.includes(p) || (p === "/legal" && LEGAL_LISTO))
-      return new Response(pagina(lang, p, url.origin), { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" } });
+      return new Response(pagina(lang, p, url.origin), { headers: {
+        "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300",
+        "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN",
+        // La copia en workers.dev no debe salir en Google: la buena es jardineriaadrover.es.
+        ...(url.hostname.endsWith(".workers.dev") ? { "x-robots-tag": "noindex" } : {}),
+      } });
     return Response.redirect(url.origin + u(lang, "/"), 302);
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(vigilar(env)); },

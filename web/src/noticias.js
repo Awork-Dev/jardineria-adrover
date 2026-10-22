@@ -24,7 +24,8 @@ export const PLANTAS = /plant|tree|flower|crop|soil|seed|root|leaf|leaves|forest
 export const NATURA = /sequ[ií]a|sequera|riego|\breg\b|plaga|plague|picudo|morrut|xylella|oliv|almendr|ametl|pinar|pinos?\b|pins\b|parque natural|parc natural|espacio natural|espai natural|tramuntana|posidonia|medio ambiente|medi ambient|incendio forestal|incendi forestal|zona verde|zones verdes|zonas verdes|poda|tala\b|vivers?\b|viveros?\b|natural/i;
 export const dec = (s) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-  .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/&amp;/g, "&");
+  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([\da-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+  .replace(/&amp;/g, "&");
 export const tag = (x, t) => { const m = x.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, "i")); return m ? dec(m[1]).trim() : ""; };
 export const limpia = (s) => s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 export async function leerFeed(url) {
@@ -42,7 +43,7 @@ export async function leerFeed(url) {
       const resumen = google ? "" : limpia(tag(it, "description")).slice(0, 260);
       const fecha = Date.parse(tag(it, "pubDate")) || Date.now();
       return { titulo, enlace: limpia(tag(it, "link")), fuente, resumen, fecha, idioma: url.includes("hl=es") ? "es" : "en" };
-    }).filter((n) => n.titulo && n.enlace);
+    }).filter((n) => n.titulo && /^https?:\/\//.test(n.enlace));
   } catch { return []; }
 }
 export async function vigilar(env) {
