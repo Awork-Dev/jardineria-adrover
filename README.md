@@ -48,6 +48,9 @@ Lo más habitual al hacer cambios:
 - Cambiar los iconos → `node compartido/generar-pngs.mjs` (colores en ese archivo), crear el
   `favicon.ico` de cada app y ejecutar `node compartido/generar-iconos.mjs`.
 - Cambiar las tareas rápidas de los partes → `TAREAS` en `equipo/src/worker.js`.
+- Cambiar la ayuda de las apps (botón «?») → editar `docs/manual-oficina.md` o `docs/manual-equipo.md`
+  y ejecutar `python3 compartido/generar-ayuda.py`.
+- Cargar los datos de ejemplo → GitHub, Actions → «Cargar ejemplos» (se borran en la gestión con «Borrar ejemplos»).
 
 ## Trabajar en local
 

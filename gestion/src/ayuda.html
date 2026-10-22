@@ -1,0 +1,81 @@
+<!-- Generado por compartido/generar-ayuda.py desde docs/manual-oficina.md: no editar a mano. -->
+<nav class="ay-indice"><a href="#ay1">Las tres apps</a><a href="#ay2">Entrar</a><a href="#ay3">Resumen</a><a href="#ay4">Clientes y proveedores</a><a href="#ay5">Presupuestos</a><a href="#ay6">Notas</a><a href="#ay7">Partes</a><a href="#ay8">Equipo</a><a href="#ay9">Copias de seguridad</a><a href="#ay10">Si algo falla</a></nav><h3 id="ay1">Las tres apps</h3>
+<p>Jardinería Adrover funciona con tres apps: la <b>web</b> para los clientes, la <b>gestión</b> para la oficina y la <b>app del equipo</b> para los operarios. Se abren en el navegador y se pueden poner en el móvil como una app más.</p>
+<div class="ay-tabla"><table><thead><tr><th>App</th><th>Para quién</th><th>Enlace</th><th>Icono</th></tr></thead><tbody><tr><td>Web</td><td>Clientes y público</td><td><a href="https://jardineriaadrover.es" target="_blank" rel="noopener">jardineriaadrover.es</a></td><td>Verde</td></tr><tr><td>Gestión</td><td>Oficina (con clave)</td><td><a href="https://gestionadrover.jardineriaadrover.workers.dev" target="_blank" rel="noopener">gestionadrover.jardineriaadrover.workers.dev</a></td><td>Dorado</td></tr><tr><td>Equipo</td><td>Operarios (con PIN)</td><td><a href="https://equipo.jardineriaadrover.workers.dev" target="_blank" rel="noopener">equipo.jardineriaadrover.workers.dev</a></td><td>Lima y negro</td></tr></tbody></table></div>
+<p><b>Ponerla en el móvil:</b> ábrela en Safari (iPhone) y pulsa <b>Compartir → Añadir a pantalla de inicio</b>; en Android, menú <b>⋮ → Añadir a pantalla de inicio</b>.</p>
+<h3 id="ay2">Entrar</h3>
+<p>La gestión pide la clave la primera vez y la recuerda en ese aparato hasta que pulses <b>Cerrar sesión</b>.</p>
+<ul>
+<li><b>Clave incorrecta:</b> revisa mayúsculas y espacios. Tras 10 intentos fallidos se bloquea 15 minutos.</li>
+<li><b>«Falta configurar la clave en Cloudflare»:</b> en Cloudflare, abre <b>gestionadrover → Configuración → Variables y secretos</b> y añade un <b>Secreto</b> llamado <code>CLAVE</code> con tu clave.</li>
+<li><b>Cerrar sesión:</b> abajo a la izquierda (en el móvil, al final de <b>Inicio</b>).</li>
+</ul>
+<h3 id="ay3">Resumen</h3>
+<p>El Resumen enseña cómo va el negocio: clientes, lo aceptado, lo pendiente de respuesta, las notas por cobrar y las horas del mes.</p>
+<ul>
+<li><b>Gráfico:</b> lo aceptado en los últimos 6 meses.</li>
+<li><b>Datos de la empresa:</b> salen en los PDF. Se cambian con <b>Editar</b>, donde también van las <b>condiciones</b> del pie de los presupuestos.</li>
+<li><b>Datos de ejemplo:</b> mientras haya ejemplos sale un aviso con <b>Borrar ejemplos</b>. Pulsa dos veces y se borra todo lo marcado «(Ejemplo)»; tus datos reales no se tocan.</li>
+</ul>
+<h3 id="ay4">Clientes y proveedores</h3>
+<ol>
+<li>Entra en <b>Clientes</b> (o <b>Proveedores</b>) y pulsa <b>+ Nuevo</b>.</li>
+<li>Rellena nombre, CIF/NIF, contacto, correo, teléfono, dirección, C.P., población y provincia.</li>
+<li>Pulsa <b>Guardar</b>.</li>
+</ol>
+<ul>
+<li><b>Para hacerle una nota</b>, el cliente necesita <b>NIF/CIF, dirección, C.P. y población</b>.</li>
+<li><b>Buscar:</b> por nombre, CIF, correo o teléfono.</li>
+<li><b>Borrar:</b> abre la ficha y pulsa <b>Eliminar</b> dos veces. Si tiene documentos, avisa antes.</li>
+</ul>
+<h3 id="ay5">Presupuestos</h3>
+<ol>
+<li><b>Presupuestos → + Nuevo.</b></li>
+<li>Elige <b>cliente</b>, <b>fecha</b>, <b>estado</b> e <b>IVA</b> (21, 10, 4 o 0 %).</li>
+<li>Añade las <b>líneas</b>: concepto, cantidad y precio sin IVA. El total se calcula solo.</li>
+<li>Escribe <b>observaciones</b> si hace falta y pulsa <b>Guardar</b>. El número (P-2026-001…) se pone solo.</li>
+</ol>
+<div class="ay-tabla"><table><thead><tr><th>Botón</th><th>Qué hace</th></tr></thead><tbody><tr><td>Descargar PDF</td><td>En el ordenador lo descarga; en el móvil abre <b>Compartir</b> (WhatsApp, correo…). Al compartirlo, un Borrador pasa a Enviado</td></tr><tr><td>Duplicar</td><td>Crea uno nuevo con las mismas líneas</td></tr><tr><td>Crear nota</td><td>Crea una nota con las mismas líneas, enlazada al presupuesto</td></tr></tbody></table></div>
+<ul>
+<li><b>Estados:</b> Borrador → Enviado → Aceptado o Rechazado. El Resumen suma lo aceptado.</li>
+<li><b>IVA 0 %:</b> pon el motivo de la exención en Observaciones.</li>
+<li><b>El PDF sale con lo guardado:</b> pulsa <b>Guardar</b> antes de descargarlo.</li>
+</ul>
+<h3 id="ay6">Notas</h3>
+<p>La nota funciona como una factura pero <b>no lo es</b>: deja constancia de un trabajo y de su cobro. Para facturar hay que usar un programa homologado (VERI*FACTU).</p>
+<ul>
+<li><b>Crear:</b> <b>Notas → + Nuevo</b>, o desde un presupuesto con <b>Crear nota</b>.</li>
+<li><b>Número:</b> solo y en orden por año: N-2026-001, N-2026-002…</li>
+<li><b>Cliente:</b> necesita NIF/CIF, dirección, C.P. y población. Sus datos se guardan con la nota.</li>
+<li><b>Estados:</b> Pendiente de cobro → Cobrada (o Anulada).</li>
+<li><b>PDF:</b> título «NOTA» y al final «Este documento no es una factura».</li>
+</ul>
+<h3 id="ay7">Partes</h3>
+<p>Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en un minuto.</p>
+<ul>
+<li>Traen cliente, horas, quién ha ido, tareas, detalles, fotos y <b>avisos para la oficina</b> (en amarillo).</li>
+<li><b>Horas por persona:</b> 2 personas durante 2,5 h cuentan 5 h.</li>
+<li><b>Corregir:</b> ábrelo, cambia y <b>Guardar</b>. Desde entonces el jefe ya no puede modificarlo desde su app.</li>
+</ul>
+<h3 id="ay8">Equipo</h3>
+<p><b>Dar de alta a alguien</b></p>
+<ol>
+<li><b>Equipo → Personas → + Nuevo.</b></li>
+<li>Nombre y puesto: <b>Operario</b> o <b>Jefe de cuadrilla</b> (solo los jefes hacen partes).</li>
+<li>Apunta el <b>PIN</b> que sale y pulsa <b>Guardar</b>. Dale el PIN y el enlace de la app del equipo.</li>
+</ol>
+<ul>
+<li><b>Si pierde el móvil o se va:</b> cámbiale el PIN o ponlo <b>De baja</b>. Pierde el acceso al momento; sus datos se conservan.</li>
+<li><b>Jornada:</b> elige persona y mes; sale cada día con entradas, salidas y total. <b>Descargar PDF</b> para firmar. Hay que guardarlo 4 años.</li>
+<li><b>Gastos:</b> cada uno con la foto del ticket. Al pagarlo, ábrelo, pon <b>Pagado</b> y <b>Guardar</b>.</li>
+<li><b>Fotos:</b> las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.</li>
+</ul>
+<h3 id="ay9">Copias de seguridad</h3>
+<p>Cada noche se guarda sola una copia de todo y se conserva 60 días.</p>
+<ul>
+<li><b>Copias de seguridad:</b> lista por fecha para <b>Descargar</b> o <b>Recuperar</b> (vuelve a poner lo de ese día; lo creado después se mantiene). <b>Hacer copia ahora</b> antes de un cambio grande.</li>
+<li><b>Descargar copia / Cargar copia:</b> baja todo a un archivo o lo vuelve a subir.</li>
+</ul>
+<h3 id="ay10">Si algo falla</h3>
+<div class="ay-tabla"><table><thead><tr><th>Qué pasa</th><th>Qué hacer</th></tr></thead><tbody><tr><td>No carga en el ordenador</td><td>Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador</td></tr><tr><td>No llega un parte o un gasto</td><td>Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse <b>Sincronizar</b></td></tr><tr><td>Un operario no puede entrar</td><td>Revisa su PIN en <b>Equipo → Personas</b> y que no esté <b>De baja</b></td></tr><tr><td>El icono del móvil sale antiguo</td><td>Borra el acceso y vuelve a añadirlo</td></tr></tbody></table></div>
+<p><b>Dónde están los datos:</b> en Cloudflare, en una base de datos con jurisdicción de la Unión Europea, con copia cada noche.</p>

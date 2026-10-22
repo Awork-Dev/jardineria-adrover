@@ -1,4 +1,7 @@
-import HTML from './index.html';
+import PAGINA from './index.html';
+import AYUDA from './ayuda.html';
+// El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
+const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA);
 import { icono, manifiesto } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 

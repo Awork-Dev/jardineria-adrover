@@ -90,6 +90,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 #toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--lima);color:var(--lima-ink);font-weight:700;padding:12px 18px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:calc(100% - 32px);text-align:center}
 #toast.show{opacity:1}#toast.mal{background:var(--rojo)}
 [hidden]{display:none!important}
+/* Ayuda (manual dentro de la app) */
+.ay-btn{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:15;width:40px;height:40px;border-radius:50%;border:2px solid currentColor;font:700 1.15rem/1 system-ui,sans-serif;cursor:pointer}
+.ay{line-height:1.55}
+.ay h3{margin:22px 0 8px;font-size:1.1rem;scroll-margin-top:12px}
+.ay p{margin:0 0 10px}.ay ul,.ay ol{margin:0 0 10px;padding-left:22px}.ay li{margin:3px 0}
+.ay-indice{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.ay-indice a{padding:6px 12px;border-radius:999px;text-decoration:none;font-size:.88rem;font-weight:600}
+.ay-tabla{overflow-x:auto;margin:0 0 12px}.ay table{border-collapse:collapse;width:100%;font-size:.92rem}
+.ay th,.ay td{text-align:left;vertical-align:top;padding:7px 9px;border-bottom:1px solid currentColor;border-color:rgba(128,128,128,.3)}
+.ay code{font-size:.9em}
+.ay-btn{position:static;background:transparent;color:var(--lima)}.ay-indice a{background:var(--panel2);color:var(--lima)}.ay a{color:var(--lima)}
+#acceso .ay-btn{position:fixed}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
 </style>
 </head>
@@ -98,6 +110,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <section id="acceso" hidden>
     <img src="/icon-192.png" alt="">
     <div><h1>Adrover Equipo</h1><p class="meta" style="margin:6px 0 0">Escribe tu PIN de 4 cifras</p></div>
+    <button class="ay-btn" data-ayuda aria-label="Ayuda" title="Ayuda">?</button>
     <div class="puntos" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
     <p id="pin-error" role="alert"></p>
     <div class="teclado" role="group" aria-label="Teclado del PIN">
@@ -111,7 +124,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <section id="app" hidden>
     <header class="top">
       <div class="marca"><img src="/icon-192.png" alt=""><div><h1 id="nombre"></h1><small id="rol"></small></div></div>
-      <button class="btn borde peq" id="salir">Salir</button>
+      <div style="display:flex;gap:8px;align-items:center"><button class="ay-btn" data-ayuda aria-label="Ayuda" title="Ayuda">?</button><button class="btn borde peq" id="salir">Salir</button></div>
     </header>
     <div class="sync" id="sync"><span id="sync-txt"></span><button class="btn borde peq" id="sincronizar">Sincronizar</button></div>
     <div id="cola" class="aviso" hidden></div>
@@ -197,6 +210,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <label class="campo"><span>Comentario</span><textarea name="nota" rows="2" placeholder="Opcional: antes, después, algo que deba ver la oficina…"></textarea></label>
   <div class="acciones"><button class="btn lima">Enviar fotos</button></div>
 </form>
+<div id="ayuda" class="hoja" hidden>
+  <header class="top"><h1>Ayuda</h1><button type="button" class="btn borde peq" data-cerrar-ayuda>Cerrar</button></header>
+  <div class="ay"><!--AYUDA--></div>
+  <div class="acciones" style="margin-top:18px"><button type="button" class="btn lima" data-cerrar-ayuda>Entendido</button></div>
+</div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -604,6 +622,12 @@ function mostrar() {
   $('#acceso').hidden = !!token; $('#app').hidden = !token;
   if (token) { pintar(); pintarCola(); pintarFallidos(); }
 }
+
+// ---------- Ayuda ----------
+document.addEventListener('click', (e) => {
+  if (e.target.closest('[data-ayuda]')) { $('#ayuda').hidden = false; $('#ayuda').scrollTop = 0; }
+  if (e.target.closest('[data-cerrar-ayuda]')) $('#ayuda').hidden = true;
+});
 
 // ---------- Arranque ----------
 mostrar();

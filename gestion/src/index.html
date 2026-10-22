@@ -80,6 +80,18 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .mini-foto{width:48px;height:48px;flex:none}
 .foto-grande{width:100%;border-radius:12px;display:block;background:var(--soft)}
 .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+/* Ayuda (manual dentro de la app) */
+.ay-btn{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));z-index:15;width:40px;height:40px;border-radius:50%;border:2px solid currentColor;font:700 1.15rem/1 system-ui,sans-serif;cursor:pointer}
+.ay{line-height:1.55}
+.ay h3{margin:22px 0 8px;font-size:1.1rem;scroll-margin-top:12px}
+.ay p{margin:0 0 10px}.ay ul,.ay ol{margin:0 0 10px;padding-left:22px}.ay li{margin:3px 0}
+.ay-indice{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.ay-indice a{padding:6px 12px;border-radius:999px;text-decoration:none;font-size:.88rem;font-weight:600}
+.ay-tabla{overflow-x:auto;margin:0 0 12px}.ay table{border-collapse:collapse;width:100%;font-size:.92rem}
+.ay th,.ay td{text-align:left;vertical-align:top;padding:7px 9px;border-bottom:1px solid currentColor;border-color:rgba(128,128,128,.3)}
+.ay code{font-size:.9em}
+.ay-btn{background:var(--panel);color:var(--brand)}.ay-indice a{background:var(--soft);color:var(--brand)}.ay a{color:var(--brand)}
+@media (max-width:760px){.ay-btn{top:calc(10px + env(safe-area-inset-top,0px))}}
 .panel svg{width:100%;height:auto;display:block}
 .bar{fill:var(--brand)}
 .axis{stroke:var(--line);stroke-width:1.5}
@@ -199,6 +211,8 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
     <button class="btn primary">Entrar</button>
   </form>
 </div>
+<button class="ay-btn" data-act="ayuda" aria-label="Ayuda" title="Ayuda">?</button>
+<template id="ayuda"><div class="ay"><!--AYUDA--></div></template>
 <div id="toast" class="toast" role="status"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -740,6 +754,12 @@ document.addEventListener('click', e => {
     case 'close': closeSheet(); break;
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
+    case 'ayuda':
+      $('#sheet-title').textContent = 'Ayuda';
+      sheetSave = sheetDel = null;
+      $('#sheet-form').innerHTML = $('#ayuda').innerHTML + '<div class="actions"><span class="grow"></span><button type="button" class="btn primary" data-act="close">Cerrar</button></div>';
+      $('#overlay').hidden = false; $('#sheet-form').scrollTop = 0;
+      break;
     case 'borrar-ejemplos': borrarEjemplos(el); break;
     case 'new-operario': operarioSheet(null); break;
     case 'edit-operario': operarioSheet(id); break;
