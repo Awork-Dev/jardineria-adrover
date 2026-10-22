@@ -18,6 +18,8 @@
 3. **Gestión interna** con clave: clientes, proveedores, presupuestos (`P-AAAA-NNN`) y notas (`N-AAAA-NNN`)
    con IVA del 21 % y PDF, partes de trabajo y resumen por meses. Una nota se puede crear desde un presupuesto
    con un botón; su PDF lleva el título «NOTA» y la frase «Este documento no es una factura».
+   Para guardar una nota, el cliente debe tener NIF/CIF, dirección, código postal y población. Cada presupuesto
+   y nota guarda una copia de los datos del cliente de ese momento, así el PDF no cambia si luego se edita la ficha.
 4. **Página de accesos** para el cliente.
 5. **Web app:** la web y la gestión se pueden añadir a la pantalla de inicio del móvil (iPhone y Android)
    con el icono de la empresa. En el iPhone se llaman «Adrover» y «Gestión».

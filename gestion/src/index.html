@@ -268,6 +268,7 @@ function contactoHtml(v = {}, extra = '') {
     ${fld('direccion', 'Dirección', {value:v.direccion, wide:1})}
     ${fld('cp', 'C.P.', {value:v.cp})}
     ${fld('poblacion', 'Población', {value:v.poblacion})}
+    ${fld('provincia', 'Provincia', {value:v.provincia})}
     ${extra}
     ${fld('notas', 'Notas', {area:1, value:v.notas, wide:1})}
   </div>`;
@@ -333,8 +334,16 @@ function docSheet(kind, id, base) {
     const lineas = linesFrom(fd);
     if (!lineas.length) throw new Error('Añade al menos una línea con concepto.');
     const fecha = fd.get('fecha') || today();
+    const cli = S.clientes[fd.get('clienteId')] || {};
+    // Una nota debe identificar al cliente por completo.
+    if (kind === 'notas') {
+      const falta = [['cif', 'NIF/CIF'], ['direccion', 'dirección'], ['cp', 'código postal'], ['poblacion', 'población']].filter(([k]) => !String(cli[k] || '').trim()).map(([, n]) => n);
+      if (falta.length) throw new Error('Faltan datos del cliente: ' + falta.join(', ') + '. Complétalos en Clientes.');
+    }
+    // Se guarda una copia de los datos del cliente: el documento sigue igual aunque luego se cambie la ficha.
+    const cliente = Object.fromEntries(['nombre', 'cif', 'direccion', 'cp', 'poblacion', 'provincia', 'telefono', 'email', 'contacto'].map(k => [k, String(cli[k] || '').trim()]));
     await put(kind, id || uid(K.pref.toLowerCase()), {
-      numero: v.numero || nextNumero(kind, fecha), clienteId: fd.get('clienteId'), fecha,
+      numero: v.numero || nextNumero(kind, fecha), clienteId: fd.get('clienteId'), cliente, fecha,
       estado: fd.get('estado'), lineas, notas: String(fd.get('notas') || '').trim(), ...(v.origen ? {origen: v.origen} : {})
     });
   }, id ? () => del(kind, id) : null);
@@ -734,7 +743,7 @@ function generarPDF(kind, id) {
   const J = window.jspdf && window.jspdf.jsPDF;
   if (!J) { toast('No se pudo cargar el generador de PDF. Revisa la conexión.', true); return; }
   const e = S.ajustes.empresa || DEFAULT_EMPRESA;
-  const c = S.clientes[p.clienteId] || {};
+  const c = p.cliente || S.clientes[p.clienteId] || {};
   const d = new J({unit: 'mm', format: 'a4'});
   const L = 18, R = 192, ALTO = 297, PIE = 280, VERDE = [46, 107, 61];
   const txt = (s, x, y, o) => d.text(String(s), x, y, o);
@@ -777,11 +786,21 @@ function generarPDF(kind, id) {
   txt('Nº ' + (p.numero || ''), R, 27, {align: 'right'});
   txt('Fecha: ' + fmtFecha(p.fecha), R, 33, {align: 'right'});
 
-  // Cliente
-  y = Math.max(y, 40) + 14;
-  d.setFont('helvetica', 'bold'); txt('Cliente', L, y); d.setFont('helvetica', 'normal');
-  [c.nombre, c.cif && 'CIF ' + c.cif, c.direccion, [c.cp, c.poblacion].filter(Boolean).join(' '), c.telefono, c.email, c.contacto && 'Contacto: ' + c.contacto]
-    .filter(Boolean).forEach(t => { y += 5; txt(t, L, y); });
+  // Cliente, en un recuadro y con etiquetas
+  y = Math.max(y, 40) + 10;
+  const datosCli = [['NIF/CIF', c.cif], ['Dirección', c.direccion], ['Localidad', [c.cp, c.poblacion, c.provincia && '(' + c.provincia + ')'].filter(Boolean).join(' ')],
+    ['Teléfono', c.telefono], ['Correo', c.email], ['Contacto', c.contacto]].filter(([, x]) => x);
+  const altoCli = 15 + datosCli.length * 5;
+  d.setDrawColor(200); d.setFillColor(246, 248, 244); d.roundedRect(L, y, R - L, altoCli, 2, 2, 'FD');
+  d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...VERDE); txt('CLIENTE', L + 4, y + 5);
+  d.setFontSize(11); d.setTextColor(30, 30, 30); txt(c.nombre || '(sin cliente)', L + 4, y + 10.5);
+  d.setFontSize(9);
+  datosCli.forEach(([k, x], i) => {
+    d.setFont('helvetica', 'bold'); d.setTextColor(90, 90, 90); txt(k + ':', L + 4, y + 15.5 + i * 5);
+    d.setFont('helvetica', 'normal'); d.setTextColor(30, 30, 30); txt(d.splitTextToSize(String(x), R - L - 34)[0], L + 26, y + 15.5 + i * 5);
+  });
+  d.setTextColor(60, 60, 60);
+  y += altoCli + 2;
 
   // Líneas: el concepto se parte en varias líneas si es largo
   y += 12;
