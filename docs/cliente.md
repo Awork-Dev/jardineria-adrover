@@ -40,7 +40,7 @@
 | Worker de la web | `hall` | — |
 | Worker de la gestión | `gestionadrover` | — |
 | KV de la web | `hall-datos` (binding `DATOS`) | `984960ce65f5450e81f433edb5354799` |
-| Base D1 de la gestión | `jardineria-adrover-gestion` (binding `DB`) | `e74eb7e7-c0c6-41d0-933f-a6e5772d270e` |
+| Base D1 de la gestión (jurisdicción UE) | `jardineria-adrover-gestion-eu` (binding `DB`) | `09425f2b-e6b6-40b6-9d4b-bd433237a19a` |
 | KV de copias de la gestión | `gestion-copias` (binding `COPIAS`) | `c74f881c6f0d429689e3d576bc3734cd` |
 | Worker de la app del equipo | `equipo` | — |
 | Tabla de intentos de acceso | `intentos` en la base D1 | bloquea 15 min tras 10 claves o PIN incorrectos |
@@ -51,6 +51,12 @@
 | Secreto | `CLAVE` en `gestionadrover` | solo en Cloudflare |
 
 Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`.
+
+**Dónde están los datos:** la base D1 tiene jurisdicción UE (los datos se guardan y procesan solo en la
+Unión Europea). Se movió el 22-10-2026 desde una base en EE. UU. (`jardineria-adrover-gestion`) con la
+tarea `.github/workflows/mover-base-europa.yml`; la antigua se conserva unos días como copia y después se
+borra. Los KV (fotos del equipo y copias nocturnas) son globales de Cloudflare: para tenerlos también solo en
+la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con una tarjeta).
 
 ## Copias de seguridad
 

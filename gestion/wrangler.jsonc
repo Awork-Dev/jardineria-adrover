@@ -14,5 +14,5 @@
     // Fotos de tickets y del trabajo que envía el equipo desde la app.
     { "binding": "FOTOS", "id": "01cf68b53236438f96b5fa6c3a0607c3" }
   ],
-  "d1_databases": [{ "binding": "DB", "database_name": "jardineria-adrover-gestion", "database_id": "e74eb7e7-c0c6-41d0-933f-a6e5772d270e" }]
+  "d1_databases": [{ "binding": "DB", "database_name": "jardineria-adrover-gestion-eu", "database_id": "09425f2b-e6b6-40b6-9d4b-bd433237a19a" }]
 }
