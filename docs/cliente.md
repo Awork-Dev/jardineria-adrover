@@ -16,7 +16,7 @@
 2. **Vigilante de noticias:** cada 3 horas busca noticias de jardinería y plantas y las guarda
    para la sección de noticias.
 3. **Gestión interna** con clave: clientes, proveedores, presupuestos (`P-AAAA-NNN`) y notas (`N-AAAA-NNN`)
-   con IVA del 21 % y PDF, partes de trabajo y resumen por meses. Una nota se puede crear desde un presupuesto
+   con IVA a elegir (21, 10, 4 o 0 %) y PDF, partes de trabajo y resumen por meses. Una nota se puede crear desde un presupuesto
    con un botón; su PDF lleva el título «NOTA» y la frase «Este documento no es una factura».
    Para guardar una nota, el cliente debe tener NIF/CIF, dirección, código postal y población. Cada presupuesto
    y nota guarda una copia de los datos del cliente de ese momento, así el PDF no cambia si luego se edita la ficha.

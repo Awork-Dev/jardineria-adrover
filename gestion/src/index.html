@@ -202,7 +202,9 @@ const eur = n => num(n).toLocaleString('es-ES', {style:'currency', currency:'EUR
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const fmtFecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', {day:'numeric', month:'short', year:'numeric'}) : '';
-const IVA = 0.21;
+// Tipos de IVA que se pueden elegir en cada documento; los antiguos, sin tipo guardado, son del 21 %.
+const IVAS = [21, 10, 4, 0];
+const ivaDe = p => p.iva ?? 21;
 // Presupuestos y notas funcionan igual; cambian el número, los estados y el título del PDF.
 // La nota es un documento interno, no una factura (las facturas requieren VERI*FACTU).
 const DOCS = {
@@ -216,9 +218,9 @@ const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, aj
 const COLS = Object.keys(S);
 let db = null, loaded = 0, view = 'resumen', lastView = '', estadoF = 'todos', q = '', sheetSave = null, sheetDel = null;
 
-const totalsOf = lines => {
+const totalsOf = (lines, iva = 21) => {
   const sub = (lines || []).reduce((a, l) => a + num(l.cantidad) * num(l.precio), 0);
-  return {sub, iva: sub * IVA, total: sub * (1 + IVA)};
+  return {sub, iva: sub * iva / 100, total: sub * (1 + iva / 100)};
 };
 const clienteNombre = id => (S.clientes[id] && S.clientes[id].nombre) || '(sin cliente)';
 const byNombre = (a, b) => (a[1].nombre || '').localeCompare(b[1].nombre || '', 'es');
@@ -304,13 +306,14 @@ function lineRow(l = {}) {
   return `<div class="line-r"><input name="lc" value="${esc(l.concepto)}" placeholder="Concepto" aria-label="Concepto"><input name="lq" type="number" min="0" step="0.01" value="${l.cantidad ?? 1}" aria-label="Cantidad"><input name="lp" type="number" min="0" step="0.01" value="${l.precio ?? 0}" aria-label="Precio sin IVA"><button type="button" class="icon" data-act="rmline" aria-label="Quitar línea">×</button></div>`;
 }
 function updateTotals(form) {
-  const t = totalsOf(linesFrom(new FormData(form)));
-  $('#totals', form).innerHTML = `<div><span>Base imponible</span><b>${eur(t.sub)}</b></div><div><span>IVA 21 %</span><b>${eur(t.iva)}</b></div><div class="grand"><span>Total</span><b>${eur(t.total)}</b></div>`;
+  const fd = new FormData(form), pct = Number(fd.get('iva') ?? 21);
+  const t = totalsOf(linesFrom(fd), pct);
+  $('#totals', form).innerHTML = `<div><span>Base imponible</span><b>${eur(t.sub)}</b></div><div><span>IVA ${pct} %</span><b>${eur(t.iva)}</b></div><div class="grand"><span>Total</span><b>${eur(t.total)}</b></div>`;
 }
 // «base» rellena un documento nuevo con las líneas de otro (Duplicar, o crear una nota desde un presupuesto).
 function docSheet(kind, id, base) {
   const K = DOCS[kind];
-  const v = id ? S[kind][id] || {} : {fecha: today(), estado: K.inicial, ...(base ? {clienteId: base.clienteId, lineas: base.lineas, notas: base.notas, origen: base.origen} : {})};
+  const v = id ? S[kind][id] || {} : {fecha: today(), estado: K.inicial, ...(base ? {clienteId: base.clienteId, lineas: base.lineas, notas: base.notas, origen: base.origen, iva: base.iva} : {})};
   const ls = v.lineas && v.lineas.length ? v.lineas : [{concepto:'', cantidad:1, precio:0}];
   const botones = id ? `<div class="actions" style="margin:0">
       <button type="button" class="btn small" data-act="pdf" data-k="${kind}" data-id="${esc(id)}">Descargar PDF</button>
@@ -320,6 +323,7 @@ function docSheet(kind, id, base) {
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
       ${fld('estado', 'Estado', {options:Object.entries(K.estados), value:v.estado || K.inicial})}
+      ${fld('iva', 'IVA', {options:IVAS.map(x => [x, x + ' %']), value:ivaDe(v)})}
     </div>
     <div class="lines">
       <div class="lhead"><span>Concepto</span><span>Cantidad</span><span>Precio sin IVA</span><span></span></div>
@@ -344,7 +348,7 @@ function docSheet(kind, id, base) {
     const cliente = Object.fromEntries(['nombre', 'cif', 'direccion', 'cp', 'poblacion', 'provincia', 'telefono', 'email', 'contacto'].map(k => [k, String(cli[k] || '').trim()]));
     await put(kind, id || uid(K.pref.toLowerCase()), {
       numero: v.numero || nextNumero(kind, fecha), clienteId: fd.get('clienteId'), cliente, fecha,
-      estado: fd.get('estado'), lineas, notas: String(fd.get('notas') || '').trim(), ...(v.origen ? {origen: v.origen} : {})
+      estado: fd.get('estado'), iva: Number(fd.get('iva')), lineas, notas: String(fd.get('notas') || '').trim(), ...(v.origen ? {origen: v.origen} : {})
     });
   }, id ? () => del(kind, id) : null);
   updateTotals($('#sheet-form'));
@@ -384,7 +388,7 @@ function empresaSheet() {
 /* ---------- Vistas ---------- */
 function vResumen() {
   const P = Object.values(S.presupuestos);
-  const tot = p => totalsOf(p.lineas).total;
+  const tot = p => totalsOf(p.lineas, ivaDe(p)).total;
   const acept = P.filter(p => p.estado === 'aceptado');
   const pend = P.filter(p => p.estado === 'enviado');
   const porCobrar = Object.values(S.notas).filter(n => n.estado === 'pendiente');
@@ -475,13 +479,13 @@ function listaDocs(kind) {
   if (!list.length) return '<div class="empty">' + (t ? 'Ninguna coincidencia.' : 'No hay ' + K.Varios.toLowerCase() + ' en este estado.') + '</div>';
   return `<div class="rows">${list.map(([id, p]) => `<button class="row" data-act="edit-doc" data-k="${kind}" data-id="${esc(id)}">
         <div><b>${esc(p.numero || 'Sin número')} · ${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}</span></div>
-        <div class="rowr"><span class="pill ${esc(p.estado)}">${esc(K.estados[p.estado] || '')}</span><b class="amt">${eur(totalsOf(p.lineas).total)}</b></div>
+        <div class="rowr"><span class="pill ${esc(p.estado)}">${esc(K.estados[p.estado] || '')}</span><b class="amt">${eur(totalsOf(p.lineas, ivaDe(p)).total)}</b></div>
       </button>`).join('')}</div>`;
 }
 function vDocs(kind) {
   const K = DOCS[kind];
   const chips = ['todos', ...Object.keys(K.estados)].map(e => `<button class="chip${estadoF === e ? ' on' : ''}" data-act="filter" data-v="${e}">${e === 'todos' ? 'Todos' : K.estados[e]}</button>`).join('');
-  return `<header class="pagehead"><div><h1>${K.Varios}</h1><p class="sub">${kind === 'notas' ? 'Notas de trabajos y cobros (no son facturas) · ' : ''}Importes con IVA del 21 %</p></div>
+  return `<header class="pagehead"><div><h1>${K.Varios}</h1><p class="sub">${kind === 'notas' ? 'Notas de trabajos y cobros (no son facturas) · ' : ''}Importes con IVA incluido</p></div>
     <button class="btn primary" data-act="new-doc" data-k="${kind}">+ Nuevo</button></header>
     <input id="q" class="search" type="search" placeholder="Buscar por número, cliente o concepto" value="${esc(q)}" aria-label="Buscar ${K.Varios.toLowerCase()}">
     <div class="chips">${chips}</div><div id="list">${listaDocs(kind)}</div>`;
@@ -818,11 +822,11 @@ function generarPDF(kind, id) {
   });
 
   // Totales
-  const t = totalsOf(p.lineas);
+  const t = totalsOf(p.lineas, ivaDe(p));
   sitio(26);
   d.setDrawColor(180); d.line(128, y + 3, R, y + 3);
   y += 9; txt('Base imponible', 130, y); txt(eurPDF(t.sub), R, y, {align: 'right'});
-  y += 6; txt('IVA 21 %', 130, y); txt(eurPDF(t.iva), R, y, {align: 'right'});
+  y += 6; txt('IVA ' + ivaDe(p) + ' %', 130, y); txt(eurPDF(t.iva), R, y, {align: 'right'});
   y += 7; d.setFont('helvetica', 'bold'); d.setFontSize(11); d.setTextColor(...VERDE);
   txt('Total', 130, y); txt(eurPDF(t.total), R, y, {align: 'right'});
   d.setTextColor(60, 60, 60);
