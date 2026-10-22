@@ -27,7 +27,23 @@ async function igual(a, b) {
 }
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), {status, headers: {'content-type': 'application/json;charset=utf-8', 'cache-control': 'no-store'}});
 
+// ---------- Copias de seguridad ----------
+const DIAS_COPIA = 60;
+async function todosLosDatos(env) {
+  const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs').all();
+  const out = {};
+  for (const r of results) (out[r.coleccion] ||= {})[r.id] = JSON.parse(r.data);
+  return out;
+}
+async function hacerCopia(env) {
+  const fecha = new Date().toISOString().slice(0, 10);
+  await env.COPIAS.put('copia:' + fecha, JSON.stringify(await todosLosDatos(env)), {expirationTtl: DIAS_COPIA * 86400});
+  return fecha;
+}
+
 export default {
+  async scheduled(event, env, ctx) { ctx.waitUntil(hacerCopia(env)); },
+
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === '/' || url.pathname === '/index.html') {
@@ -43,11 +59,18 @@ export default {
       return json({error: 'clave'}, 401);
     }
 
-    if (url.pathname === '/api/datos' && req.method === 'GET') {
-      const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs').all();
-      const out = {};
-      for (const r of results) (out[r.coleccion] ||= {})[r.id] = JSON.parse(r.data);
-      return json(out);
+    if (url.pathname === '/api/datos' && req.method === 'GET') return json(await todosLosDatos(env));
+
+    // Lista de copias automáticas y descarga de una de ellas.
+    if (url.pathname === '/api/copias' && req.method === 'GET') {
+      const {keys} = await env.COPIAS.list({prefix: 'copia:'});
+      return json(keys.map(k => k.name.slice(6)).sort().reverse());
+    }
+    if (url.pathname === '/api/copias' && req.method === 'POST') return json({fecha: await hacerCopia(env)});
+    const c = url.pathname.match(/^\/api\/copias\/(\d{4}-\d{2}-\d{2})$/);
+    if (c && req.method === 'GET') {
+      const v = await env.COPIAS.get('copia:' + c[1]);
+      return v ? new Response(v, {headers: {'content-type': 'application/json;charset=utf-8', 'cache-control': 'no-store'}}) : json({error: 'no existe'}, 404);
     }
 
     const m = url.pathname.match(/^\/api\/doc\/([^/]+)\/([^/]+)$/);

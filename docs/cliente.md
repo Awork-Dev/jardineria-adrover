@@ -29,11 +29,23 @@
 | Worker de la gestión | `gestionadrover` | — |
 | KV de la web | `hall-datos` (binding `DATOS`) | `984960ce65f5450e81f433edb5354799` |
 | Base D1 de la gestión | `jardineria-adrover-gestion` (binding `DB`) | `e74eb7e7-c0c6-41d0-933f-a6e5772d270e` |
+| KV de copias de la gestión | `gestion-copias` (binding `COPIAS`) | `c74f881c6f0d429689e3d576bc3734cd` |
+| Tabla de intentos de acceso | `intentos` en la base D1 | bloquea 15 min tras 10 claves incorrectas |
 | Secreto | `CLAVE` en `gestionadrover` | solo en Cloudflare |
 
 Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`.
 
 ## Copias de seguridad
 
-Los datos de la gestión viven en la base D1. Desde la propia gestión, «Guardar copia» descarga un JSON
-con todo; «Cargar copia» lo vuelve a subir.
+- **Automáticas:** cada noche (03:15 UTC) el Worker `gestionadrover` guarda una copia de todos los datos
+  en el KV `gestion-copias`. Se conservan 60 días.
+- **Desde la gestión:** «Copias de seguridad» muestra las copias por fecha para descargarlas o recuperarlas
+  (recuperar vuelve a poner lo de ese día y mantiene lo creado después). «Hacer copia ahora» crea una al momento.
+- **Manuales:** «Descargar copia» baja un JSON con todo; «Cargar copia» lo vuelve a subir.
+- Además, Cloudflare guarda el historial de la base D1 de los últimos 30 días (Time Travel).
+
+## Decisiones
+
+- **Facturas:** la gestión hace presupuestos, no facturas. En España, los programas de facturación deben
+  cumplir el reglamento VERI*FACTU (registro encadenado y envío a Hacienda). Para facturar conviene usar un
+  programa homologado y, si hace falta, importar los presupuestos aceptados.

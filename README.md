@@ -23,10 +23,10 @@ web/
   src/legal.js          Aviso legal, privacidad y cookies (datos del titular)
   src/noticias.js       Vigilante de noticias (feeds → KV)
 gestion/
-  wrangler.jsonc        Worker «gestionadrover»: D1 DB
+  wrangler.jsonc        Worker «gestionadrover»: D1 DB, KV COPIAS y copia cada noche
   src/worker.js         Sirve la página y la API /api/* protegida con la clave
   src/index.html        La aplicación de gestión (incluye el PDF de presupuestos)
-  schema.sql            Tabla «docs» de la base D1
+  schema.sql            Tablas de la base D1: «docs» (datos) e «intentos» (accesos fallidos)
 compartido/
   iconos/               Iconos de la empresa (PNG e ICO) y el logo en SVG
   iconos.js             Sirve los iconos y el manifiesto de la web app
