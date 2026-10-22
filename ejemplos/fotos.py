@@ -5,9 +5,10 @@ import json, sys, os, urllib.request, datetime, zoneinfo
 DIR = os.path.join(os.path.dirname(__file__), 'imagenes')
 BASE = sys.argv[1]
 hoy = datetime.datetime.now(zoneinfo.ZoneInfo('Europe/Madrid')).date()
+# Cloudflare bloquea la firma por defecto de Python (Python-urllib): se envía otra.
 def pedir(ruta, cuerpo=None, token=None, tipo='application/json'):
     datos = cuerpo if isinstance(cuerpo, bytes) else (json.dumps(cuerpo).encode() if cuerpo is not None else None)
-    r = urllib.request.Request(BASE + ruta, data=datos, method='POST' if datos is not None else 'GET', headers={'content-type': tipo, **({'authorization': 'Bearer ' + token} if token else {})})
+    r = urllib.request.Request(BASE + ruta, data=datos, method='POST' if datos is not None else 'GET', headers={'content-type': tipo, 'user-agent': 'Mozilla/5.0 (compatible; AdroverEjemplos/1.0)', **({'authorization': 'Bearer ' + token} if token else {})})
     with urllib.request.urlopen(r) as x: return json.loads(x.read() or b'{}')
 def entrar(pin): return pedir('/api/entrar', {'pin': pin})['token']
 def foto(token, nombre, id):
