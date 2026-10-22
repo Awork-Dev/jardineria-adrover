@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Gestión Jardinería Adrover</title>
-<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#1f3d2b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gestión">
+<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#b8862f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gestión">
 <style>
 /* Paleta: verde de jardín con arena. Maqueta: barra lateral en escritorio, barra inferior en móvil. */
 :root{
@@ -74,6 +74,7 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 @media (max-width:980px){.split{grid-template-columns:1fr}}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
 .panel h2{margin-bottom:12px}
+.panel a{color:var(--brand)}
 .panel svg{width:100%;height:auto;display:block}
 .bar{fill:var(--brand)}
 .axis{stroke:var(--line);stroke-width:1.5}
@@ -143,7 +144,9 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
     padding:8px max(12px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));flex-direction:row;gap:0;z-index:10}
   .brand{display:none}
   nav{flex-direction:row;width:100%;justify-content:space-around;gap:2px}
-  nav button{font-size:.8rem;padding:8px 6px;text-align:center;flex:1}
+  nav button{font-size:.74rem;padding:8px 2px;text-align:center;flex:1 1 0;min-width:0}
+  /* En móviles estrechos la barra se desliza de lado para que quepan las siete secciones. */
+  @media (max-width:380px){nav{overflow-x:auto;justify-content:flex-start;scrollbar-width:none}nav::-webkit-scrollbar{display:none}nav button{flex:0 0 auto;padding:8px 8px}}
   main{padding-bottom:110px}
   .split{gap:14px}
 }
@@ -163,6 +166,7 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
       <button data-act="nav" data-view="presupuestos"><span class="largo">Presupuestos</span><span class="corto" aria-hidden="true">Presup.</span></button>
       <button data-act="nav" data-view="notas">Notas</button>
       <button data-act="nav" data-view="partes">Partes</button>
+      <button data-act="nav" data-view="equipo">Equipo</button>
     </nav>
     <div class="backup">
       <button class="btn small" data-act="copias">Copias de seguridad</button>
@@ -214,7 +218,8 @@ const DOCS = {
     estados: {pendiente: 'Pendiente de cobro', cobrada: 'Cobrada', anulada: 'Anulada'},
     aviso: 'Este documento no es una factura.'},
 };
-const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}};
+const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}, operarios:{}, fichajes:{}};
+const APP_EQUIPO = 'https://equipo.jardineriaadrover.workers.dev';
 const COLS = Object.keys(S);
 let db = null, loaded = 0, view = 'resumen', lastView = '', estadoF = 'todos', q = '', sheetSave = null, sheetDel = null;
 
@@ -355,7 +360,13 @@ function docSheet(kind, id, base) {
 }
 function parteSheet(id) {
   const v = id ? S.partes[id] || {} : {fecha: today(), horas: 1};
-  const html = `<div class="grid2">
+  const deApp = v.origen === 'equipo';
+  const info = deApp ? `<div class="empresa" style="margin:0">
+      <span class="meta">Enviado desde la app del equipo por ${esc(v.autor || '')} · ${esc(v.inicio)}–${esc(v.fin)} (${num(v.duracion).toLocaleString('es-ES')} h × ${(v.operarios || []).length} pers.)</span>
+      ${(v.tareas || []).length ? `<span class="line"><b>Tareas:</b> ${esc(v.tareas.join(', '))}</span>` : ''}
+      ${v.incidencias ? `<span class="line" style="color:var(--pend-ink);background:var(--pend-bg);padding:8px 10px;border-radius:10px"><b>Aviso para la oficina:</b> ${esc(v.incidencias)}</span>` : ''}
+    </div>` : '';
+  const html = `${info}<div class="grid2">
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId})}
       ${fld('operario', 'Operario', {value:v.operario})}
@@ -364,7 +375,9 @@ function parteSheet(id) {
     </div>`;
   openSheet(id ? 'Editar parte' : 'Nuevo parte de trabajo', html, async fd => {
     if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
+    const {id: _, ...antes} = v;
     await put('partes', id || uid('t'), {
+      ...antes,
       fecha: fd.get('fecha') || today(), clienteId: fd.get('clienteId'),
       operario: String(fd.get('operario') || '').trim(), horas: num(fd.get('horas')),
       descripcion: String(fd.get('descripcion') || '').trim()
@@ -496,17 +509,114 @@ function vPartes() {
   const h = all.reduce((a, [, p]) => a + num(p.horas), 0);
   const body = !all.length ? empty('Aún no hay partes de trabajo.', 'Registra aquí las horas y los trabajos hechos en cada cliente.')
     : `<div class="rows">${all.map(([id, p]) => `<button class="row" data-act="edit-parte" data-id="${esc(id)}">
-        <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc(p.descripcion || '')}</span></div>
+        <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}${p.inicio ? ' · ' + esc(p.inicio) + '–' + esc(p.fin) : ''} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc([(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join(' · '))}</span>${p.incidencias ? `<span class="pill enviado" style="align-self:flex-start;margin-top:4px">Aviso: ${esc(p.incidencias.slice(0, 60))}</span>` : ''}</div>
         <div class="rowr"><b class="amt">${num(p.horas).toLocaleString('es-ES')} h</b></div>
       </button>`).join('')}</div>`;
   return `<header class="pagehead"><div><h1>Partes de trabajo</h1><p class="sub">${num(h).toLocaleString('es-ES')} h registradas en ${all.length} partes</p></div>
     <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${body}`;
 }
 
-const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), proveedores: () => vContactos('proveedores'), presupuestos: () => vDocs('presupuestos'), notas: () => vDocs('notas'), partes: vPartes};
+/* ---------- Equipo: operarios con su PIN y registro de jornada ---------- */
+const mesActual = () => today().slice(0, 7);
+let mesJ = mesActual(), opJ = '';
+const dos = n => String(n).padStart(2, '0');
+const diaDe = ts => { const d = new Date(ts); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
+const horaDe = ts => new Date(ts).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+const hm = ms => { const m = Math.round(ms / 60e3); return Math.floor(m / 60) + ' h ' + dos(m % 60) + ' min'; };
+// Días del mes con sus tramos entrada → salida para un operario.
+function registro(opId, mes) {
+  const fs = Object.values(S.fichajes).filter(f => f.operarioId === opId && diaDe(f.ts).startsWith(mes)).sort((a, b) => a.ts - b.ts);
+  const dias = {};
+  for (const f of fs) (dias[diaDe(f.ts)] ||= []).push(f);
+  return Object.entries(dias).sort().map(([dia, lista]) => {
+    const tramos = []; let ab = null, raro = false;
+    for (const f of lista) {
+      if (f.tipo === 'entrada') { if (ab) { raro = true; tramos.push([ab, null]); } ab = f; }
+      else if (ab) { tramos.push([ab, f]); ab = null; } else { raro = true; tramos.push([null, f]); }
+    }
+    if (ab) { tramos.push([ab, null]); if (dia !== today()) raro = true; }
+    const ms = tramos.reduce((a, [e, s]) => a + (e && s ? s.ts - e.ts : 0), 0);
+    return {dia, tramos, ms, raro, sinConexion: lista.some(f => f.sinConexion)};
+  });
+}
+function pinLibre(excepto) {
+  const usados = new Set(Object.entries(S.operarios).filter(([id]) => id !== excepto).map(([, o]) => o.pin));
+  for (let i = 0; i < 200; i++) { const p = String(Math.floor(1000 + Math.random() * 9000)); if (!usados.has(p)) return p; }
+  return '';
+}
+function operarioSheet(id) {
+  const v = id ? S.operarios[id] || {} : {rol: 'operario', activo: true, pin: pinLibre()};
+  openSheet(id ? 'Editar operario' : 'Nuevo operario', `<div class="grid2">
+      ${fld('nombre', 'Nombre', {req:1, value:v.nombre, wide:1})}
+      ${fld('rol', 'Puesto', {options:[['operario', 'Operario'], ['jefe', 'Jefe de cuadrilla']], value:v.rol})}
+      ${fld('activo', 'Acceso a la app', {options:[['si', 'Activo'], ['no', 'De baja']], value:v.activo === false ? 'no' : 'si'})}
+      ${fld('pin', 'PIN (4 cifras)', {value:v.pin})}
+      <p class="meta wide" style="margin:0">Cambiar el PIN cierra la sesión en su móvil (útil si lo pierde). «De baja» le quita el acceso; sus fichajes y partes se conservan.</p>
+    </div>`, async fd => {
+    const d = readObj(fd);
+    if (!d.nombre) throw new Error('El nombre es obligatorio.');
+    if (!/^\d{4}$/.test(d.pin)) throw new Error('El PIN debe tener 4 cifras.');
+    if (Object.entries(S.operarios).some(([k, o]) => k !== id && o.pin === d.pin)) throw new Error('Ese PIN ya lo usa otra persona.');
+    await put('operarios', id || uid('o'), {nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin});
+  }, null);
+}
+function vEquipo() {
+  const ops = Object.entries(S.operarios).sort(byNombre);
+  if (!opJ || !S.operarios[opJ]) opJ = ops.length ? ops[0][0] : '';
+  const lista = ops.length ? `<div class="cards">${ops.map(([id, o]) => `<button class="card" data-act="edit-operario" data-id="${esc(id)}">
+      <b>${esc(o.nombre)}</b><span class="meta">${o.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario'}${o.activo === false ? ' · De baja' : ''}</span>
+      <span class="line">PIN: <b style="font-family:inherit;letter-spacing:.2em">${esc(o.pin)}</b></span></button>`).join('')}</div>`
+    : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.');
+  const reg = opJ ? registro(opJ, mesJ) : [];
+  const total = reg.reduce((a, d) => a + d.ms, 0);
+  const tabla = !opJ ? '' : reg.length ? `<div class="rows">${reg.map(d => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(d.dia))}</b>
+      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) : '¿?') + ' – ' + (s ? horaDe(s.ts) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
+      <div class="rowr"><b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
+    : '<div class="empty">No hay fichajes en este mes.</div>';
+  return `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, PIN de acceso y registro de jornada</p></div>
+    <button class="btn primary" data-act="new-operario">+ Nuevo</button></header>
+    <section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
+      · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>
+    <section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Registro de jornada</h2>
+      ${opJ ? `<button class="btn small" data-act="pdf-jornada">Descargar PDF</button>` : ''}</div>
+      ${ops.length ? `<div class="grid2" style="margin-bottom:14px">
+        <label class="fld"><span>Persona</span><select id="op-j">${ops.map(([id, o]) => `<option value="${esc(id)}"${id === opJ ? ' selected' : ''}>${esc(o.nombre)}</option>`).join('')}</select></label>
+        <label class="fld"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label></div>
+        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}</p>${tabla}` : ''}
+    </section>`;
+}
+function pdfJornada() {
+  const J = window.jspdf && window.jspdf.jsPDF, o = S.operarios[opJ];
+  if (!J || !o) return toast('No se pudo generar el PDF.', true);
+  const e = S.ajustes.empresa || DEFAULT_EMPRESA, reg = registro(opJ, mesJ), d = new J({unit: 'mm', format: 'a4'});
+  const L = 18, R = 192; let y = 20;
+  const nombreMes = new Date(mesJ + '-15').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'});
+  d.setFont('helvetica', 'bold'); d.setFontSize(14); d.text('Registro de jornada', L, y);
+  d.setFont('helvetica', 'normal'); d.setFontSize(10);
+  y += 7; d.text('Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), L, y);
+  y += 5; d.text('Trabajador: ' + o.nombre, L, y);
+  y += 5; d.text('Mes: ' + nombreMes, L, y);
+  y += 10; d.setFont('helvetica', 'bold'); d.text('Día', L, y); d.text('Entrada – salida', 60, y); d.text('Horas', R, y, {align: 'right'});
+  d.setDrawColor(180); d.line(L, y + 2, R, y + 2); d.setFont('helvetica', 'normal');
+  for (const r of reg) {
+    const t = r.tramos.map(([a, b]) => (a ? horaDe(a.ts) : '¿?') + ' – ' + (b ? horaDe(b.ts) : '¿?')).join('   ');
+    const partes = d.splitTextToSize(t + (r.raro ? '  (falta un fichaje)' : ''), 100);
+    if (y + partes.length * 5 + 6 > 270) { d.addPage(); y = 20; }
+    y += 6; d.text(fmtFecha(r.dia), L, y); d.text(partes, 60, y); d.text(hm(r.ms), R, y, {align: 'right'});
+    y += (partes.length - 1) * 5;
+  }
+  y += 8; d.setFont('helvetica', 'bold'); d.text('Total del mes', 60, y); d.text(hm(reg.reduce((a, r) => a + r.ms, 0)), R, y, {align: 'right'});
+  if (y > 240) { d.addPage(); y = 20; }
+  y += 24; d.setFont('helvetica', 'normal'); d.text('Firma de la empresa', L, y); d.text('Firma del trabajador', 120, y);
+  d.save('jornada-' + o.nombre.replace(/\s+/g, '-').toLowerCase() + '-' + mesJ + '.pdf');
+}
+
+const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), proveedores: () => vContactos('proveedores'), presupuestos: () => vDocs('presupuestos'), notas: () => vDocs('notas'), partes: vPartes, equipo: vEquipo};
 
 function render() {
   document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
+  const activo = document.querySelector('nav button[aria-current="page"]');
+  if (activo && activo.scrollIntoView) activo.scrollIntoView({block: 'nearest', inline: 'nearest'});
   // Si solo cambian los datos y el usuario escribe en el buscador, se refresca la lista sin perder el foco.
   if (view === lastView && ['clientes', 'proveedores', 'presupuestos', 'notas'].includes(view) && $('#list')) {
     $('#list').innerHTML = DOCS[view] ? listaDocs(view) : listaContactos(view);
@@ -526,6 +636,9 @@ document.addEventListener('click', e => {
     case 'close': closeSheet(); break;
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
+    case 'new-operario': operarioSheet(null); break;
+    case 'edit-operario': operarioSheet(id); break;
+    case 'pdf-jornada': pdfJornada(); break;
     case 'copias': copiasSheet(); break;
     case 'copia-ahora': copiaAhora(); break;
     case 'copia-bajar': bajarCopia(el.dataset.f); break;
@@ -683,6 +796,8 @@ async function importarCopia(file) {
   } catch (e) { toast('El archivo no es una copia válida.', true); }
 }
 document.addEventListener('change', e => {
+  if (e.target.id === 'op-j') { opJ = e.target.value; lastView = ''; render(); return; }
+  if (e.target.id === 'mes-j') { mesJ = e.target.value || mesActual(); lastView = ''; render(); return; }
   if (e.target.matches('.imp') && e.target.files[0]) importarCopia(e.target.files[0]);
 });
 

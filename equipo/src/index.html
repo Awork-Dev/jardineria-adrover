@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Adrover Equipo</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#111111"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Equipo">
+<style>
+/* Lima y negro: botones grandes para usar con guantes y al sol. */
+:root{--bg:#111111;--panel:#1c1c1c;--panel2:#262626;--ink:#f4f4f0;--muted:#a3a39b;--line:#333333;--lima:#c6f432;--lima-ink:#111111;--rojo:#ff7a59;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+body{padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+main{max-width:560px;margin:0 auto}
+h1,h2{margin:0;font-weight:700;letter-spacing:-.01em}
+h1{font-size:1.5rem}h2{font-size:1.15rem}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--lima);outline-offset:2px}
+.btn{border:0;border-radius:16px;padding:16px 20px;font-weight:700;background:var(--panel2);color:var(--ink);width:100%}
+.btn.lima{background:var(--lima);color:var(--lima-ink)}
+.btn.borde{background:transparent;border:2px solid var(--line)}
+.btn.peq{width:auto;padding:10px 14px;border-radius:12px;font-size:.92rem}
+.btn:disabled{opacity:.5}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 14px}
+.top small{display:block;color:var(--muted);font-size:.85rem}
+.marca{display:flex;align-items:center;gap:12px}.marca img{width:42px;height:42px;border-radius:12px}
+.card{background:var(--panel);border-radius:22px;padding:20px;margin-bottom:14px}
+.card h2{margin-bottom:12px}
+.meta{color:var(--muted);font-size:.9rem}
+.aviso{background:#3a2f12;color:#ffd98a;border-radius:14px;padding:10px 14px;font-size:.9rem;margin-bottom:14px}
+/* Acceso con PIN */
+#acceso{min-height:90vh;display:flex;flex-direction:column;justify-content:center;gap:22px;text-align:center}
+#acceso img{width:84px;height:84px;border-radius:22px;margin:0 auto}
+.puntos{display:flex;justify-content:center;gap:16px;min-height:22px}
+.puntos i{width:18px;height:18px;border-radius:50%;border:2px solid var(--lima)}
+.puntos i.on{background:var(--lima)}
+.teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:330px;margin:0 auto;width:100%}
+.teclado button{border:0;border-radius:50%;aspect-ratio:1;font-size:1.7rem;font-weight:600;background:var(--panel2);color:var(--ink)}
+.teclado button:active{background:var(--lima);color:var(--lima-ink)}
+.teclado .vacio{visibility:hidden}
+#pin-error{color:var(--rojo);min-height:1.4em;margin:0}
+/* Fichaje */
+.estado{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;margin-bottom:6px}
+.estado i{width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.estado.dentro i{background:var(--lima);box-shadow:0 0 0 6px rgba(198,244,50,.18)}
+#fichar{font-size:1.35rem;padding:24px;border-radius:20px;margin-top:14px}
+.hoy{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.hoy span{background:var(--panel2);border-radius:999px;padding:5px 12px;font-size:.88rem}
+.hoy span.pend{outline:1.5px dashed var(--lima)}
+/* Horas */
+.total{font-size:2.2rem;font-weight:800;color:var(--lima);line-height:1}
+.dias{margin-top:14px;display:flex;flex-direction:column}
+.dias div{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:.95rem}
+.dias b{font-variant-numeric:tabular-nums}
+.dias .raro{color:#ffd98a}
+/* Partes */
+.parte{background:var(--panel2);border-radius:16px;padding:14px 16px;margin-top:10px;display:block;width:100%;text-align:left;border:0}
+.parte b{display:block}
+.parte .pend{color:var(--lima);font-size:.85rem}
+#hoja{position:fixed;inset:0;background:var(--bg);overflow:auto;z-index:20;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+#hoja[hidden]{display:none}
+.campo{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.campo>span{font-weight:700;font-size:.95rem}
+.campo input,.campo select,.campo textarea{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;width:100%;min-width:0}
+.campo textarea{resize:vertical}
+.fila{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.hora{display:flex;gap:8px}.hora input{flex:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{position:relative}
+.chips input{position:absolute;opacity:0;inset:0}
+.chips span{display:inline-block;padding:11px 15px;border-radius:999px;background:var(--panel2);border:2px solid var(--line);font-weight:600;font-size:.95rem}
+.chips input:checked+span{background:var(--lima);color:var(--lima-ink);border-color:var(--lima)}
+.chips input:focus-visible+span{outline:3px solid var(--lima);outline-offset:2px}
+.acciones{display:flex;gap:10px;margin-top:8px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--lima);color:var(--lima-ink);font-weight:700;padding:12px 18px;border-radius:999px;opacity:0;transition:.25s;pointer-events:none;z-index:30;max-width:calc(100% - 32px);text-align:center}
+#toast.show{opacity:1}#toast.mal{background:var(--rojo)}
+[hidden]{display:none!important}
+@media (prefers-reduced-motion:reduce){#toast{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <section id="acceso" hidden>
+    <img src="/icon-192.png" alt="">
+    <div><h1>Adrover Equipo</h1><p class="meta" style="margin:6px 0 0">Escribe tu PIN de 4 cifras</p></div>
+    <div class="puntos" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <p id="pin-error" role="alert"></p>
+    <div class="teclado" role="group" aria-label="Teclado del PIN">
+      <button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button>
+      <button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
+      <button data-n="7">7</button><button data-n="8">8</button><button data-n="9">9</button>
+      <button class="vacio" tabindex="-1" aria-hidden="true"></button><button data-n="0">0</button><button data-n="borrar" aria-label="Borrar">⌫</button>
+    </div>
+  </section>
+
+  <section id="app" hidden>
+    <header class="top">
+      <div class="marca"><img src="/icon-192.png" alt=""><div><h1 id="nombre"></h1><small id="rol"></small></div></div>
+      <button class="btn borde peq" id="salir">Salir</button>
+    </header>
+    <div id="cola" class="aviso" hidden></div>
+
+    <section class="card" aria-labelledby="t-fichaje">
+      <h2 id="t-fichaje">Jornada de hoy</h2>
+      <div class="estado" id="estado"><i></i><span></span></div>
+      <div class="meta" id="estado-sub"></div>
+      <button class="btn lima" id="fichar"></button>
+      <div class="hoy" id="hoy"></div>
+    </section>
+
+    <section class="card" id="partes-card" hidden aria-labelledby="t-partes">
+      <h2 id="t-partes">Partes de trabajo</h2>
+      <button class="btn lima" id="nuevo-parte">+ Nuevo parte</button>
+      <div id="partes"></div>
+    </section>
+
+    <section class="card" aria-labelledby="t-horas">
+      <h2 id="t-horas">Mis horas</h2>
+      <div class="total" id="total-mes"></div>
+      <div class="meta" id="mes-nombre"></div>
+      <div class="dias" id="dias"></div>
+    </section>
+  </section>
+</main>
+
+<form id="hoja" hidden autocomplete="off">
+  <header class="top"><h1 id="hoja-titulo">Nuevo parte</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
+  <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
+  <div class="fila">
+    <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
+    <span></span>
+  </div>
+  <div class="fila">
+    <div class="campo"><span>Empezamos</span><div class="hora"><input type="time" name="inicio" required aria-label="Hora de inicio"><button type="button" class="btn peq" data-ahora="inicio">Ahora</button></div></div>
+    <div class="campo"><span>Terminamos</span><div class="hora"><input type="time" name="fin" required aria-label="Hora de fin"><button type="button" class="btn peq" data-ahora="fin">Ahora</button></div></div>
+  </div>
+  <fieldset class="campo" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:700;margin-bottom:6px">Quién ha ido</legend><div class="chips" id="quien"></div></fieldset>
+  <fieldset class="campo" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:700;margin-bottom:6px">Qué se ha hecho</legend><div class="chips" id="tareas"></div></fieldset>
+  <label class="campo"><span>Detalles del trabajo</span><textarea name="descripcion" rows="3" placeholder="Opcional"></textarea></label>
+  <label class="campo"><span>Avisos para la oficina</span><textarea name="incidencias" rows="2" placeholder="Plagas, averías, el cliente pide algo…"></textarea></label>
+  <div class="acciones"><button class="btn lima">Guardar parte</button></div>
+</form>
+<div id="toast" role="status"></div>
+
+<script>
+(function () {
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const guardado = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
+const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+const dos = (n) => String(n).padStart(2, '0');
+const hoyISO = () => { const d = new Date(); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
+const diaDe = (ts) => { const d = new Date(ts); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
+const horaDe = (ts) => new Date(ts).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
+const horas = (ms) => { const m = Math.round(ms / 60e3); return Math.floor(m / 60) + ' h ' + dos(m % 60) + ' min'; };
+const fecha = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('es-ES', {weekday: 'short', day: 'numeric', month: 'short'});
+
+function toast(msg, mal) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (mal ? ' mal' : '');
+  clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = ''; }, 3000);
+}
+
+// ---------- Datos: lo último que se recibió del servidor y lo que falta por enviar ----------
+let token = guardado('token', '');
+let D = guardado('datos', null);          // respuesta de /api/inicio
+let cola = guardado('cola', []);          // envíos pendientes: [{ruta, cuerpo}]
+
+async function api(ruta, cuerpo) {
+  const r = await fetch(ruta, {method: cuerpo ? 'POST' : 'GET', headers: {'content-type': 'application/json', authorization: 'Bearer ' + token}, body: cuerpo ? JSON.stringify(cuerpo) : undefined});
+  if (r.status === 401) { cerrarSesion(false); throw new Error('sesion'); }
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) { const e = new Error(j.error || 'Error del servidor'); e.rechazo = r.status < 500; throw e; }
+  return j;
+}
+// Sin cobertura, todo se guarda en la cola y se envía en cuanto vuelve la conexión.
+let enviando = false;
+async function enviarCola() {
+  if (enviando || !cola.length || !token) return pintarCola();
+  enviando = true;
+  while (cola.length) {
+    try { await api(cola[0].ruta, cola[0].cuerpo); }
+    catch (e) {
+      if (e.message === 'sesion') break;
+      if (e.rechazo) { toast('No se pudo guardar: ' + e.message, true); }
+      else break; // sin conexión: se reintenta más tarde
+    }
+    cola.shift(); guardar('cola', cola);
+  }
+  enviando = false;
+  pintarCola();
+  if (!cola.length) actualizar();
+}
+function encolar(ruta, cuerpo) { cola.push({ruta, cuerpo}); guardar('cola', cola); enviarCola(); }
+function pintarCola() {
+  const n = cola.length;
+  $('#cola').hidden = !n;
+  $('#cola').textContent = n ? (n === 1 ? 'Hay 1 dato pendiente de enviar.' : 'Hay ' + n + ' datos pendientes de enviar.') + ' Se enviará solo cuando haya cobertura.' : '';
+}
+let cargando = null;
+function actualizar() {
+  if (!token) return Promise.resolve();
+  return cargando ||= api('/api/inicio').then((d) => { D = d; guardar('datos', D); pintar(); }).catch(() => {}).finally(() => { cargando = null; });
+}
+
+// ---------- Fichajes: los del servidor más los que aún están en la cola ----------
+function misFichajes() {
+  const pend = cola.filter((c) => c.ruta === '/api/fichar').map((c) => ({...c.cuerpo, pendiente: true}));
+  const vistos = new Set(pend.map((f) => f.id));
+  return [...((D && D.fichajes) || []).filter((f) => !vistos.has(f.id)), ...pend].sort((a, b) => a.ts - b.ts);
+}
+// Agrupa por día y suma los tramos entrada → salida. Un tramo abierto de hoy cuenta hasta ahora.
+function jornadas() {
+  const dias = {};
+  for (const f of misFichajes()) (dias[diaDe(f.ts)] ||= []).push(f);
+  return Object.entries(dias).map(([dia, fs]) => {
+    let ms = 0, abierta = null, raro = false;
+    for (const f of fs) {
+      if (f.tipo === 'entrada') { if (abierta) raro = true; abierta = f.ts; }
+      else if (abierta) { ms += f.ts - abierta; abierta = null; } else raro = true;
+    }
+    if (abierta) { if (dia === hoyISO()) ms += Date.now() - abierta; else raro = true; }
+    return {dia, fs, ms, abierta: !!abierta && dia === hoyISO(), raro};
+  }).sort((a, b) => b.dia.localeCompare(a.dia));
+}
+
+function pintar() {
+  if (!D) return;
+  $('#nombre').textContent = D.yo.nombre;
+  $('#rol').textContent = D.yo.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario';
+  const js = jornadas(), hoy = js.find((j) => j.dia === hoyISO());
+  const fsHoy = hoy ? hoy.fs : [], ultimo = fsHoy[fsHoy.length - 1];
+  const dentro = ultimo && ultimo.tipo === 'entrada';
+  $('#estado').className = 'estado' + (dentro ? ' dentro' : '');
+  $('#estado span').textContent = dentro ? 'Trabajando desde las ' + horaDe(ultimo.ts) : fsHoy.length ? 'Jornada parada' : 'Aún no has empezado';
+  $('#estado-sub').textContent = hoy ? 'Hoy llevas ' + horas(hoy.ms) : '';
+  $('#fichar').textContent = dentro ? 'Termino la jornada' : fsHoy.length ? 'Vuelvo al trabajo' : 'Empiezo la jornada';
+  $('#fichar').dataset.tipo = dentro ? 'salida' : 'entrada';
+  $('#hoy').innerHTML = fsHoy.map((f) => `<span class="${f.pendiente ? 'pend' : ''}">${f.tipo === 'entrada' ? 'Entrada' : 'Salida'} ${horaDe(f.ts)}</span>`).join('');
+
+  const mes = hoyISO().slice(0, 7), delMes = js.filter((j) => j.dia.startsWith(mes));
+  $('#total-mes').textContent = horas(delMes.reduce((a, j) => a + j.ms, 0));
+  $('#mes-nombre').textContent = 'Este mes · ' + delMes.length + (delMes.length === 1 ? ' día' : ' días');
+  $('#dias').innerHTML = js.slice(0, 31).map((j) => `<div class="${j.raro ? 'raro' : ''}"><span>${esc(fecha(j.dia))}${j.raro ? ' · falta un fichaje' : ''}</span><b>${horas(j.ms)}</b></div>`).join('') || '<p class="meta">Aún no hay fichajes.</p>';
+
+  const jefe = D.yo.rol === 'jefe';
+  $('#partes-card').hidden = !jefe;
+  if (jefe) {
+    const pend = cola.filter((c) => c.ruta === '/api/partes').map((c) => ({...c.cuerpo, pendiente: true}));
+    const ids = new Set(pend.map((p) => p.id));
+    const lista = [...pend, ...(D.partes || []).filter((p) => !ids.has(p.id))].sort((a, b) => (b.fecha + b.inicio).localeCompare(a.fecha + a.inicio));
+    const cli = Object.fromEntries((D.clientes || []).map((c) => [c.id, c.nombre]));
+    $('#partes').innerHTML = lista.length ? lista.map((p) => `<button class="parte" data-parte="${esc(p.id)}"><b>${esc(cli[p.clienteId] || 'Cliente')}</b>
+      <span class="meta">${esc(fecha(p.fecha))} · ${esc(p.inicio)}–${esc(p.fin)} · ${(p.operarios || []).length} pers.</span>${p.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</button>`).join('')
+      : '<p class="meta" style="margin:12px 0 0">Los partes de las últimas dos semanas aparecerán aquí.</p>';
+  }
+}
+
+// ---------- Fichar ----------
+$('#fichar').onclick = () => {
+  const tipo = $('#fichar').dataset.tipo;
+  encolar('/api/fichar', {id: uid(), tipo, ts: Date.now()});
+  pintar();
+  toast(tipo === 'entrada' ? 'Entrada fichada a las ' + horaDe(Date.now()) : 'Salida fichada a las ' + horaDe(Date.now()));
+};
+
+// ---------- Parte de trabajo ----------
+const hoja = $('#hoja');
+let editando = null;
+function abrirParte(p) {
+  editando = p ? p.id : uid();
+  const h = new Date(), ahora = dos(h.getHours()) + ':' + dos(h.getMinutes());
+  $('#hoja-titulo').textContent = p ? 'Editar parte' : 'Nuevo parte';
+  hoja.clienteId.innerHTML = '<option value="">Elige un cliente</option>' + (D.clientes || []).map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}${c.lugar ? ' · ' + esc(c.lugar) : ''}</option>`).join('');
+  hoja.clienteId.value = p ? p.clienteId : '';
+  hoja.fecha.value = p ? p.fecha : hoyISO();
+  hoja.inicio.value = p ? p.inicio : '';
+  hoja.fin.value = p ? p.fin : ahora;
+  const quien = p ? p.operarios : [D.yo.id];
+  $('#quien').innerHTML = (D.equipo || []).map((o) => `<label><input type="checkbox" name="operarios" value="${esc(o.id)}"${quien.includes(o.id) ? ' checked' : ''}><span>${esc(o.nombre)}</span></label>`).join('');
+  $('#tareas').innerHTML = (D.tareas || []).map((t) => `<label><input type="checkbox" name="tareas" value="${esc(t)}"${p && (p.tareas || []).includes(t) ? ' checked' : ''}><span>${esc(t)}</span></label>`).join('');
+  hoja.descripcion.value = p ? p.descripcion || '' : '';
+  hoja.incidencias.value = p ? p.incidencias || '' : '';
+  hoja.hidden = false; scrollTo(0, 0);
+}
+// Recién entrado, la lista de clientes puede no haber llegado aún: se espera a tenerla.
+$('#nuevo-parte').onclick = async () => {
+  if (!D.clientes) { toast('Cargando clientes…'); await actualizar(); }
+  if (!D.clientes) return toast('Sin conexión. La primera vez hace falta cobertura para cargar los clientes.', true);
+  abrirParte(null);
+};
+$('#partes').onclick = (e) => {
+  const b = e.target.closest('[data-parte]'); if (!b) return;
+  const id = b.dataset.parte;
+  const p = cola.map((c) => c.cuerpo).find((x) => x.id === id && x.clienteId !== undefined) || (D.partes || []).find((x) => x.id === id);
+  if (p) abrirParte(p);
+};
+hoja.addEventListener('click', (e) => {
+  if (e.target.closest('[data-cerrar]')) { hoja.hidden = true; return; }
+  const a = e.target.closest('[data-ahora]');
+  if (a) { const h = new Date(); hoja[a.dataset.ahora].value = dos(h.getHours()) + ':' + dos(h.getMinutes()); }
+});
+hoja.onsubmit = (e) => {
+  e.preventDefault();
+  const fd = new FormData(hoja), p = {
+    id: editando, clienteId: fd.get('clienteId'), fecha: fd.get('fecha'), inicio: fd.get('inicio'), fin: fd.get('fin'),
+    operarios: fd.getAll('operarios'), tareas: fd.getAll('tareas'),
+    descripcion: String(fd.get('descripcion') || '').trim(), incidencias: String(fd.get('incidencias') || '').trim(),
+  };
+  if (!p.clienteId) return toast('Elige un cliente.', true);
+  if (!p.inicio || !p.fin || p.fin <= p.inicio) return toast('Revisa las horas: el fin debe ser después del inicio.', true);
+  if (!p.operarios.length) return toast('Marca quién ha ido.', true);
+  // Si se edita un parte que aún no se había enviado, se sustituye en la cola.
+  cola = cola.filter((c) => !(c.ruta === '/api/partes' && c.cuerpo.id === p.id)); guardar('cola', cola);
+  encolar('/api/partes', p);
+  hoja.hidden = true; pintar(); toast('Parte guardado');
+};
+
+// ---------- Acceso con PIN ----------
+let pin = '';
+function pintarPin() { document.querySelectorAll('.puntos i').forEach((i, n) => i.classList.toggle('on', n < pin.length)); }
+document.querySelector('.teclado').onclick = async (e) => {
+  const b = e.target.closest('[data-n]'); if (!b) return;
+  $('#pin-error').textContent = '';
+  if (b.dataset.n === 'borrar') pin = pin.slice(0, -1); else if (pin.length < 4) pin += b.dataset.n;
+  pintarPin();
+  if (pin.length < 4) return;
+  try {
+    const r = await fetch('/api/entrar', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify({pin})});
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'No se pudo entrar.');
+    token = j.token; guardar('token', token);
+    // Lo pendiente de enviar solo se conserva si vuelve a entrar la misma persona.
+    if (guardado('colaDe', '') !== j.yo.id) { cola = []; guardar('cola', cola); }
+    guardar('colaDe', j.yo.id);
+    D = {yo: j.yo, fichajes: []}; guardar('datos', D);
+    mostrar(); actualizar();
+  } catch (err) {
+    $('#pin-error').textContent = err.message === 'Failed to fetch' ? 'Sin conexión. Para entrar la primera vez hace falta internet.' : err.message;
+  }
+  pin = ''; pintarPin();
+};
+// Si el servidor cierra la sesión (PIN cambiado), lo pendiente se guarda para enviarlo al volver a entrar.
+function cerrarSesion(borrarCola = true) {
+  token = ''; D = null;
+  if (borrarCola) cola = [];
+  ['token', 'datos', ...(borrarCola ? ['cola', 'colaDe'] : [])].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} });
+  mostrar();
+}
+$('#salir').onclick = () => {
+  if (cola.length && !confirm('Hay datos sin enviar. Si sales ahora se perderán. ¿Salir igualmente?')) return;
+  api('/api/salir', {}).catch(() => {}).finally(cerrarSesion);
+};
+function mostrar() {
+  $('#acceso').hidden = !!token; $('#app').hidden = !token;
+  if (token) { pintar(); pintarCola(); }
+}
+
+// ---------- Arranque ----------
+mostrar();
+enviarCola(); actualizar();
+addEventListener('online', enviarCola);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { enviarCola(); actualizar(); } });
+setInterval(() => { enviarCola(); if (token) pintar(); }, 60e3);
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>

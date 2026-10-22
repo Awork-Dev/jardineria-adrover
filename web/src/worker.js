@@ -7,6 +7,7 @@ import { T, G, CULT_G, HT } from './textos.js';
 import { PLANTAS_G, CAL_G, DOC_G, XERO_G, PLANTA_MES, PM_T } from './guia.js';
 import { TITULAR, LEGAL_LISTO, LEGAL, ACTUALIZADO } from './legal.js';
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
+import { ICONOS } from '../../compartido/iconos-web.js';
 
 const TODAS = new Set([FOTOS.hero, FOTOS.vivero, FOTOS.mant, FOTOS.poda, FOTOS.diseno, FOTOS.flor, ...FOTOS.galeria,
   "1ifQJNiTOw-VO1CCIOSpnTPiVg4vUtCYB", "1insih4dhc_okLA8toUKb1whvDuSzPc-q", "1Uj5v5HCLCmlNs7ugBB-54LO0MjsSEvvU",
@@ -552,7 +553,7 @@ export default {
     const url = new URL(req.url);
     if (url.protocol === "http:" && !/^(localhost|127\.0\.0\.1)/.test(url.hostname)) { url.protocol = "https:"; return Response.redirect(url.toString(), 301); }
     if (url.pathname === "/manifest.webmanifest") return manifiesto("Jardinería Adrover", "Adrover", "/");
-    const ico = icono(url.pathname); if (ico) return ico;
+    const ico = icono(url.pathname, ICONOS); if (ico) return ico;
     if (url.pathname === "/avisos") return avisos(url); if (url.pathname === "/api/noticias") return noticias(env, ctx);
     if (url.pathname === "/robots.txt") return new Response(`User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${url.origin}/sitemap.xml\n`, { headers: { "content-type": "text/plain; charset=utf-8" } });
     if (url.pathname === "/sitemap.xml") {

@@ -4,13 +4,16 @@
   "type": "module",
   "description": "Web y gestión de Jardinería Adrover (Zones Verdes S.L.), en Cloudflare Workers",
   "scripts": {
-    "comprobar": "npm run comprobar:web && npm run comprobar:gestion",
-    "comprobar:web": "cd web && wrangler deploy --dry-run --outdir ../.wrangler/web",
+    "comprobar": "npm run comprobar:web && npm run comprobar:gestion && npm run comprobar:equipo",
+    "comprobar:equipo": "cd equipo && wrangler deploy --dry-run --outdir ../.wrangler/equipo",
     "comprobar:gestion": "cd gestion && wrangler deploy --dry-run --outdir ../.wrangler/gestion",
-    "publicar:web": "cd web && wrangler deploy",
-    "publicar:gestion": "cd gestion && wrangler deploy",
+    "comprobar:web": "cd web && wrangler deploy --dry-run --outdir ../.wrangler/web",
+    "local:equipo": "cd equipo && wrangler dev --port 8789 --persist-to ../.wrangler/local",
+    "local:gestion": "cd gestion && wrangler dev --port 8788 --persist-to ../.wrangler/local",
     "local:web": "cd web && wrangler dev",
-    "local:gestion": "cd gestion && wrangler dev"
+    "publicar:equipo": "cd equipo && wrangler deploy",
+    "publicar:gestion": "cd gestion && wrangler deploy",
+    "publicar:web": "cd web && wrangler deploy"
   },
   "devDependencies": {
     "wrangler": "4.152.0"

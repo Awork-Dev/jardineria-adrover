@@ -9,6 +9,7 @@ on:
     paths:
       - "web/**"
       - "gestion/**"
+      - "equipo/**"
       - "compartido/**"
       - ".github/workflows/publicar.yml"
   workflow_dispatch:
@@ -23,6 +24,7 @@ jobs:
     outputs:
       web: ${{ steps.f.outputs.web }}
       gestion: ${{ steps.f.outputs.gestion }}
+      equipo: ${{ steps.f.outputs.equipo }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -30,11 +32,12 @@ jobs:
       - id: f
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "web=true" >> "$GITHUB_OUTPUT"; echo "gestion=true" >> "$GITHUB_OUTPUT"; exit 0
+            for x in web gestion equipo; do echo "$x=true" >> "$GITHUB_OUTPUT"; done; exit 0
           fi
-          c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || printf 'web/\ngestion/\n')
+          c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || printf 'web/\ngestion/\nequipo/\n')
           echo "$c" | grep -qE '^(web/|compartido/|\.github/)' && echo "web=true" >> "$GITHUB_OUTPUT" || true
           echo "$c" | grep -qE '^(gestion/|compartido/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
+          echo "$c" | grep -qE '^(equipo/|compartido/|\.github/)' && echo "equipo=true" >> "$GITHUB_OUTPUT" || true
 
   web:
     needs: cambios
@@ -61,5 +64,19 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: gestion
+          wranglerVersion: "4.152.0"
+          command: deploy
+
+  equipo:
+    needs: cambios
+    if: needs.cambios.outputs.equipo == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: equipo
           wranglerVersion: "4.152.0"
           command: deploy

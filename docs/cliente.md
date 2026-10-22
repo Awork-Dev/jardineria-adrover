@@ -20,9 +20,15 @@
    con un botón; su PDF lleva el título «NOTA» y la frase «Este documento no es una factura».
    Para guardar una nota, el cliente debe tener NIF/CIF, dirección, código postal y población. Cada presupuesto
    y nota guarda una copia de los datos del cliente de ese momento, así el PDF no cambia si luego se edita la ficha.
-4. **Página de accesos** para el cliente.
-5. **Web app:** la web y la gestión se pueden añadir a la pantalla de inicio del móvil (iPhone y Android)
-   con el icono de la empresa. En el iPhone se llaman «Adrover» y «Gestión».
+4. **App del equipo** (equipo.jardineriaadrover.workers.dev): cada operario entra con su PIN y ficha
+   entrada y salida (registro de jornada); los jefes de cuadrilla hacen además el parte de cada trabajo
+   (cliente, horas, quién ha ido, tareas, detalles y avisos para la oficina). Funciona sin cobertura.
+   En la gestión, la sección **Equipo** da de alta a los operarios con su PIN y muestra el registro de
+   jornada de cada uno por meses, con PDF para firmar. Los partes llegan a **Partes**.
+5. **Página de accesos** para el cliente.
+6. **Web app:** las tres se pueden añadir a la pantalla de inicio del móvil (iPhone y Android), cada una
+   con el logo en su color: la web en verde («Adrover»), la gestión en dorado («Gestión») y la app del
+   equipo en lima y negro («Equipo»).
 
 ## Recursos en Cloudflare
 
@@ -33,7 +39,9 @@
 | KV de la web | `hall-datos` (binding `DATOS`) | `984960ce65f5450e81f433edb5354799` |
 | Base D1 de la gestión | `jardineria-adrover-gestion` (binding `DB`) | `e74eb7e7-c0c6-41d0-933f-a6e5772d270e` |
 | KV de copias de la gestión | `gestion-copias` (binding `COPIAS`) | `c74f881c6f0d429689e3d576bc3734cd` |
-| Tabla de intentos de acceso | `intentos` en la base D1 | bloquea 15 min tras 10 claves incorrectas |
+| Worker de la app del equipo | `equipo` | — |
+| Tabla de intentos de acceso | `intentos` en la base D1 | bloquea 15 min tras 10 claves o PIN incorrectos |
+| Tabla de sesiones del equipo | `sesiones` en la base D1 | una por móvil; deja de valer al cambiar el PIN |
 | Secreto | `CLAVE` en `gestionadrover` | solo en Cloudflare |
 
 Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`.

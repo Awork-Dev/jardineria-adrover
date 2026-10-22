@@ -1,7 +1,8 @@
 import HTML from './index.html';
 import { icono, manifiesto } from '../../compartido/iconos.js';
+import { ICONOS } from '../../compartido/iconos-gestion.js';
 
-const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes'];
+const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes'];
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
 async function bloqueada(env, ip) {
@@ -49,8 +50,8 @@ export default {
     if (url.pathname === '/' || url.pathname === '/index.html') {
       return new Response(HTML, {headers: {'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer'}});
     }
-    if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/');
-    const ico = icono(url.pathname); if (ico) return ico;
+    if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');
+    const ico = icono(url.pathname, ICONOS); if (ico) return ico;
     if (!url.pathname.startsWith('/api/')) return new Response('No encontrado', {status: 404});
     const ip = req.headers.get('cf-connecting-ip') || 'desconocida';
     if (await bloqueada(env, ip)) return json({error: 'demasiados intentos'}, 429);

@@ -7,6 +7,7 @@ Todo funciona en Cloudflare Workers y se publica solo desde este repositorio.
 |---|---|---|---|
 | Web pública (es, ca, en, de) y vigilante de noticias | `web/` | `hall` | jardineriaadrover.es · hall.jardineriaadrover.workers.dev |
 | Gestión: clientes, proveedores, presupuestos y partes | `gestion/` | `gestionadrover` | gestionadrover.jardineriaadrover.workers.dev (con clave) |
+| App del equipo: fichajes y partes desde el móvil | `equipo/` | `equipo` | equipo.jardineriaadrover.workers.dev (con PIN) |
 | Página de accesos rápidos para el cliente | `accesos/` | — | no se publica sola |
 
 Datos del cliente, recursos de Cloudflare y pendientes: [`docs/cliente.md`](docs/cliente.md).
@@ -27,10 +28,15 @@ gestion/
   src/worker.js         Sirve la página y la API /api/* protegida con la clave
   src/index.html        La aplicación de gestión (incluye el PDF de presupuestos)
   schema.sql            Tablas de la base D1: «docs» (datos) e «intentos» (accesos fallidos)
+equipo/
+  wrangler.jsonc        Worker «equipo»: misma base D1 que la gestión
+  src/worker.js         API de la app: entrar con PIN, fichar, partes (solo jefes de cuadrilla)
+  src/index.html        La app de los operarios (funciona sin cobertura y envía al volver la señal)
 compartido/
-  iconos/               Iconos de la empresa (PNG e ICO) y el logo en SVG
+  iconos/<app>/         Iconos de cada app: web en verde, gestión en dorado, equipo en lima y negro
   iconos.js             Sirve los iconos y el manifiesto de la web app
-  iconos-datos.js       Iconos en base64 (se genera con generar-iconos.mjs)
+  iconos-<app>.js       Iconos en base64 de cada app (se generan con generar-iconos.mjs)
+  generar-pngs.mjs      Dibuja los PNG de las tres apps a partir del logo
 accesos/index.html      Accesos rápidos: web, gestión y panel de Cloudflare
 docs/cliente.md         Ficha del proyecto
 ```
@@ -39,8 +45,9 @@ Lo más habitual al hacer cambios:
 - Cambiar un teléfono, el correo o una foto → `web/src/datos.js`.
 - Cambiar un texto de la web → `web/src/textos.js` (hay que tocar los cuatro idiomas).
 - Cambiar los datos legales → `web/src/legal.js`.
-- Cambiar el icono de la web app → sustituir los archivos de `compartido/iconos/` y ejecutar
-  `node compartido/generar-iconos.mjs`.
+- Cambiar los iconos → `node compartido/generar-pngs.mjs` (colores en ese archivo), crear el
+  `favicon.ico` de cada app y ejecutar `node compartido/generar-iconos.mjs`.
+- Cambiar las tareas rápidas de los partes → `TAREAS` en `equipo/src/worker.js`.
 
 ## Trabajar en local
 
@@ -48,12 +55,13 @@ Lo más habitual al hacer cambios:
 npm install
 npm run comprobar        # prepara los dos Workers sin publicar nada
 npm run local:web        # la web en http://localhost:8787
-npm run local:gestion    # la gestión en local
+npm run local:gestion    # la gestión en local (http://localhost:8788)
+npm run local:equipo     # la app del equipo en local (http://localhost:8789), con la misma base que la gestión
 ```
 
 ## Publicar
 
-Al subir cambios a `main` en `web/`, `gestion/` o `compartido/`, `.github/workflows/publicar.yml` publica en Cloudflare
+Al subir cambios a `main` en `web/`, `gestion/`, `equipo/` o `compartido/`, `.github/workflows/publicar.yml` publica en Cloudflare
 solo la parte que ha cambiado. También se puede lanzar a mano desde la pestaña **Actions**.
 
 Secretos necesarios en el repositorio (Settings → Secrets and variables → Actions):
