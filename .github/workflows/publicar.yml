@@ -32,7 +32,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "web=true" >> "$GITHUB_OUTPUT"; echo "gestion=true" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "web/ gestion/")
+          c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || printf 'web/\ngestion/\n')
           echo "$c" | grep -qE '^(web/|compartido/|\.github/)' && echo "web=true" >> "$GITHUB_OUTPUT" || true
           echo "$c" | grep -qE '^(gestion/|compartido/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
 
