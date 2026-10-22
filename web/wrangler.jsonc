@@ -1,0 +1,9 @@
+// Web de Jardinería Adrover y vigilante de noticias (Worker «hall»).
+{
+  "name": "hall",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-06-01",
+  "workers_dev": true,
+  "kv_namespaces": [{ "binding": "DATOS", "id": "984960ce65f5450e81f433edb5354799" }],
+  "triggers": { "crons": ["0 */3 * * *"] }
+}

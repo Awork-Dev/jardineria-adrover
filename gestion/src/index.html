@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gestión Jardinería Adrover</title>
+<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#1f3d2b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gestión">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Paleta: verde de jardín con arena. Maqueta: barra lateral en escritorio, barra inferior en móvil. */
+:root{
+  --bg:#f3f5ef; --panel:#ffffff; --ink:#1b2a20; --muted:#5f6b63; --line:#dde4d8;
+  --brand:#2e6b3d; --brand-ink:#ffffff; --sand:#b8862f; --soft:#e6eee2;
+  --pend-bg:#f4e6c8; --pend-ink:#6e4c0e; --rej-bg:#f2dcd2; --rej-ink:#8a3f16;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121a15; --panel:#1a241d; --ink:#e6ede4; --muted:#9aa89e; --line:#2c3a2f;
+    --brand:#7fbf8a; --brand-ink:#0f1a12; --sand:#dcb06a; --soft:#22302a;
+    --pend-bg:#3a2f18; --pend-ink:#f0d59a; --rej-bg:#3a2218; --rej-ink:#f0b898;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121a15; --panel:#1a241d; --ink:#e6ede4; --muted:#9aa89e; --line:#2c3a2f;
+  --brand:#7fbf8a; --brand-ink:#0f1a12; --sand:#dcb06a; --soft:#22302a;
+  --pend-bg:#3a2f18; --pend-ink:#f0d59a; --rej-bg:#3a2218; --rej-ink:#f0b898;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "IBM Plex Sans",system-ui,sans-serif;
+  padding-left:0;padding-right:0}
+h1,h2,b.h{font-family:"Fraunces",Georgia,serif;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+h1{font-size:1.9rem;margin:0}
+h2{font-size:1.2rem;margin:0}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;align-self:start;height:100vh;padding:26px 16px;border-right:1px solid var(--line);
+  background:var(--panel);display:flex;flex-direction:column;gap:22px}
+.backup{margin-top:auto;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.backup label{cursor:pointer}
+.brand{display:flex;gap:12px;align-items:center}
+.mark{width:40px;height:40px;border-radius:12px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;
+  font:600 1.25rem "Fraunces",Georgia,serif}
+.brand b{display:block;font-family:"Fraunces",Georgia,serif;font-size:1rem}
+.brand small{color:var(--muted);font-size:.8rem}
+nav{display:flex;flex-direction:column;gap:4px}
+nav button{all:unset;cursor:pointer;padding:9px 12px;border-radius:10px;color:var(--muted);font-weight:500}
+nav button:hover{background:var(--soft);color:var(--ink)}
+nav button[aria-current="page"]{background:var(--soft);color:var(--brand);font-weight:600}
+nav button:focus-visible,.btn:focus-visible,.row:focus-visible,.card:focus-visible,.chip:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(safe-area-inset-left,0px));min-width:0}
+.pagehead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.sub{color:var(--muted);margin:4px 0 0}
+.btn{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--panel);color:var(--ink);
+  padding:9px 16px;border-radius:999px;cursor:pointer}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--rej-ink);border-color:var(--rej-ink)}
+.btn.small{padding:6px 12px;font-size:.9rem}
+.btn:disabled{opacity:.5;cursor:default}
+.icon{all:unset;cursor:pointer;width:34px;height:34px;display:grid;place-items:center;border-radius:50%;font-size:1.4rem;color:var(--muted)}
+.icon:hover{background:var(--soft)}
+.search{width:100%;font:inherit;padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);margin-bottom:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:4px}
+.kpi span{color:var(--muted);font-size:.85rem}
+.kpi b{font:600 1.7rem "Fraunces",Georgia,serif;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--muted)}
+.split{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px}
+@media (max-width:980px){.split{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
+.panel h2{margin-bottom:12px}
+.panel svg{width:100%;height:auto;display:block}
+.bar{fill:var(--brand)}
+.axis{stroke:var(--line);stroke-width:1.5}
+.val{fill:var(--ink);font-size:13px;font-variant-numeric:tabular-nums}
+.lbl{fill:var(--muted);font-size:12px}
+.empresa{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{all:unset;cursor:pointer;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.card:hover{border-color:var(--brand)}
+.card b{font-family:"Fraunces",Georgia,serif;font-size:1.05rem;overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:.85rem}
+.line{font-size:.92rem;overflow-wrap:anywhere}
+.tag{align-self:flex-start;margin-top:6px;font-size:.78rem;background:var(--soft);color:var(--brand);padding:2px 10px;border-radius:999px;font-weight:600}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{all:unset;cursor:pointer;padding:6px 14px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.9rem;background:var(--panel)}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.rows{display:flex;flex-direction:column;gap:10px}
+.row{all:unset;cursor:pointer;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;
+  display:flex;justify-content:space-between;gap:14px;align-items:center;min-width:0}
+.row:hover{border-color:var(--brand)}
+.row>div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0}
+.row b{overflow-wrap:anywhere}
+.rowr{display:flex;align-items:center;gap:12px;flex-shrink:0}
+.amt{font-variant-numeric:tabular-nums;font-size:1.02rem}
+.pill{font-size:.78rem;font-weight:600;padding:3px 11px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.pill.enviado{background:var(--pend-bg);color:var(--pend-ink)}
+.pill.aceptado{background:var(--brand);color:var(--brand-ink)}
+.pill.rechazado{background:var(--rej-bg);color:var(--rej-ink)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:16px;padding:26px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);margin-bottom:4px}
+.empty p{margin:0}
+.overlay{position:fixed;inset:0;background:rgba(10,18,12,.45);display:grid;place-items:center;padding:16px;z-index:20}
+.overlay[hidden]{display:none}
+.sheet{background:var(--panel);color:var(--ink);border-radius:20px;width:min(680px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 22px;border:1px solid var(--line)}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#sheet-form{display:flex;flex-direction:column;gap:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.grid2 .wide{grid-column:1/-1}
+@media (max-width:560px){.grid2{grid-template-columns:1fr}}
+.fld{display:flex;flex-direction:column;gap:5px;min-width:0}
+.fld span{font-size:.84rem;color:var(--muted);font-weight:500}
+.fld input,.fld select,.fld textarea,.line-in{font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.fld textarea{resize:vertical}
+.lines{display:flex;flex-direction:column;gap:8px}
+.lhead,.line-r{display:grid;grid-template-columns:minmax(0,1fr) 82px 110px 34px;gap:8px;align-items:center}
+.lhead span{font-size:.8rem;color:var(--muted)}
+.line-r input{font:inherit;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;width:100%}
+.totals{margin-left:auto;min-width:240px;display:flex;flex-direction:column;gap:4px}
+.totals div{display:flex;justify-content:space-between;color:var(--muted);font-variant-numeric:tabular-nums}
+.totals .grand{color:var(--ink);font-weight:600;border-top:1px solid var(--line);padding-top:6px;font-size:1.05rem}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.grow{flex:1}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:999px;transition:.25s;pointer-events:none;z-index:30;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.bad{background:var(--rej-ink);color:#fff}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+@media (max-width:760px){
+  .app{grid-template-columns:1fr}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;border-right:0;border-top:1px solid var(--line);
+    padding:8px max(12px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px));flex-direction:row;gap:0;z-index:10}
+  .brand{display:none}
+  nav{flex-direction:row;width:100%;justify-content:space-around;gap:2px}
+  nav button{font-size:.8rem;padding:8px 6px;text-align:center;flex:1}
+  main{padding-bottom:110px}
+  .split{gap:14px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand">
+      <span class="mark">J</span>
+      <div><b>Jardinería Adrover</b><small>Zones Verdes S.L.</small></div>
+    </div>
+    <nav aria-label="Secciones">
+      <button data-act="nav" data-view="resumen">Resumen</button>
+      <button data-act="nav" data-view="clientes">Clientes</button>
+      <button data-act="nav" data-view="proveedores">Proveedores</button>
+      <button data-act="nav" data-view="presupuestos">Presupuestos</button>
+      <button data-act="nav" data-view="partes">Partes</button>
+    </nav>
+    <div class="backup">
+      <button class="btn small" data-act="export">Guardar copia</button>
+      <label class="btn small">Cargar copia<input id="imp" type="file" accept="application/json" hidden></label>
+      <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en este navegador. Haz una copia de vez en cuando.</p>
+    </div>
+  </aside>
+  <main><div id="view"></div></main>
+</div>
+
+<div id="overlay" class="overlay" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <div class="sheet-head"><h2 id="sheet-title"></h2><button class="icon" data-act="close" aria-label="Cerrar">×</button></div>
+    <form id="sheet-form" autocomplete="off"></form>
+  </div>
+</div>
+<div id="toast" class="toast" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => Number(n) || 0;
+const eur = n => num(n).toLocaleString('es-ES', {style:'currency', currency:'EUR'});
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); };
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const fmtFecha = f => f ? new Date(f + 'T12:00:00').toLocaleDateString('es-ES', {day:'numeric', month:'short', year:'numeric'}) : '';
+const IVA = 0.21;
+const ESTADOS = {borrador:'Borrador', enviado:'Enviado', aceptado:'Aceptado', rechazado:'Rechazado'};
+const S = {clientes:{}, proveedores:{}, presupuestos:{}, partes:{}, ajustes:{}};
+const COLS = Object.keys(S);
+let db = null, loaded = 0, view = 'resumen', lastView = '', estadoF = 'todos', q = '', sheetSave = null, sheetDel = null;
+
+const totalsOf = lines => {
+  const sub = (lines || []).reduce((a, l) => a + num(l.cantidad) * num(l.precio), 0);
+  return {sub, iva: sub * IVA, total: sub * (1 + IVA)};
+};
+const clienteNombre = id => (S.clientes[id] && S.clientes[id].nombre) || '(sin cliente)';
+const byNombre = (a, b) => (a[1].nombre || '').localeCompare(b[1].nombre || '', 'es');
+const clienteOpts = () => [['', 'Elige un cliente'], ...Object.entries(S.clientes).sort(byNombre).map(([k, c]) => [k, c.nombre])];
+const nextNumero = fecha => {
+  const y = (fecha || today()).slice(0, 4);
+  const max = Object.values(S.presupuestos).map(p => String(p.numero || ''))
+    .filter(n => n.startsWith('P-' + y + '-')).map(n => parseInt(n.split('-')[2], 10) || 0).reduce((a, b) => Math.max(a, b), 0);
+  return 'P-' + y + '-' + String(max + 1).padStart(3, '0');
+};
+const empty = (titulo, texto) => `<div class="empty"><b>${esc(titulo)}</b><p>${esc(texto)}</p></div>`;
+
+function toast(msg, bad) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (bad ? ' bad' : '');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { t.className = 'toast'; }, 3200);
+}
+
+const put = (col, id, data) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).set(data); };
+const del = (col, id) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).delete(); };
+const readObj = fd => Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v).trim()]));
+const linesFrom = fd => {
+  const c = fd.getAll('lc'), cq = fd.getAll('lq'), cp = fd.getAll('lp');
+  return c.map((x, i) => ({concepto: String(x).trim(), cantidad: num(cq[i]), precio: num(cp[i])})).filter(l => l.concepto);
+};
+
+/* ---------- Formularios ---------- */
+function fld(name, label, o = {}) {
+  const v = o.value ?? '';
+  const cls = 'fld' + (o.wide ? ' wide' : '');
+  let input;
+  if (o.area) input = `<textarea name="${name}" rows="2">${esc(v)}</textarea>`;
+  else if (o.options) input = `<select name="${name}">${o.options.map(([val, txt]) => `<option value="${esc(val)}"${String(val) === String(v) ? ' selected' : ''}>${esc(txt)}</option>`).join('')}</select>`;
+  else input = `<input name="${name}" type="${o.type || 'text'}" value="${esc(v)}"${o.req ? ' required' : ''}${o.step ? ` step="${o.step}" min="0"` : ''}>`;
+  return `<label class="${cls}"><span>${esc(label)}</span>${input}</label>`;
+}
+function contactoHtml(v = {}, extra = '') {
+  return `<div class="grid2">
+    ${fld('nombre', 'Nombre o razón social', {req:1, value:v.nombre, wide:1})}
+    ${fld('cif', 'CIF / NIF', {value:v.cif})}
+    ${fld('contacto', 'Persona de contacto', {value:v.contacto})}
+    ${fld('email', 'Correo electrónico', {type:'email', value:v.email})}
+    ${fld('telefono', 'Teléfono', {type:'tel', value:v.telefono})}
+    ${fld('direccion', 'Dirección', {value:v.direccion, wide:1})}
+    ${fld('cp', 'C.P.', {value:v.cp})}
+    ${fld('poblacion', 'Población', {value:v.poblacion})}
+    ${extra}
+    ${fld('notas', 'Notas', {area:1, value:v.notas, wide:1})}
+  </div>`;
+}
+function openSheet(title, html, onSave, onDel) {
+  $('#sheet-title').textContent = title;
+  $('#sheet-form').innerHTML = html + `<div class="actions">${onDel ? '<button type="button" class="btn danger" data-act="del">Eliminar</button>' : ''}<span class="grow"></span><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn primary">Guardar</button></div>`;
+  sheetSave = onSave; sheetDel = onDel;
+  $('#overlay').hidden = false;
+  const first = $('#sheet-form input, #sheet-form select, #sheet-form textarea');
+  if (first) first.focus();
+}
+function closeSheet() { $('#overlay').hidden = true; $('#sheet-form').innerHTML = ''; sheetSave = sheetDel = null; }
+
+function contactSheet(kind, id) {
+  const isC = kind === 'clientes';
+  const v = id ? S[kind][id] || {} : {};
+  const extra = isC ? '' : fld('categoria', 'Tipo de proveedor', {value:v.categoria, wide:1});
+  openSheet((id ? 'Editar ' : 'Nuevo ') + (isC ? 'cliente' : 'proveedor'), contactoHtml(v, extra), async fd => {
+    const d = readObj(fd);
+    if (!d.nombre) throw new Error('El nombre es obligatorio.');
+    await put(kind, id || uid(isC ? 'c' : 'v'), d);
+  }, id ? () => del(kind, id) : null);
+}
+
+function lineRow(l = {}) {
+  return `<div class="line-r"><input name="lc" value="${esc(l.concepto)}" placeholder="Concepto" aria-label="Concepto"><input name="lq" type="number" min="0" step="0.01" value="${l.cantidad ?? 1}" aria-label="Cantidad"><input name="lp" type="number" min="0" step="0.01" value="${l.precio ?? 0}" aria-label="Precio sin IVA"><button type="button" class="icon" data-act="rmline" aria-label="Quitar línea">×</button></div>`;
+}
+function updateTotals(form) {
+  const t = totalsOf(linesFrom(new FormData(form)));
+  $('#totals', form).innerHTML = `<div><span>Base imponible</span><b>${eur(t.sub)}</b></div><div><span>IVA 21 %</span><b>${eur(t.iva)}</b></div><div class="grand"><span>Total</span><b>${eur(t.total)}</b></div>`;
+}
+function presupuestoSheet(id) {
+  const v = id ? S.presupuestos[id] || {} : {fecha: today(), estado: 'borrador'};
+  const ls = v.lineas && v.lineas.length ? v.lineas : [{concepto:'', cantidad:1, precio:0}];
+  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf" data-id="${esc(id)}">Descargar PDF</button></div>` : ''}<div class="grid2">
+      ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
+      ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
+      ${fld('estado', 'Estado', {options:Object.entries(ESTADOS), value:v.estado || 'borrador'})}
+    </div>
+    <div class="lines">
+      <div class="lhead"><span>Concepto</span><span>Cantidad</span><span>Precio sin IVA</span><span></span></div>
+      <div id="lines">${ls.map(lineRow).join('')}</div>
+      <div><button type="button" class="btn ghost small" data-act="addline">+ Añadir línea</button></div>
+    </div>
+    <div class="totals" id="totals"></div>
+    <div class="grid2">${fld('notas', 'Notas', {area:1, value:v.notas, wide:1})}</div>`;
+  openSheet(id ? 'Presupuesto ' + (v.numero || '') : 'Nuevo presupuesto', html, async fd => {
+    if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
+    const lineas = linesFrom(fd);
+    if (!lineas.length) throw new Error('Añade al menos una línea con concepto.');
+    const fecha = fd.get('fecha') || today();
+    await put('presupuestos', id || uid('p'), {
+      numero: v.numero || nextNumero(fecha), clienteId: fd.get('clienteId'), fecha,
+      estado: fd.get('estado'), lineas, notas: String(fd.get('notas') || '').trim()
+    });
+  }, id ? () => del('presupuestos', id) : null);
+  updateTotals($('#sheet-form'));
+}
+function parteSheet(id) {
+  const v = id ? S.partes[id] || {} : {fecha: today(), horas: 1};
+  const html = `<div class="grid2">
+      ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
+      ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId})}
+      ${fld('operario', 'Operario', {value:v.operario})}
+      ${fld('horas', 'Horas', {type:'number', step:'0.25', value:v.horas})}
+      ${fld('descripcion', 'Trabajo realizado', {area:1, value:v.descripcion, wide:1})}
+    </div>`;
+  openSheet(id ? 'Editar parte' : 'Nuevo parte de trabajo', html, async fd => {
+    if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
+    await put('partes', id || uid('t'), {
+      fecha: fd.get('fecha') || today(), clienteId: fd.get('clienteId'),
+      operario: String(fd.get('operario') || '').trim(), horas: num(fd.get('horas')),
+      descripcion: String(fd.get('descripcion') || '').trim()
+    });
+  }, id ? () => del('partes', id) : null);
+}
+function empresaSheet() {
+  const v = S.ajustes.empresa || {};
+  openSheet('Datos de la empresa', `<div class="grid2">
+      ${fld('nombre', 'Razón social', {value:v.nombre, wide:1})}
+      ${fld('cif', 'CIF', {value:v.cif})}
+      ${fld('telefono', 'Teléfono', {type:'tel', value:v.telefono})}
+      ${fld('email', 'Correo electrónico', {type:'email', value:v.email})}
+      ${fld('direccion', 'Dirección', {value:v.direccion, wide:1})}
+      ${fld('cp', 'C.P.', {value:v.cp})}
+      ${fld('poblacion', 'Población', {value:v.poblacion})}
+      ${fld('condiciones', 'Condiciones y validez (salen en el PDF)', {area:1, value:v.condiciones, wide:1})}
+    </div>`, async fd => { await put('ajustes', 'empresa', readObj(fd)); }, null);
+}
+
+/* ---------- Vistas ---------- */
+function vResumen() {
+  const P = Object.values(S.presupuestos);
+  const tot = p => totalsOf(p.lineas).total;
+  const acept = P.filter(p => p.estado === 'aceptado');
+  const pend = P.filter(p => p.estado === 'enviado');
+  const ym = today().slice(0, 7);
+  const horas = Object.values(S.partes).filter(x => (x.fecha || '').startsWith(ym)).reduce((a, x) => a + num(x.horas), 0);
+  const hoy = new Date();
+  const meses = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push({key: d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'), label: d.toLocaleDateString('es-ES', {month:'short'})});
+  }
+  const vals = meses.map(m => acept.filter(p => (p.fecha || '').startsWith(m.key)).reduce((a, p) => a + tot(p), 0));
+  const max = Math.max(1, ...vals), W = 600, H = 220, base = 190, top = 20, slot = (W - 40) / 6, bw = slot - 24;
+  const bars = vals.map((v, i) => {
+    const h = v / max * (base - top), x = 20 + i * slot + 12, y = base - h;
+    return `<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="6" class="bar"/>
+      <text x="${x + bw/2}" y="${y - 6}" text-anchor="middle" class="val">${v ? Math.round(v).toLocaleString('es-ES') + ' €' : ''}</text>
+      <text x="${x + bw/2}" y="${H - 6}" text-anchor="middle" class="lbl">${esc(meses[i].label)}</text>`;
+  }).join('');
+  const chart = acept.length
+    ? `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Importe aceptado por mes">${bars}<line x1="12" x2="${W-12}" y1="${base}" y2="${base}" class="axis"/></svg>`
+    : empty('Aún no hay presupuestos aceptados.', 'Cuando un presupuesto pase a «Aceptado», aparecerá aquí su importe por mes.');
+  const recientes = P.slice().sort((a, b) => (b.fecha || '').localeCompare(a.fecha || '')).slice(0, 5);
+  const e = S.ajustes.empresa;
+  const sum = arr => arr.reduce((a, p) => a + tot(p), 0);
+  return `
+  <header class="pagehead"><div><h1>Resumen</h1><p class="sub">Clientes, presupuestos y horas de un vistazo</p></div></header>
+  <div class="kpis">
+    <div class="kpi"><span>Clientes</span><b>${Object.keys(S.clientes).length}</b></div>
+    <div class="kpi"><span>Aceptado en total</span><b>${eur(sum(acept))}</b></div>
+    <div class="kpi"><span>Pendientes de respuesta</span><b>${pend.length}</b><small>${eur(sum(pend))}</small></div>
+    <div class="kpi"><span>Horas este mes</span><b>${horas.toLocaleString('es-ES')} h</b></div>
+  </div>
+  <div class="split">
+    <section class="panel"><h2>Aceptado por mes</h2>${chart}</section>
+    <section class="panel"><h2>Últimos presupuestos</h2>
+      ${recientes.length ? `<div class="rows">${recientes.map(p => `<button class="row" data-act="edit-presupuesto" data-id="${esc(p.id)}"><div><b>${esc(p.numero || 'Sin número')}</b><span class="meta">${esc(clienteNombre(p.clienteId))}</span></div><div class="rowr"><b class="amt">${eur(tot(p))}</b></div></button>`).join('')}</div>`
+        : empty('Sin presupuestos todavía.', 'Crea el primero desde la sección Presupuestos.')}
+    </section>
+  </div>
+  <section class="panel" style="margin-top:18px">
+    <div class="pagehead" style="margin-bottom:8px"><h2>Datos de la empresa</h2><button class="btn small" data-act="edit-empresa">${e ? 'Editar' : 'Añadir datos'}</button></div>
+    ${e ? `<div class="empresa"><b>${esc(e.nombre)}</b><span class="meta">CIF ${esc(e.cif || '—')}</span><span class="line">${esc([e.direccion, e.cp, e.poblacion].filter(Boolean).join(' · '))}</span><span class="line">${esc([e.telefono, e.email].filter(Boolean).join(' · '))}</span></div>`
+      : '<p class="meta" style="margin:0">Aún no has añadido los datos de la empresa.</p>'}
+  </section>`;
+}
+
+function listaContactos(kind) {
+  const isC = kind === 'clientes';
+  if (!Object.keys(S[kind]).length) return empty(isC ? 'Aún no hay clientes.' : 'Aún no hay proveedores.', 'Pulsa «+ Nuevo» para añadir el primero. Guardamos nombre, CIF, correo y teléfono.');
+  const t = q.trim().toLowerCase();
+  const items = Object.entries(S[kind]).filter(([, c]) => (c.nombre + ' ' + c.cif + ' ' + c.email + ' ' + c.telefono + ' ' + (c.contacto || '')).toLowerCase().includes(t)).sort(byNombre);
+  if (!items.length) return '<div class="empty">Ninguna coincidencia.</div>';
+  return `<div class="cards">${items.map(([id, c]) => `<button class="card" data-act="edit-${kind}" data-id="${esc(id)}">
+      <b>${esc(c.nombre)}</b>
+      <span class="meta">${esc(c.cif || 'Sin CIF')}${c.poblacion ? ' · ' + esc(c.poblacion) : ''}</span>
+      <span class="line">${esc(c.telefono || 'Sin teléfono')}</span>
+      <span class="line">${esc(c.email || 'Sin correo')}</span>
+      ${c.contacto ? `<span class="line">Contacto: ${esc(c.contacto)}</span>` : ''}
+      ${!isC && c.categoria ? `<span class="tag">${esc(c.categoria)}</span>` : ''}
+    </button>`).join('')}</div>`;
+}
+function vContactos(kind) {
+  const isC = kind === 'clientes';
+  return `<header class="pagehead"><div><h1>${isC ? 'Clientes' : 'Proveedores'}</h1><p class="sub">${isC ? 'Personas y empresas a las que facturas' : 'Empresas a las que compras'}</p></div>
+    <button class="btn primary" data-act="new-${kind}">+ Nuevo</button></header>
+    <input id="q" class="search" type="search" placeholder="Buscar por nombre, CIF, correo o teléfono" value="${esc(q)}" aria-label="Buscar">
+    <div id="list">${listaContactos(kind)}</div>`;
+}
+
+function vPresupuestos() {
+  const all = Object.entries(S.presupuestos).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
+  const chips = ['todos', ...Object.keys(ESTADOS)].map(e => `<button class="chip${estadoF === e ? ' on' : ''}" data-act="filter" data-v="${e}">${e === 'todos' ? 'Todos' : ESTADOS[e]}</button>`).join('');
+  const list = all.filter(([, p]) => estadoF === 'todos' || p.estado === estadoF);
+  const body = !all.length ? empty('Aún no hay presupuestos.', 'Pulsa «+ Nuevo» para crear el primero. El número se asigna solo.')
+    : !list.length ? '<div class="empty">No hay presupuestos en este estado.</div>'
+    : `<div class="rows">${list.map(([id, p]) => `<button class="row" data-act="edit-presupuesto" data-id="${esc(id)}">
+        <div><b>${esc(p.numero || 'Sin número')} · ${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}</span></div>
+        <div class="rowr"><span class="pill ${esc(p.estado)}">${esc(ESTADOS[p.estado] || '')}</span><b class="amt">${eur(totalsOf(p.lineas).total)}</b></div>
+      </button>`).join('')}</div>`;
+  return `<header class="pagehead"><div><h1>Presupuestos</h1><p class="sub">Importes con IVA del 21 %</p></div>
+    <button class="btn primary" data-act="new-presupuesto">+ Nuevo</button></header>
+    <div class="chips">${chips}</div>${body}`;
+}
+
+function vPartes() {
+  const all = Object.entries(S.partes).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
+  const h = all.reduce((a, [, p]) => a + num(p.horas), 0);
+  const body = !all.length ? empty('Aún no hay partes de trabajo.', 'Registra aquí las horas y los trabajos hechos en cada cliente.')
+    : `<div class="rows">${all.map(([id, p]) => `<button class="row" data-act="edit-parte" data-id="${esc(id)}">
+        <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc(p.descripcion || '')}</span></div>
+        <div class="rowr"><b class="amt">${num(p.horas).toLocaleString('es-ES')} h</b></div>
+      </button>`).join('')}</div>`;
+  return `<header class="pagehead"><div><h1>Partes de trabajo</h1><p class="sub">${num(h).toLocaleString('es-ES')} h registradas en ${all.length} partes</p></div>
+    <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${body}`;
+}
+
+const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), proveedores: () => vContactos('proveedores'), presupuestos: vPresupuestos, partes: vPartes};
+
+function render() {
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
+  // Si solo cambian los datos y el usuario escribe en el buscador, se refresca la lista sin perder el foco.
+  if (view === lastView && (view === 'clientes' || view === 'proveedores') && $('#list')) {
+    $('#list').innerHTML = listaContactos(view);
+    return;
+  }
+  lastView = view;
+  $('#view').innerHTML = VIEWS[view]();
+}
+
+/* ---------- Eventos ---------- */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  switch (a) {
+    case 'nav': view = el.dataset.view; estadoF = 'todos'; q = ''; render(); break;
+    case 'close': closeSheet(); break;
+    case 'export': exportarCopia(); break;
+    case 'pdf': generarPDF(id); break;
+    case 'new-clientes': contactSheet('clientes', null); break;
+    case 'edit-clientes': contactSheet('clientes', id); break;
+    case 'new-proveedores': contactSheet('proveedores', null); break;
+    case 'edit-proveedores': contactSheet('proveedores', id); break;
+    case 'new-presupuesto': presupuestoSheet(null); break;
+    case 'edit-presupuesto': presupuestoSheet(id); break;
+    case 'new-parte': parteSheet(null); break;
+    case 'edit-parte': parteSheet(id); break;
+    case 'edit-empresa': empresaSheet(); break;
+    case 'filter': estadoF = el.dataset.v; render(); break;
+    case 'addline': {
+      const wrap = $('#lines');
+      if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); updateTotals($('#sheet-form')); }
+      break;
+    }
+    case 'rmline': el.closest('.line-r').remove(); updateTotals($('#sheet-form')); break;
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'q') { q = e.target.value; $('#list').innerHTML = listaContactos(view); return; }
+  const form = e.target.closest('#sheet-form');
+  if (form && $('#totals', form)) updateTotals(form);
+});
+const form = $('#sheet-form');
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!sheetSave) return;
+  const btn = form.querySelector('.btn.primary');
+  btn.disabled = true;
+  try {
+    await sheetSave(new FormData(form));
+    closeSheet();
+    toast('Guardado');
+  } catch (err) {
+    toast(err.message || 'No se pudo guardar. Inténtalo de nuevo.', true);
+  } finally {
+    btn.disabled = false;
+  }
+});
+form.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act="del"]');
+  if (!el || !sheetDel) return;
+  if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'Pulsa otra vez para eliminar'; return; }
+  el.disabled = true;
+  try {
+    await sheetDel();
+    closeSheet();
+    toast('Eliminado');
+  } catch (err) {
+    toast(err.message || 'No se pudo eliminar.', true);
+    el.disabled = false;
+  }
+});
+
+/* ---------- Almacenamiento en el servidor ---------- */
+const DEFAULT_EMPRESA = {
+  nombre: 'Zones Verdes S.L.', cif: 'B07566193', direccion: 'Carretera Son Servera - Capdepera km 11,600',
+  cp: '07580', poblacion: 'Capdepera', telefono: '971 563 213 · 654 788 002 · 626 900 428',
+  email: 'jardineriaadrover@gmail.com', condiciones: ''
+};
+let mem = {};
+let clave = '';
+try { clave = sessionStorage.getItem('clave') || ''; } catch (e) {}
+function pedirClave() {
+  const c = window.prompt('Clave de acceso a la gestión');
+  if (c) { clave = c; try { sessionStorage.setItem('clave', c); } catch (e) {} }
+  return !!c;
+}
+async function api(method, path, body) {
+  const r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave},
+    body: body ? JSON.stringify(body) : undefined});
+  if (r.status === 401) { if (pedirClave()) return api(method, path, body); throw new Error('Clave incorrecta.'); }
+  if (!r.ok) throw new Error('El servidor no pudo guardar. Revisa la conexión e inténtalo de nuevo.');
+  return r.json();
+}
+function cargarEnPantalla() {
+  COLS.forEach(col => {
+    S[col] = Object.fromEntries(Object.entries(mem[col] || {}).map(([id, d]) => [id, {...d, id}]));
+  });
+  if (loaded < COLS.length) loaded = COLS.length;
+  render();
+}
+db = {
+  collection: col => ({
+    doc: id => ({
+      set: async d => {
+        await api('PUT', '/api/doc/' + encodeURIComponent(col) + '/' + encodeURIComponent(id), d);
+        mem[col] = mem[col] || {}; mem[col][id] = d;
+        cargarEnPantalla();
+      },
+      delete: async () => {
+        await api('DELETE', '/api/doc/' + encodeURIComponent(col) + '/' + encodeURIComponent(id));
+        if (mem[col]) delete mem[col][id];
+        cargarEnPantalla();
+      }
+    })
+  })
+};
+function exportarCopia() {
+  const blob = new Blob([JSON.stringify(mem, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'copia-jardineria-adrover-' + today() + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast('Copia descargada');
+}
+async function importarCopia(file) {
+  try {
+    const d = JSON.parse(await file.text());
+    if (!d || typeof d !== 'object') throw new Error();
+    for (const col of Object.keys(d)) {
+      if (!COLS.includes(col)) continue;
+      for (const [id, data] of Object.entries(d[col] || {})) await db.collection(col).doc(id).set(data);
+    }
+    toast('Datos cargados');
+  } catch (e) { toast('El archivo no es una copia válida.', true); }
+}
+document.addEventListener('change', e => {
+  if (e.target.id === 'imp' && e.target.files[0]) importarCopia(e.target.files[0]);
+});
+
+/* ---------- PDF del presupuesto ---------- */
+const eurPDF = n => num(n).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+function generarPDF(id) {
+  const p = S.presupuestos[id];
+  if (!p) return;
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if (!J) { toast('No se pudo cargar el generador de PDF. Revisa la conexión.', true); return; }
+  const e = S.ajustes.empresa || DEFAULT_EMPRESA;
+  const c = S.clientes[p.clienteId] || {};
+  const d = new J({unit: 'mm', format: 'a4'});
+  const L = 18, R = 192;
+  let y = 20;
+  d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(46, 107, 61);
+  d.text(String(e.nombre || ''), L, y);
+  d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
+  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), e.telefono, e.email]
+    .filter(Boolean).forEach(t => { y += 5; d.text(String(t), L, y); });
+  d.setFont('helvetica', 'bold'); d.setFontSize(13); d.setTextColor(30, 30, 30);
+  d.text('PRESUPUESTO', R, 20, {align: 'right'});
+  d.setFont('helvetica', 'normal'); d.setFontSize(10);
+  d.text('Nº ' + (p.numero || ''), R, 27, {align: 'right'});
+  d.text('Fecha: ' + fmtFecha(p.fecha), R, 33, {align: 'right'});
+  y = 58;
+  d.setFont('helvetica', 'bold'); d.text('Cliente', L, y); d.setFont('helvetica', 'normal');
+  [c.nombre, c.cif && 'CIF ' + c.cif, c.direccion, [c.cp, c.poblacion].filter(Boolean).join(' '), c.telefono, c.email, c.contacto && 'Contacto: ' + c.contacto]
+    .filter(Boolean).forEach(t => { y += 5; d.text(String(t), L, y); });
+  y += 12;
+  d.setFont('helvetica', 'bold'); d.setFontSize(9);
+  d.text('Concepto', L, y); d.text('Cant.', 120, y, {align: 'right'});
+  d.text('Precio', 152, y, {align: 'right'}); d.text('Importe', R, y, {align: 'right'});
+  d.setDrawColor(180); d.line(L, y + 2, R, y + 2);
+  d.setFont('helvetica', 'normal');
+  (p.lineas || []).forEach(l => {
+    y += 7;
+    d.text(String(l.concepto || ''), L, y);
+    d.text(String(num(l.cantidad)), 120, y, {align: 'right'});
+    d.text(eurPDF(l.precio), 152, y, {align: 'right'});
+    d.text(eurPDF(num(l.cantidad) * num(l.precio)), R, y, {align: 'right'});
+  });
+  const t = totalsOf(p.lineas);
+  y += 12;
+  d.text('Base imponible', 140, y); d.text(eurPDF(t.sub), R, y, {align: 'right'});
+  y += 6; d.text('IVA 21 %', 140, y); d.text(eurPDF(t.iva), R, y, {align: 'right'});
+  y += 7; d.setFont('helvetica', 'bold'); d.text('Total', 140, y); d.text(eurPDF(t.total), R, y, {align: 'right'});
+  if (p.notas) { y += 14; d.setFont('helvetica', 'normal'); d.text(d.splitTextToSize('Notas: ' + p.notas, R - L), L, y); }
+  if (e.condiciones) {
+    y += 14; d.setFont('helvetica', 'bold'); d.text('Condiciones', L, y);
+    d.setFont('helvetica', 'normal'); d.text(d.splitTextToSize(String(e.condiciones), R - L), L, y + 5);
+  }
+  d.save((p.numero || 'presupuesto') + '.pdf');
+}
+
+/* ---------- Arranque ---------- */
+(async function init() {
+  try { mem = await api('GET', '/api/datos'); }
+  catch (e) { toast(e.message, true); }
+  if (!(mem.ajustes && mem.ajustes.empresa)) {
+    try { await db.collection('ajustes').doc('empresa').set(DEFAULT_EMPRESA); } catch (e) {}
+  }
+  cargarEnPantalla();
+})();
+})();
+</script>
+</body>
+</html>

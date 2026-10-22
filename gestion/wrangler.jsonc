@@ -1,0 +1,9 @@
+// Gestión de Jardinería Adrover (Worker «gestionadrover»).
+// La clave de acceso es el secreto CLAVE, guardado en Cloudflare (no va en el repositorio).
+{
+  "name": "gestionadrover",
+  "main": "src/worker.js",
+  "compatibility_date": "2025-06-01",
+  "workers_dev": true,
+  "d1_databases": [{ "binding": "DB", "database_name": "jardineria-adrover-gestion", "database_id": "e74eb7e7-c0c6-41d0-933f-a6e5772d270e" }]
+}

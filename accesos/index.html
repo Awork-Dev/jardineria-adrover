@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Accesos Jardinería Adrover</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{--bg:#f3f5ef;--panel:#fff;--ink:#1b2a20;--muted:#5f6b63;--line:#dde4d8;--brand:#2e6b3d;--brand-ink:#fff;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a15;--panel:#1a241d;--ink:#e6ede4;--muted:#9aa89e;--line:#2c3a2f;--brand:#7fbf8a;--brand-ink:#0f1a12;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121a15;--panel:#1a241d;--ink:#e6ede4;--muted:#9aa89e;--line:#2c3a2f;--brand:#7fbf8a;--brand-ink:#0f1a12;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:640px;margin:0 auto;padding:40px 16px 56px}
+h1{font:600 1.8rem Georgia,serif;margin:0 0 4px}
+.sub{color:var(--muted);margin:0 0 28px}
+.card{display:flex;gap:16px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:14px;text-decoration:none;color:inherit}
+.card:hover{border-color:var(--brand)}
+.card:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.ico{flex:none;width:44px;height:44px;border-radius:12px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-size:1.3rem}
+.card b{display:block;font-size:1.08rem}
+.card span{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.go{margin-left:auto;color:var(--brand);font-size:1.3rem}
+p.note{color:var(--muted);font-size:.85rem;margin-top:24px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Jardinería Adrover</h1>
+  <p class="sub">Accesos rápidos a la web y a la gestión</p>
+
+  <a class="card" href="https://jardineriaadrover.es" target="_blank" rel="noopener">
+    <div class="ico" aria-hidden="true">🌿</div>
+    <div><b>Página web</b><span>jardineriaadrover.es</span></div>
+    <span class="go" aria-hidden="true">↗</span>
+  </a>
+
+  <a class="card" href="https://gestionadrover.jardineriaadrover.workers.dev" target="_blank" rel="noopener">
+    <div class="ico" aria-hidden="true">📋</div>
+    <div><b>Gestión: clientes, presupuestos y partes</b><span>gestionadrover.jardineriaadrover.workers.dev · pide la clave</span></div>
+    <span class="go" aria-hidden="true">↗</span>
+  </a>
+
+  <a class="card" href="https://dash.cloudflare.com" target="_blank" rel="noopener">
+    <div class="ico" aria-hidden="true">⚙️</div>
+    <div><b>Panel de Cloudflare</b><span>Donde están alojadas la web y la gestión</span></div>
+    <span class="go" aria-hidden="true">↗</span>
+  </a>
+
+  <p class="note">El código está en GitHub, en el repositorio jardineria-adrover.</p>
+</main>
+</body>
+</html>

@@ -1,0 +1,65 @@
+# Publica en Cloudflare al subir cambios a main.
+# Necesita en GitHub (Settings → Secrets and variables → Actions) los secretos
+# CLOUDFLARE_API_TOKEN y CLOUDFLARE_ACCOUNT_ID.
+name: Publicar en Cloudflare
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "gestion/**"
+      - "compartido/**"
+      - ".github/workflows/publicar.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: publicar
+  cancel-in-progress: false
+
+jobs:
+  cambios:
+    runs-on: ubuntu-latest
+    outputs:
+      web: ${{ steps.f.outputs.web }}
+      gestion: ${{ steps.f.outputs.gestion }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: f
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "web=true" >> "$GITHUB_OUTPUT"; echo "gestion=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          c=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "web/ gestion/")
+          echo "$c" | grep -qE '^(web/|compartido/|\.github/)' && echo "web=true" >> "$GITHUB_OUTPUT" || true
+          echo "$c" | grep -qE '^(gestion/|compartido/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
+
+  web:
+    needs: cambios
+    if: needs.cambios.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: web
+          wranglerVersion: "4.152.0"
+          command: deploy
+
+  gestion:
+    needs: cambios
+    if: needs.cambios.outputs.gestion == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: gestion
+          wranglerVersion: "4.152.0"
+          command: deploy
