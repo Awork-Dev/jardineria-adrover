@@ -12,28 +12,31 @@ const TODAS = new Set([FOTOS.hero, FOTOS.vivero, FOTOS.mant, FOTOS.poda, FOTOS.d
   "1ifQJNiTOw-VO1CCIOSpnTPiVg4vUtCYB", "1insih4dhc_okLA8toUKb1whvDuSzPc-q", "1Uj5v5HCLCmlNs7ugBB-54LO0MjsSEvvU",
   "16O1eYhY7DvQfKhdsPt34RzDZK3NsBNti", "1uOPLB0PIp0tf2PjPHcnalYgEciSNshid"]);
 
-async function imagen(id, w, env) {
+const CACHE_IMG = "public, max-age=31536000, immutable";
+async function imagen(id, w, env, webp) {
   if (!TODAS.has(id)) return new Response("No encontrada", { status: 404 });
   const ancho = [480, 900, 1600].includes(w) ? w : 900;
-  const clave = `img:${id}:${ancho}`;
+  const clave = `img:${id}:${ancho}${webp ? ":webp" : ""}`;
+  const cab = (ct) => ({ "content-type": ct, "cache-control": CACHE_IMG, vary: "Accept" });
   if (env.DATOS) {
     const { value, metadata } = await env.DATOS.getWithMetadata(clave, "arrayBuffer");
-    if (value) return new Response(value, { headers: { "content-type": metadata?.ct || "image/jpeg", "cache-control": "public, max-age=2592000, immutable" } });
+    if (value) return new Response(value, { headers: cab(metadata?.ct || "image/jpeg") });
   }
-  const urls = [`https://lh3.googleusercontent.com/d/${id}=w${ancho}`, `https://drive.google.com/thumbnail?id=${id}&sz=w${ancho}`];
+  const urls = [`https://lh3.googleusercontent.com/d/${id}=w${ancho}${webp ? "-rw" : ""}`, `https://drive.google.com/thumbnail?id=${id}&sz=w${ancho}`];
   for (const u of urls) {
     const r = await fetch(u, { redirect: "follow" });
     const ct = r.headers.get("content-type") || "";
     if (r.ok && ct.startsWith("image/")) {
       const buf = await r.arrayBuffer();
       if (env.DATOS) await env.DATOS.put(clave, buf, { metadata: { ct } });
-      return new Response(buf, { headers: { "content-type": ct, "cache-control": "public, max-age=2592000, immutable" } });
+      return new Response(buf, { headers: cab(ct) });
     }
   }
   return new Response("Imagen no disponible", { status: 502 });
 }
 
 const img = (id, w = 900) => `/img/${id}?w=${w}`;
+const srcset = (id, sizes) => `srcset="${[480, 900, 1600].map((w) => `${img(id, w)} ${w}w`).join(", ")}" sizes="${sizes}"`;
 const ICO = {
   chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5c.3 2.6 3.4 5.7 6 6l1.3-1.4-2-1-1 .8c-1-.4-2.3-1.7-2.7-2.7l.8-1-1-2Z" fill="currentColor"/></svg>',
   sms: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 17v4l4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="12" cy="10.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="10.5" r="1.2" fill="currentColor"/></svg>',
@@ -61,30 +64,30 @@ function menu(lang, ruta, t) {
   const langs = '<span class="langs">' + IDIOMAS.map((l) => `<a href="${u(l, ruta)}" hreflang="${l}"${l === lang ? ' class="on"' : ""}>${l.toUpperCase()}</a>`).join("") + "</span>";
   return links.slice(0, -1).join("") + langs + links[links.length - 1];
 }
-const phead = (foto, x) => `<section class="phead"><img src="${img(foto, 1600)}" alt=""><div class="wrap"><div class="eyebrow">${x[0]}</div><h1>${x[1]}</h1><p>${x[2]}</p></div></section>`;
+const phead = (foto, x) => `<section class="phead"><img src="${img(foto, 1600)}" ${srcset(foto, "100vw")} alt="" fetchpriority="high"><div class="wrap"><div class="eyebrow">${x[0]}</div><h1>${x[1]}</h1><p>${x[2]}</p></div></section>`;
 const cab = (x) => `<div class="cab rv"><div><div class="eyebrow">${x[0]}</div><h2>${x[1]}</h2></div><p>${x[2]}</p></div>`;
 
 const CUERPOS = {
-  "/": (t, lang) => `<section class="hero" style="padding:0"><img src="${img(FOTOS.hero, 1600)}" alt="Jardinería Adrover" fetchpriority="high">
+  "/": (t, lang) => `<section class="hero" style="padding:0"><img src="${img(FOTOS.hero, 1600)}" ${srcset(FOTOS.hero, "100vw")} alt="Jardinería Adrover" fetchpriority="high">
 <div class="wrap"><div class="eyebrow">${t.hero[0]}</div><h1>${t.hero[1]}</h1><p>${t.hero[2]}</p>
 <a class="btn" href="${u(lang, "/contacto")}">${t.hero[3]}</a><a class="btn lin" href="${u(lang, "/servicios")}">${t.hero[4]}</a></div></section>
 <div class="wrap"><div class="cifras rv">${t.cifras.map((c) => `<div><b>${c[0]}</b><span>${c[1]}</span></div>`).join("")}</div></div>
 <section><div class="wrap">${cab(t.desc)}
-<div class="accesos">${[["/servicios", FOTOS.mant], ["/vivero", FOTOS.vivero], ["/noticias", "1Rt7joKht4znZ66jmYXhzAE6erH0HT8tE"]].map(([r, f], i) => `<a class="card acceso rv" href="${u(lang, r)}"><img loading="lazy" src="${img(f)}" alt="${t.acc[i][0]}"><div><h3>${t.acc[i][0]}</h3><p>${t.acc[i][1]}</p><span class="ver">${t.acc[i][2]}</span></div></a>`).join("")}</div></div></section>
+<div class="accesos">${[["/servicios", FOTOS.mant], ["/vivero", FOTOS.vivero], ["/noticias", "1Rt7joKht4znZ66jmYXhzAE6erH0HT8tE"]].map(([r, f], i) => `<a class="card acceso rv" href="${u(lang, r)}"><img loading="lazy" src="${img(f)}" ${srcset(f, "(max-width:980px) 100vw, 390px")} alt="${t.acc[i][0]}"><div><h3>${t.acc[i][0]}</h3><p>${t.acc[i][1]}</p><span class="ver">${t.acc[i][2]}</span></div></a>`).join("")}</div></div></section>
 <section style="padding-top:0"><div class="wrap"><div class="cta rv"><div><div class="eyebrow">${t.cta[0]}</div><h2>${t.cta[1]}</h2><p>${t.cta[2]}</p></div><div>${canales(t)}</div></div></div></section>`,
 
   "/servicios": (t) => `${phead(FOTOS.mant, t.servPh)}
 <section id="servicios"><div class="wrap">${cab(t.serv)}
-<div class="serv">${[FOTOS.mant, FOTOS.poda, FOTOS.diseno, FOTOS.flor].map((f, i) => `<article class="card rv"><img loading="lazy" src="${img(f)}" alt="${t.cards[i][0]}"><div><h3>${t.cards[i][0]}</h3><p>${t.cards[i][1]}</p><ul>${t.cards[i][2].map((x) => `<li>${x}</li>`).join("")}</ul></div></article>`).join("")}</div></div></section>
+<div class="serv">${[FOTOS.mant, FOTOS.poda, FOTOS.diseno, FOTOS.flor].map((f, i) => `<article class="card rv"><img loading="lazy" src="${img(f)}" ${srcset(f, "(max-width:600px) 100vw, (max-width:980px) 50vw, 290px")} alt="${t.cards[i][0]}"><div><h3>${t.cards[i][0]}</h3><p>${t.cards[i][1]}</p><ul>${t.cards[i][2].map((x) => `<li>${x}</li>`).join("")}</ul></div></article>`).join("")}</div></div></section>
 <section id="proceso" class="suave"><div class="wrap">${cab(t.proc)}
 <div class="pasos">${t.pasos.map((p, i) => `<div class="paso rv"><span>0${i + 1}</span><h3>${p[0]}</h3><p>${p[1]}</p></div>`).join("")}</div></div></section>`,
 
   "/vivero": (t, lang) => `${phead(FOTOS.vivero, t.vivPh)}
-<section id="vivero"><div class="wrap split"><img class="rv" loading="lazy" src="${img(FOTOS.vivero, 1600)}" alt="${t.viv[0]}">
+<section id="vivero"><div class="wrap split"><img class="rv" loading="lazy" src="${img(FOTOS.vivero, 1600)}" ${srcset(FOTOS.vivero, "(max-width:980px) 100vw, 620px")} alt="${t.viv[0]}">
 <div class="rv"><div class="eyebrow">${t.viv[0]}</div><h2>${t.viv[1]}</h2><p style="color:var(--gris)">${t.viv[2]}</p><p style="color:var(--gris)">${t.viv[3]}</p>
 <ul>${t.viv[4].map((x) => `<li>${x}</li>`).join("")}</ul><a class="btn" href="${u(lang, "/contacto")}" style="background:var(--verde2);color:#fff">${t.viv[5]}</a></div></div></section>
 <section id="galeria" class="oscuro"><div class="wrap">${cab(t.gal)}
-<div class="galeria">${FOTOS.galeria.map((id, i) => `<figure class="g g${i}"><img loading="lazy" src="${img(id, 900)}" alt="${t.gal[3]}"></figure>`).join("")}</div></div></section>`,
+<div class="galeria">${FOTOS.galeria.map((id, i) => `<figure class="g g${i}"><img loading="lazy" src="${img(id, 900)}" ${srcset(id, "(max-width:600px) 100vw, (max-width:980px) 66vw, 400px")} alt="${t.gal[3]}"></figure>`).join("")}</div></div></section>`,
 
   "/noticias": (t) => `${phead("1m47kdFJeWuUVpKQIMY5Rn0Cp1Z4vw-gI", t.newsPh)}
 <section id="noticias"><div class="wrap"><div class="cab rv"><div><div class="eyebrow">${t.news[0]}</div><h2>${t.news[1]}</h2></div>
@@ -96,7 +99,7 @@ const CUERPOS = {
 <section id="contacto" style="padding-bottom:0"><div class="wrap"><div class="contacto rv"><div><div class="eyebrow">${t.cont[0]}</div><h2>${t.cont[1]}</h2><p>${t.cont[2]}</p>
 <p style="margin:26px 0 12px;color:#fff;font-weight:600">${t.cont[3]}</p>${canales(t)}
 <div class="datos" style="margin-top:22px"><a href="mailto:${EMAIL}">${EMAIL}</a></div></div>
-<img loading="lazy" src="${img("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", 1600)}" alt="${t.cont[0]}"></div></div></section>
+<img loading="lazy" src="${img("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", 1600)}" ${srcset("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", "(max-width:980px) 100vw, 600px")} alt="${t.cont[0]}"></div></div></section>
 <section id="preguntas" class="suave"><div class="wrap faqw"><div class="rv"><div class="eyebrow">${t.faqH[0]}</div><h2>${t.faqH[1]}</h2><p style="color:var(--gris)">${t.faqH[2]}</p></div>
 <div class="faq rv">${t.faq.map((q, i) => `<details${i ? "" : " open"}><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("")}</div></div></section>`,
 };
@@ -238,7 +241,7 @@ async function fuentes(path, env) {
       css = (await r.text()).replace(/https:\/\/fonts\.gstatic\.com\//g, "/fonts/f/");
       if (env.DATOS) await env.DATOS.put("fonts:css", css, { expirationTtl: 2592000 });
     }
-    return new Response(css, { headers: { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=86400" } });
+    return new Response(css, { headers: { "content-type": "text/css; charset=utf-8", "cache-control": "public, max-age=604800" } });
   }
   const sub = path.slice("/fonts/f/".length);
   if (!/^[\w\-\/.]+\.woff2$/.test(sub) || sub.includes("..")) return new Response("No encontrada", { status: 404 });
@@ -339,7 +342,7 @@ section{padding:110px 0}
 .contacto>div{padding:60px}.contacto img{width:100%;height:100%;object-fit:cover;min-height:420px}.contacto h2{font-size:clamp(2rem,4vw,3rem);margin:12px 0 18px}
 .contacto p{color:#c5d3c8}.contacto .eyebrow{color:#a9d39a}.datos a{display:block;font-size:1.15rem;margin:8px 0;text-decoration:none;color:#fff}
 footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.rv{opacity:0;transform:translateY(30px);transition:1s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}.card ul{list-style:none;padding:14px 0 0;margin:14px 0 0;border-top:1px solid var(--arena);font-size:.9rem}.card li{padding:4px 0 4px 20px;position:relative}.card li:before{content:"";position:absolute;left:2px;top:12px;width:8px;height:8px;border-radius:50% 0;background:var(--hoja)}.suave{background:#efe8da}.pasos{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}.paso{background:#fff;border-radius:20px;padding:28px}.paso span{font-family:Fraunces,serif;font-size:2.4rem;color:var(--hoja);font-weight:600;line-height:1}.paso h3{font-size:1.3rem;margin:14px 0 8px}.paso p{margin:0;color:var(--gris);font-size:.95rem}.faqw{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;align-items:start}.faqw h2{font-size:clamp(2rem,4vw,3rem);margin:12px 0 16px}.faq details{background:#fff;border-radius:16px;padding:20px 24px;margin-bottom:12px}.faq summary{cursor:pointer;font-weight:600;list-style:none;position:relative;padding-right:30px}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";position:absolute;right:0;top:-4px;font-size:1.5rem;color:var(--verde2);transition:.3s}.faq details[open] summary:after{transform:rotate(45deg)}.faq details p{margin:12px 0 0;color:var(--gris)}@media(max-width:980px){.pasos{grid-template-columns:repeat(2,1fr)}.faqw{grid-template-columns:1fr;gap:30px}}@media(max-width:600px){.pasos{grid-template-columns:1fr}}.canales{display:flex;flex-wrap:wrap;gap:10px}.canal{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;font-weight:600;text-decoration:none;transition:.2s;background:#fff;color:var(--verde)}.canal svg{width:20px;height:20px}.canal:hover{transform:translateY(-2px)}.canal.wa{background:#25a35a;color:#fff}.canal.sms{background:var(--hoja);color:#10220f}.flotante{position:fixed;right:20px;bottom:20px;z-index:60;width:60px;height:60px;border-radius:50%;background:#25a35a;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:.2s}.flotante:hover{transform:scale(1.08)}.flotante svg{width:30px;height:30px}@media(max-width:600px){html,body{overflow-x:hidden}header .wrap{height:72px}nav .btn{padding:9px 16px!important;font-size:.85rem}.wrap .cifras{grid-template-columns:1fr;margin-top:-30px}.cifras div{padding:20px 22px}.cifras b{font-size:1.45rem;margin-bottom:4px}.hero h1{font-size:2.6rem}.hero p{font-size:1.02rem}.cab h2,.split h2,.faqw h2,.contacto h2{font-size:2.1rem}.cab{margin-bottom:32px}.canal{flex:1 1 auto;justify-content:center}.flotante{width:54px;height:54px;right:14px;bottom:14px}}
+.rv{opacity:0;transform:translateY(30px);transition:1s cubic-bezier(.2,.7,.2,1)}.rv.in{opacity:1;transform:none}.card ul{list-style:none;padding:14px 0 0;margin:14px 0 0;border-top:1px solid var(--arena);font-size:.9rem}.card li{padding:4px 0 4px 20px;position:relative}.card li:before{content:"";position:absolute;left:2px;top:12px;width:8px;height:8px;border-radius:50% 0;background:var(--hoja)}.suave{background:#efe8da}.pasos{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}.paso{background:#fff;border-radius:20px;padding:28px}.paso span{font-family:Fraunces,serif;font-size:2.4rem;color:var(--hoja);font-weight:600;line-height:1}.paso h3{font-size:1.3rem;margin:14px 0 8px}.paso p{margin:0;color:var(--gris);font-size:.95rem}.faqw{display:grid;grid-template-columns:1fr 1.4fr;gap:60px;align-items:start}.faqw h2{font-size:clamp(2rem,4vw,3rem);margin:12px 0 16px}.faq details{background:#fff;border-radius:16px;padding:20px 24px;margin-bottom:12px}.faq summary{cursor:pointer;font-weight:600;list-style:none;position:relative;padding-right:30px}.faq summary::-webkit-details-marker{display:none}.faq summary:after{content:"+";position:absolute;right:0;top:-4px;font-size:1.5rem;color:var(--verde2);transition:.3s}.faq details[open] summary:after{transform:rotate(45deg)}.faq details p{margin:12px 0 0;color:var(--gris)}@media(max-width:980px){.pasos{grid-template-columns:repeat(2,1fr)}.faqw{grid-template-columns:1fr;gap:30px}}@media(max-width:600px){.pasos{grid-template-columns:1fr}}.canales{display:flex;flex-wrap:wrap;gap:10px}.canal{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:999px;font-weight:600;text-decoration:none;transition:.2s;background:#fff;color:var(--verde)}.canal svg{width:20px;height:20px}.canal:hover{transform:translateY(-2px)}.canal.wa{background:#1b7f45;color:#fff}.canal.sms{background:var(--hoja);color:#10220f}.flotante{position:fixed;right:20px;bottom:20px;z-index:60;width:60px;height:60px;border-radius:50%;background:#25a35a;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:.2s}.flotante:hover{transform:scale(1.08)}.flotante svg{width:30px;height:30px}@media(max-width:600px){html,body{overflow-x:hidden}header .wrap{height:72px}nav .btn{padding:9px 16px!important;font-size:.85rem}.wrap .cifras{grid-template-columns:1fr;margin-top:-30px}.cifras div{padding:20px 22px}.cifras b{font-size:1.45rem;margin-bottom:4px}.hero h1{font-size:2.6rem}.hero p{font-size:1.02rem}.cab h2,.split h2,.faqw h2,.contacto h2{font-size:2.1rem}.cab{margin-bottom:32px}.canal{flex:1 1 auto;justify-content:center}.flotante{width:54px;height:54px;right:14px;bottom:14px}}
 @media(max-width:980px){.serv{grid-template-columns:repeat(2,1fr)}.news{grid-template-columns:repeat(2,1fr)}.split,.contacto{grid-template-columns:1fr}.cifras{grid-template-columns:repeat(2,1fr)}.galeria{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){.serv,.news{grid-template-columns:1fr}section{padding:72px 0}.contacto>div{padding:34px 24px}.galeria{grid-template-columns:repeat(2,1fr);grid-auto-rows:140px}.g7,.g0{grid-column:span 2}.btn.lin{margin:10px 0 0}}
 .phead{min-height:56vh;position:relative;display:flex;align-items:flex-end;color:#fff;overflow:hidden;padding:0}.phead img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.phead:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,25,15,.45),rgba(10,25,15,.25) 45%,rgba(10,25,15,.82))}.phead .wrap{position:relative;z-index:2;padding-bottom:56px;padding-top:120px}.phead h1{font-size:clamp(2.4rem,6vw,4.4rem);margin:12px 0 16px;max-width:16ch}.phead p{max-width:58ch;font-size:1.1rem;opacity:.92;margin:0}.phead .eyebrow{color:#cfe6c2}nav a.on{color:var(--hoja);opacity:1}nav{display:flex;align-items:center}.menu{display:none;background:none;border:0;color:inherit;cursor:pointer;padding:8px;margin-right:-8px}.menu svg{width:30px;height:30px}.accesos{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}.acceso{text-decoration:none;display:flex;flex-direction:column}.acceso>div{flex:1;display:flex;flex-direction:column}.acceso p{flex:1}.acceso .ver{align-self:flex-start}.acceso .ver{display:inline-block;margin-top:14px;font-weight:600;color:var(--verde2)}.cta{background:var(--verde);color:#fff;border-radius:28px;padding:56px;display:grid;grid-template-columns:1.2fr 1fr;gap:40px;align-items:center}.cta h2{font-size:clamp(1.9rem,4vw,2.8rem);margin:10px 0 14px}.cta p{color:#c5d3c8;margin:0}.cta .eyebrow{color:#a9d39a}@media(max-width:980px){.menu{display:flex}nav{display:none;position:absolute;top:100%;left:0;right:0;background:var(--crema);color:var(--tinta);flex-direction:column;align-items:stretch;padding:8px 20px 22px;box-shadow:0 20px 40px rgba(0,0,0,.12)}header.abierto nav{display:flex}nav a{margin:0;padding:13px 0;border-bottom:1px solid var(--arena);font-size:1.05rem}nav a.btn{margin-top:14px;text-align:center;border:0;padding:14px!important}.accesos{grid-template-columns:1fr}.cta{grid-template-columns:1fr;padding:36px 26px}}footer{padding:70px 0 40px}footer .wrap{display:block}.cita{margin:0 auto 40px;max-width:620px;text-align:center;font-family:Fraunces,serif;font-style:italic;font-size:1.3rem;line-height:1.6;color:var(--verde)}.cita cite{display:block;margin-top:14px;font-family:Inter,sans-serif;font-style:normal;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gris)}.pie{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;border-top:1px solid var(--arena);padding-top:22px}@media(max-width:600px){.cita{font-size:1.1rem}}.langs{display:inline-flex;gap:2px;margin-left:22px;background:rgba(255,255,255,.14);border-radius:999px;padding:3px}.langs a{margin:0!important;padding:5px 9px;border-radius:999px;font-size:.78rem;font-weight:600;opacity:.85}.langs a.on{background:var(--hoja);color:#10220f;opacity:1}header.nav.solid .langs{background:var(--arena)}.pie{padding-right:70px}@media(max-width:980px){.langs{margin:14px 0 0;justify-content:center;background:var(--arena)}.langs a{padding:10px 16px!important;border:0!important;font-size:.95rem!important}}.hero .wrap{padding-top:130px}
@@ -410,7 +413,7 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 @media(max-width:980px){.plantas,.xero{grid-template-columns:repeat(2,1fr)}.mes ul{grid-template-columns:1fr}.tools,.pre{grid-template-columns:1fr}}
 @media(max-width:600px){.plantas,.xero,.campos{grid-template-columns:1fr}.subnav{top:72px}.pre{padding:30px 22px}.tool{padding:22px}.mes{padding:24px 20px}}
 </style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
-<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}" aria-label="Jardinería Adrover"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
+<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
 
 ${CUERPOS[ruta](t, lang)}
 
@@ -558,7 +561,7 @@ export default {
       return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}</urlset>`, { headers: { "content-type": "application/xml; charset=utf-8" } });
     }
     const m = url.pathname.match(/^\/img\/([\w-]+)$/);
-    if (m) return imagen(m[1], +url.searchParams.get("w"), env);
+    if (m) return imagen(m[1], +url.searchParams.get("w"), env, /image\/webp/.test(req.headers.get("accept") || ""));
     let p = url.pathname === "/index.html" ? "/" : url.pathname.replace(/\/+$/, "") || "/";
     let lang = "es";
     const lm = p.match(/^\/(ca|en|de)(\/.*)?$/);

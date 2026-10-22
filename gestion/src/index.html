@@ -289,10 +289,11 @@ function updateTotals(form) {
   const t = totalsOf(linesFrom(new FormData(form)));
   $('#totals', form).innerHTML = `<div><span>Base imponible</span><b>${eur(t.sub)}</b></div><div><span>IVA 21 %</span><b>${eur(t.iva)}</b></div><div class="grand"><span>Total</span><b>${eur(t.total)}</b></div>`;
 }
-function presupuestoSheet(id) {
-  const v = id ? S.presupuestos[id] || {} : {fecha: today(), estado: 'borrador'};
+// «base» rellena un presupuesto nuevo con las líneas de otro (Duplicar).
+function presupuestoSheet(id, base) {
+  const v = id ? S.presupuestos[id] || {} : {fecha: today(), estado: 'borrador', ...(base ? {clienteId: base.clienteId, lineas: base.lineas, notas: base.notas} : {})};
   const ls = v.lineas && v.lineas.length ? v.lineas : [{concepto:'', cantidad:1, precio:0}];
-  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf" data-id="${esc(id)}">Descargar PDF</button></div>` : ''}<div class="grid2">
+  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf" data-id="${esc(id)}">Descargar PDF</button><button type="button" class="btn small ghost" data-act="dup" data-id="${esc(id)}">Duplicar</button></div>` : ''}<div class="grid2">
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
       ${fld('estado', 'Estado', {options:Object.entries(ESTADOS), value:v.estado || 'borrador'})}
@@ -304,7 +305,7 @@ function presupuestoSheet(id) {
     </div>
     <div class="totals" id="totals"></div>
     <div class="grid2">${fld('notas', 'Notas', {area:1, value:v.notas, wide:1})}</div>`;
-  openSheet(id ? 'Presupuesto ' + (v.numero || '') : 'Nuevo presupuesto', html, async fd => {
+  openSheet(id ? 'Presupuesto ' + (v.numero || '') : base ? 'Copia de ' + (base.numero || 'presupuesto') : 'Nuevo presupuesto', html, async fd => {
     if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
     const lineas = linesFrom(fd);
     if (!lineas.length) throw new Error('Añade al menos una línea con concepto.');
@@ -421,19 +422,24 @@ function vContactos(kind) {
     <div id="list">${listaContactos(kind)}</div>`;
 }
 
-function vPresupuestos() {
+function listaPresupuestos() {
   const all = Object.entries(S.presupuestos).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
-  const chips = ['todos', ...Object.keys(ESTADOS)].map(e => `<button class="chip${estadoF === e ? ' on' : ''}" data-act="filter" data-v="${e}">${e === 'todos' ? 'Todos' : ESTADOS[e]}</button>`).join('');
-  const list = all.filter(([, p]) => estadoF === 'todos' || p.estado === estadoF);
-  const body = !all.length ? empty('Aún no hay presupuestos.', 'Pulsa «+ Nuevo» para crear el primero. El número se asigna solo.')
-    : !list.length ? '<div class="empty">No hay presupuestos en este estado.</div>'
-    : `<div class="rows">${list.map(([id, p]) => `<button class="row" data-act="edit-presupuesto" data-id="${esc(id)}">
+  if (!all.length) return empty('Aún no hay presupuestos.', 'Pulsa «+ Nuevo» para crear el primero. El número se asigna solo.');
+  const t = q.trim().toLowerCase();
+  const list = all.filter(([, p]) => (estadoF === 'todos' || p.estado === estadoF) &&
+    (!t || [p.numero, clienteNombre(p.clienteId), ...(p.lineas || []).map(l => l.concepto)].join(' ').toLowerCase().includes(t)));
+  if (!list.length) return '<div class="empty">' + (t ? 'Ninguna coincidencia.' : 'No hay presupuestos en este estado.') + '</div>';
+  return `<div class="rows">${list.map(([id, p]) => `<button class="row" data-act="edit-presupuesto" data-id="${esc(id)}">
         <div><b>${esc(p.numero || 'Sin número')} · ${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}</span></div>
         <div class="rowr"><span class="pill ${esc(p.estado)}">${esc(ESTADOS[p.estado] || '')}</span><b class="amt">${eur(totalsOf(p.lineas).total)}</b></div>
       </button>`).join('')}</div>`;
+}
+function vPresupuestos() {
+  const chips = ['todos', ...Object.keys(ESTADOS)].map(e => `<button class="chip${estadoF === e ? ' on' : ''}" data-act="filter" data-v="${e}">${e === 'todos' ? 'Todos' : ESTADOS[e]}</button>`).join('');
   return `<header class="pagehead"><div><h1>Presupuestos</h1><p class="sub">Importes con IVA del 21 %</p></div>
     <button class="btn primary" data-act="new-presupuesto">+ Nuevo</button></header>
-    <div class="chips">${chips}</div>${body}`;
+    <input id="q" class="search" type="search" placeholder="Buscar por número, cliente o concepto" value="${esc(q)}" aria-label="Buscar presupuestos">
+    <div class="chips">${chips}</div><div id="list">${listaPresupuestos()}</div>`;
 }
 
 function vPartes() {
@@ -453,8 +459,8 @@ const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), provee
 function render() {
   document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
   // Si solo cambian los datos y el usuario escribe en el buscador, se refresca la lista sin perder el foco.
-  if (view === lastView && (view === 'clientes' || view === 'proveedores') && $('#list')) {
-    $('#list').innerHTML = listaContactos(view);
+  if (view === lastView && ['clientes', 'proveedores', 'presupuestos'].includes(view) && $('#list')) {
+    $('#list').innerHTML = view === 'presupuestos' ? listaPresupuestos() : listaContactos(view);
     return;
   }
   lastView = view;
@@ -472,6 +478,7 @@ document.addEventListener('click', e => {
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
     case 'pdf': generarPDF(id); break;
+    case 'dup': { const b = S.presupuestos[id]; closeSheet(); if (b) presupuestoSheet(null, b); break; }
     case 'new-clientes': contactSheet('clientes', null); break;
     case 'edit-clientes': contactSheet('clientes', id); break;
     case 'new-proveedores': contactSheet('proveedores', null); break;
@@ -481,7 +488,7 @@ document.addEventListener('click', e => {
     case 'new-parte': parteSheet(null); break;
     case 'edit-parte': parteSheet(id); break;
     case 'edit-empresa': empresaSheet(); break;
-    case 'filter': estadoF = el.dataset.v; render(); break;
+    case 'filter': estadoF = el.dataset.v; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === estadoF)); $('#list').innerHTML = listaPresupuestos(); break;
     case 'addline': {
       const wrap = $('#lines');
       if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); updateTotals($('#sheet-form')); }
@@ -491,7 +498,7 @@ document.addEventListener('click', e => {
   }
 });
 document.addEventListener('input', e => {
-  if (e.target.id === 'q') { q = e.target.value; $('#list').innerHTML = listaContactos(view); return; }
+  if (e.target.id === 'q') { q = e.target.value; $('#list').innerHTML = view === 'presupuestos' ? listaPresupuestos() : listaContactos(view); return; }
   const form = e.target.closest('#sheet-form');
   if (form && $('#totals', form)) updateTotals(form);
 });
@@ -753,6 +760,12 @@ function generarPDF(id) {
   }
   cargarEnPantalla();
   cargarLogo();
+  let ultima = Date.now();
+  document.addEventListener('visibilitychange', async () => {
+    if (document.hidden || Date.now() - ultima < 30e3 || !$('#overlay').hidden) return;
+    ultima = Date.now();
+    try { mem = await api('GET', '/api/datos'); cargarEnPantalla(); } catch (e) {}
+  });
 })();
 })();
 </script>
