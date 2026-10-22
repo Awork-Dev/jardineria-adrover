@@ -300,7 +300,7 @@ ${compartir(lang, ruta, titulo, desc)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--tinta);background:var(--crema);line-height:1.6}
 img{max-width:100%;display:block}a{color:inherit}
 .wrap{max-width:1200px;margin:0 auto;padding:0 20px}
-h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;margin:0;overflow-wrap:break-word;hyphens:auto}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;margin:0}
 .eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:.78rem;font-weight:600;color:var(--verde2)}
 header.nav{position:fixed;inset:0 0 auto;z-index:50;transition:.3s;color:#fff}
 header.nav.solid{background:rgba(246,242,234,.96);backdrop-filter:blur(8px);color:var(--tinta);box-shadow:0 1px 0 rgba(0,0,0,.06)}
