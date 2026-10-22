@@ -2,6 +2,29 @@ import HTML from './index.html';
 import { icono, manifiesto } from '../../compartido/iconos.js';
 
 const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'partes', 'ajustes'];
+// Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
+const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
+async function bloqueada(env, ip) {
+  try {
+    const r = await env.DB.prepare('SELECT fallos, desde FROM intentos WHERE ip = ?').bind(ip).first();
+    return !!r && r.fallos >= MAX_FALLOS && Date.now() - r.desde < VENTANA;
+  } catch { return false; }
+}
+async function fallo(env, ip) {
+  try {
+    const ahora = Date.now();
+    await env.DB.prepare('INSERT INTO intentos (ip, fallos, desde) VALUES (?, 1, ?) ON CONFLICT(ip) DO UPDATE SET fallos = CASE WHEN ? - desde > ? THEN 1 ELSE fallos + 1 END, desde = CASE WHEN ? - desde > ? THEN ? ELSE desde END')
+      .bind(ip, ahora, ahora, VENTANA, ahora, VENTANA, ahora).run();
+  } catch {}
+}
+// Compara la clave sin dar pistas por el tiempo que tarda.
+async function igual(a, b) {
+  const h = async (x) => new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(x)));
+  const [x, y] = await Promise.all([h(a), h(b)]);
+  let d = 0;
+  for (let i = 0; i < x.length; i++) d |= x[i] ^ y[i];
+  return d === 0;
+}
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), {status, headers: {'content-type': 'application/json;charset=utf-8', 'cache-control': 'no-store'}});
 
 export default {
@@ -13,7 +36,12 @@ export default {
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/');
     const ico = icono(url.pathname); if (ico) return ico;
     if (!url.pathname.startsWith('/api/')) return new Response('No encontrado', {status: 404});
-    if (!env.CLAVE || req.headers.get('x-clave') !== env.CLAVE) return json({error: 'clave'}, 401);
+    const ip = req.headers.get('cf-connecting-ip') || 'desconocida';
+    if (await bloqueada(env, ip)) return json({error: 'demasiados intentos'}, 429);
+    if (!env.CLAVE || !(await igual(req.headers.get('x-clave') || '', env.CLAVE))) {
+      await fallo(env, ip);
+      return json({error: 'clave'}, 401);
+    }
 
     if (url.pathname === '/api/datos' && req.method === 'GET') {
       const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs').all();

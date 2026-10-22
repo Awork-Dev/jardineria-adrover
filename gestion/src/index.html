@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Gestión Jardinería Adrover</title>
 <link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#1f3d2b"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Gestión">
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Paleta: verde de jardín con arena. Maqueta: barra lateral en escritorio, barra inferior en móvil. */
 :root{
@@ -104,6 +103,10 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .empty p{margin:0}
 .overlay{position:fixed;inset:0;background:rgba(10,18,12,.45);display:grid;place-items:center;padding:16px;z-index:20}
 .overlay[hidden]{display:none}
+#login{background:var(--bg);z-index:40}
+#login .sheet{width:min(400px,100%);padding:28px 26px;display:flex;flex-direction:column;gap:14px}
+#login .brand{margin-bottom:6px}
+#login-err{margin:0;color:var(--rej-ink);font-size:.9rem;min-height:1.2em}
 .sheet{background:var(--panel);color:var(--ink);border-radius:20px;width:min(680px,100%);max-height:calc(100vh - 32px);overflow:auto;padding:20px 22px;border:1px solid var(--line)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 #sheet-form{display:flex;flex-direction:column;gap:14px}
@@ -157,7 +160,8 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
     <div class="backup">
       <button class="btn small" data-act="export">Guardar copia</button>
       <label class="btn small">Cargar copia<input id="imp" type="file" accept="application/json" hidden></label>
-      <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en este navegador. Haz una copia de vez en cuando.</p>
+      <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor. Haz una copia de vez en cuando.</p>
+      <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
     </div>
   </aside>
   <main><div id="view"></div></main>
@@ -168,6 +172,15 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
     <div class="sheet-head"><h2 id="sheet-title"></h2><button class="icon" data-act="close" aria-label="Cerrar">×</button></div>
     <form id="sheet-form" autocomplete="off"></form>
   </div>
+</div>
+<div id="login" class="overlay" hidden>
+  <form class="sheet" id="login-form" autocomplete="on">
+    <div class="brand"><span class="mark">J</span><div><b>Jardinería Adrover</b><small>Gestión</small></div></div>
+    <input type="text" name="usuario" value="gestion" autocomplete="username" hidden>
+    <label class="fld"><span>Clave de acceso</span><input type="password" name="clave" autocomplete="current-password" required></label>
+    <p id="login-err" role="alert"></p>
+    <button class="btn primary">Entrar</button>
+  </form>
 </div>
 <div id="toast" class="toast" role="status"></div>
 
@@ -260,7 +273,13 @@ function contactSheet(kind, id) {
     const d = readObj(fd);
     if (!d.nombre) throw new Error('El nombre es obligatorio.');
     await put(kind, id || uid(isC ? 'c' : 'v'), d);
-  }, id ? () => del(kind, id) : null);
+  }, id ? () => {
+    if (isC) {
+      const n = Object.values(S.presupuestos).filter(p => p.clienteId === id).length + Object.values(S.partes).filter(p => p.clienteId === id).length;
+      if (n && !window.confirm('Este cliente tiene ' + (n === 1 ? '1 presupuesto o parte' : n + ' presupuestos o partes') + '. Si lo eliminas, aparecerá' + (n === 1 ? '' : 'n') + ' como «(sin cliente)». ¿Eliminar igualmente?')) return Promise.reject(new Error('No se ha eliminado.'));
+    }
+    return del(kind, id);
+  } : null);
 }
 
 function lineRow(l = {}) {
@@ -451,6 +470,7 @@ document.addEventListener('click', e => {
     case 'nav': view = el.dataset.view; estadoF = 'todos'; q = ''; render(); break;
     case 'close': closeSheet(); break;
     case 'export': exportarCopia(); break;
+    case 'salir': salir(); break;
     case 'pdf': generarPDF(id); break;
     case 'new-clientes': contactSheet('clientes', null); break;
     case 'edit-clientes': contactSheet('clientes', id); break;
@@ -514,18 +534,46 @@ const DEFAULT_EMPRESA = {
 };
 let mem = {};
 let clave = '';
-try { clave = sessionStorage.getItem('clave') || ''; } catch (e) {}
-function pedirClave() {
-  const c = window.prompt('Clave de acceso a la gestión');
-  if (c) { clave = c; try { sessionStorage.setItem('clave', c); } catch (e) {} }
-  return !!c;
+// La clave se recuerda en este dispositivo hasta pulsar «Cerrar sesión».
+try { clave = localStorage.getItem('clave') || sessionStorage.getItem('clave') || ''; } catch (e) {}
+let pidiendo = null;
+function pedirClave(error) {
+  if (pidiendo) return pidiendo;
+  return pidiendo = new Promise(resolve => {
+    const box = $('#login'), f = $('#login-form');
+    $('#login-err').textContent = error || '';
+    box.hidden = false;
+    f.clave.value = '';
+    f.clave.focus();
+    f.onsubmit = ev => {
+      ev.preventDefault();
+      clave = f.clave.value.trim();
+      try { localStorage.setItem('clave', clave); } catch (e) {}
+      box.hidden = true;
+      pidiendo = null;
+      resolve();
+    };
+  });
+}
+function salir() {
+  try { localStorage.removeItem('clave'); sessionStorage.removeItem('clave'); } catch (e) {}
+  location.reload();
 }
 async function api(method, path, body) {
-  const r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave},
-    body: body ? JSON.stringify(body) : undefined});
-  if (r.status === 401) { if (pedirClave()) return api(method, path, body); throw new Error('Clave incorrecta.'); }
-  if (!r.ok) throw new Error('El servidor no pudo guardar. Revisa la conexión e inténtalo de nuevo.');
-  return r.json();
+  // Si la clave guardada deja de valer, se vuelve a pedir; si la acaban de escribir mal, se avisa.
+  let tecleada = false;
+  for (;;) {
+    if (!clave) { await pedirClave(); tecleada = true; }
+    let r;
+    try {
+      r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave},
+        body: body ? JSON.stringify(body) : undefined});
+    } catch (e) { throw new Error('Sin conexión. Revisa internet e inténtalo de nuevo.'); }
+    if (r.status === 429) throw new Error('Demasiados intentos con una clave incorrecta. Espera unos minutos.');
+    if (r.status === 401) { clave = ''; await pedirClave(tecleada ? 'Clave incorrecta. Inténtalo de nuevo.' : ''); tecleada = true; continue; }
+    if (!r.ok) throw new Error('El servidor no pudo guardar. Revisa la conexión e inténtalo de nuevo.');
+    return r.json();
+  }
 }
 function cargarEnPantalla() {
   COLS.forEach(col => {
@@ -578,6 +626,16 @@ document.addEventListener('change', e => {
 
 /* ---------- PDF del presupuesto ---------- */
 const eurPDF = n => num(n).toLocaleString('es-ES', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' €';
+// El logo se carga al abrir la gestión para que el PDF se pueda generar (y compartir) al instante.
+let LOGO = null;
+function cargarLogo() {
+  fetch('/icon-192.png').then(r => r.ok ? r.blob() : null).then(b => {
+    if (!b) return;
+    const fr = new FileReader();
+    fr.onload = () => { LOGO = fr.result; };
+    fr.readAsDataURL(b);
+  }).catch(() => {});
+}
 function generarPDF(id) {
   const p = S.presupuestos[id];
   if (!p) return;
@@ -586,56 +644,115 @@ function generarPDF(id) {
   const e = S.ajustes.empresa || DEFAULT_EMPRESA;
   const c = S.clientes[p.clienteId] || {};
   const d = new J({unit: 'mm', format: 'a4'});
-  const L = 18, R = 192;
+  const L = 18, R = 192, ALTO = 297, PIE = 280, VERDE = [46, 107, 61];
+  const txt = (s, x, y, o) => d.text(String(s), x, y, o);
+  // Si lo que viene no cabe en la página, pasa a la siguiente.
+  const sitio = (h, conCabecera) => {
+    if (y + h <= PIE) return;
+    d.addPage(); y = 20;
+    if (conCabecera) cabeceraTabla();
+  };
+  const cabeceraTabla = () => {
+    d.setFont('helvetica', 'bold'); d.setFontSize(9); d.setTextColor(30, 30, 30);
+    txt('Concepto', L, y); txt('Cant.', 128, y, {align: 'right'});
+    txt('Precio', 158, y, {align: 'right'}); txt('Importe', R, y, {align: 'right'});
+    d.setDrawColor(180); d.line(L, y + 2, R, y + 2);
+    d.setFont('helvetica', 'normal');
+    y += 3;
+  };
+  const parrafo = (titulo, texto) => {
+    d.setFontSize(9);
+    const lineas = d.splitTextToSize(String(texto), R - L);
+    sitio(10 + lineas.length * 4.5);
+    y += 10;
+    d.setFont('helvetica', 'bold'); d.setFontSize(10); txt(titulo, L, y);
+    d.setFont('helvetica', 'normal'); d.setFontSize(9);
+    lineas.forEach(l => { sitio(4.5); y += 4.5; txt(l, L, y); });
+  };
+
+  // Empresa
+  let x0 = L;
+  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 20, 20); x0 = L + 25; } catch (err) {} }
   let y = 20;
-  d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(46, 107, 61);
-  d.text(String(e.nombre || ''), L, y);
+  d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE);
+  txt(e.nombre || '', x0, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
   [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), e.telefono, e.email]
-    .filter(Boolean).forEach(t => { y += 5; d.text(String(t), L, y); });
+    .filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
   d.setFont('helvetica', 'bold'); d.setFontSize(13); d.setTextColor(30, 30, 30);
-  d.text('PRESUPUESTO', R, 20, {align: 'right'});
+  txt('PRESUPUESTO', R, 20, {align: 'right'});
   d.setFont('helvetica', 'normal'); d.setFontSize(10);
-  d.text('Nº ' + (p.numero || ''), R, 27, {align: 'right'});
-  d.text('Fecha: ' + fmtFecha(p.fecha), R, 33, {align: 'right'});
-  y = 58;
-  d.setFont('helvetica', 'bold'); d.text('Cliente', L, y); d.setFont('helvetica', 'normal');
+  txt('Nº ' + (p.numero || ''), R, 27, {align: 'right'});
+  txt('Fecha: ' + fmtFecha(p.fecha), R, 33, {align: 'right'});
+
+  // Cliente
+  y = Math.max(y, 40) + 14;
+  d.setFont('helvetica', 'bold'); txt('Cliente', L, y); d.setFont('helvetica', 'normal');
   [c.nombre, c.cif && 'CIF ' + c.cif, c.direccion, [c.cp, c.poblacion].filter(Boolean).join(' '), c.telefono, c.email, c.contacto && 'Contacto: ' + c.contacto]
-    .filter(Boolean).forEach(t => { y += 5; d.text(String(t), L, y); });
+    .filter(Boolean).forEach(t => { y += 5; txt(t, L, y); });
+
+  // Líneas: el concepto se parte en varias líneas si es largo
   y += 12;
-  d.setFont('helvetica', 'bold'); d.setFontSize(9);
-  d.text('Concepto', L, y); d.text('Cant.', 120, y, {align: 'right'});
-  d.text('Precio', 152, y, {align: 'right'}); d.text('Importe', R, y, {align: 'right'});
-  d.setDrawColor(180); d.line(L, y + 2, R, y + 2);
-  d.setFont('helvetica', 'normal');
+  cabeceraTabla();
+  d.setFontSize(9);
   (p.lineas || []).forEach(l => {
-    y += 7;
-    d.text(String(l.concepto || ''), L, y);
-    d.text(String(num(l.cantidad)), 120, y, {align: 'right'});
-    d.text(eurPDF(l.precio), 152, y, {align: 'right'});
-    d.text(eurPDF(num(l.cantidad) * num(l.precio)), R, y, {align: 'right'});
+    const partes = d.splitTextToSize(String(l.concepto || ''), 95);
+    sitio(partes.length * 4.5 + 3, true);
+    y += 5;
+    txt(num(l.cantidad).toLocaleString('es-ES'), 128, y, {align: 'right'});
+    txt(eurPDF(l.precio), 158, y, {align: 'right'});
+    txt(eurPDF(num(l.cantidad) * num(l.precio)), R, y, {align: 'right'});
+    partes.forEach((t, i) => txt(t, L, y + i * 4.5));
+    y += (partes.length - 1) * 4.5 + 1.5;
   });
+
+  // Totales
   const t = totalsOf(p.lineas);
-  y += 12;
-  d.text('Base imponible', 140, y); d.text(eurPDF(t.sub), R, y, {align: 'right'});
-  y += 6; d.text('IVA 21 %', 140, y); d.text(eurPDF(t.iva), R, y, {align: 'right'});
-  y += 7; d.setFont('helvetica', 'bold'); d.text('Total', 140, y); d.text(eurPDF(t.total), R, y, {align: 'right'});
-  if (p.notas) { y += 14; d.setFont('helvetica', 'normal'); d.text(d.splitTextToSize('Notas: ' + p.notas, R - L), L, y); }
-  if (e.condiciones) {
-    y += 14; d.setFont('helvetica', 'bold'); d.text('Condiciones', L, y);
-    d.setFont('helvetica', 'normal'); d.text(d.splitTextToSize(String(e.condiciones), R - L), L, y + 5);
+  sitio(26);
+  d.setDrawColor(180); d.line(128, y + 3, R, y + 3);
+  y += 9; txt('Base imponible', 130, y); txt(eurPDF(t.sub), R, y, {align: 'right'});
+  y += 6; txt('IVA 21 %', 130, y); txt(eurPDF(t.iva), R, y, {align: 'right'});
+  y += 7; d.setFont('helvetica', 'bold'); d.setFontSize(11); d.setTextColor(...VERDE);
+  txt('Total', 130, y); txt(eurPDF(t.total), R, y, {align: 'right'});
+  d.setTextColor(60, 60, 60);
+
+  if (p.notas) parrafo('Notas', p.notas);
+  if (e.condiciones) parrafo('Condiciones', e.condiciones);
+
+  // Pie con número de página
+  const n = d.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    d.setPage(i); d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(140, 140, 140);
+    txt([e.nombre, e.telefono, e.email].filter(Boolean).join(' · '), L, ALTO - 10);
+    if (n > 1) txt('Página ' + i + ' de ' + n, R, ALTO - 10, {align: 'right'});
   }
-  d.save((p.numero || 'presupuesto') + '.pdf');
+
+  // En el móvil se abre «Compartir» (WhatsApp, correo…); en el ordenador se descarga.
+  const nombre = (p.numero || 'presupuesto') + '.pdf';
+  const archivo = new File([d.output('blob')], nombre, {type: 'application/pdf'});
+  const movil = matchMedia('(pointer:coarse)').matches;
+  if (movil && navigator.canShare && navigator.canShare({files: [archivo]})) {
+    navigator.share({files: [archivo], title: 'Presupuesto ' + (p.numero || '')}).catch(err => { if (err.name !== 'AbortError') d.save(nombre); });
+  } else {
+    d.save(nombre);
+  }
 }
 
 /* ---------- Arranque ---------- */
 (async function init() {
-  try { mem = await api('GET', '/api/datos'); }
-  catch (e) { toast(e.message, true); }
+  $('#view').innerHTML = empty('Cargando…', 'Conectando con el servidor.');
+  try {
+    mem = await api('GET', '/api/datos');
+  } catch (e) {
+    $('#view').innerHTML = empty('No se han podido cargar los datos.', e.message + ' Vuelve a abrir la página para reintentarlo.');
+    return;
+  }
+  // Solo la primera vez (base vacía) se rellenan los datos de la empresa.
   if (!(mem.ajustes && mem.ajustes.empresa)) {
     try { await db.collection('ajustes').doc('empresa').set(DEFAULT_EMPRESA); } catch (e) {}
   }
   cargarEnPantalla();
+  cargarLogo();
 })();
 })();
 </script>

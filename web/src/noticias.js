@@ -20,11 +20,15 @@ export const FUENTES = {
   ],
 };
 export const FUERA = /coca[ií]na|de coca\b|marihuana|narco|ratas|ratones|\bkit\b|modelos de|oferta|descuento|amazon|lidl|aldi/i;
+// Webs de ofertas y anuncios de productos que se cuelan como noticias.
+export const FUENTES_FUERA = /poder ?popular/i;
+export const PRODUCTO = /\bpack de \d|\b\d+([.,]\d+)?\s?(mm|cm|uds?|unidades|piezas)\b|\b\d+\s?m\b.*[–-]/i;
 export const PLANTAS = /plant|tree|flower|crop|soil|seed|root|leaf|leaves|forest|botan|pollinat|\bbees?\b|garden|fung|photosynth|weed|fruit|grass|árbol|arbol|flor|semilla|cultivo|bosque|suelo|hoja|polin|abeja|jard|vegetal|xylella|hongo|palmer|vivero|agricult|agrono/i;
 export const NATURA = /sequ[ií]a|sequera|riego|\breg\b|plaga|plague|picudo|morrut|xylella|oliv|almendr|ametl|pinar|pinos?\b|pins\b|parque natural|parc natural|espacio natural|espai natural|tramuntana|posidonia|medio ambiente|medi ambient|incendio forestal|incendi forestal|zona verde|zones verdes|zonas verdes|poda|tala\b|vivers?\b|viveros?\b|natural/i;
 export const dec = (s) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
-  .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/&amp;/g, "&");
+  .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([\da-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+  .replace(/&amp;/g, "&");
 export const tag = (x, t) => { const m = x.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`, "i")); return m ? dec(m[1]).trim() : ""; };
 export const limpia = (s) => s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 export async function leerFeed(url) {
@@ -42,7 +46,7 @@ export async function leerFeed(url) {
       const resumen = google ? "" : limpia(tag(it, "description")).slice(0, 260);
       const fecha = Date.parse(tag(it, "pubDate")) || Date.now();
       return { titulo, enlace: limpia(tag(it, "link")), fuente, resumen, fecha, idioma: url.includes("hl=es") ? "es" : "en" };
-    }).filter((n) => n.titulo && n.enlace);
+    }).filter((n) => n.titulo && /^https?:\/\//.test(n.enlace));
   } catch { return []; }
 }
 export async function vigilar(env) {
@@ -55,7 +59,8 @@ export async function vigilar(env) {
     out[cat] = [...listas.flat(), ...((prev && prev[cat]) || [])].sort((a, b) => b.fecha - a.fecha).filter((n) => {
       if (n.fecha < limite) return false;
       const txt = n.titulo + " " + n.resumen;
-      if (FUERA.test(txt)) return false;
+      if (FUERA.test(txt) || FUENTES_FUERA.test(n.fuente) || PRODUCTO.test(n.titulo)) return false;
+      if (n.titulo.split(/\s+/).length < 4) return false; // titulares vacíos, como «AyuntamientoJaen»
       if (cat === "ciencia" && !PLANTAS.test(txt)) return false;
       if (cat === "baleares" && !PLANTAS.test(txt) && !NATURA.test(txt)) return false;
       const k = n.titulo.toLowerCase().replace(/[^a-záéíóúñü0-9]/g, "").slice(0, 60);
