@@ -70,6 +70,8 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 - Traen cliente, horas, quién ha ido, tareas, detalles, fotos y **avisos para la oficina** (en amarillo).
 - **Horas por persona:** 2 personas durante 2,5 h cuentan 5 h.
 - **Corregir:** ábrelo, cambia y **Guardar**. Desde entonces el jefe ya no puede modificarlo desde su app.
+- **PDF de un parte:** ábrelo y pulsa **Descargar PDF**. Sale con los datos del cliente, horas, tareas, fotos y espacio para las firmas. Los avisos para la oficina no salen.
+- **PDF del mes de un cliente** (para adjuntar a la factura o archivar): en **Partes** elige **cliente** y **mes** y pulsa **PDF de estos partes**. Sale una tabla con todos los partes y el total de horas.
 
 ## Equipo
 

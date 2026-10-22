@@ -386,7 +386,7 @@ function parteSheet(id) {
       ${v.incidencias ? `<span class="line" style="color:var(--pend-ink);background:var(--pend-bg);padding:8px 10px;border-radius:10px"><b>Aviso para la oficina:</b> ${esc(v.incidencias)}</span>` : ''}
       ${miniaturas(v.fotos)}
     </div>` : '';
-  const html = `${info}<div class="grid2">
+  const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button></div>` : ''}${info}<div class="grid2">
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId})}
       ${fld('operario', 'Operario', {value:v.operario})}
@@ -550,16 +550,26 @@ function vDocs(kind) {
     <div class="chips">${chips}</div><div id="list">${listaDocs(kind)}</div>`;
 }
 
+let partesCli = '', partesMes = '';
+const partesFiltrados = () => Object.entries(S.partes)
+  .filter(([, p]) => (!partesCli || p.clienteId === partesCli) && (!partesMes || (p.fecha || '').startsWith(partesMes)))
+  .sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || '') || (b[1].inicio || '').localeCompare(a[1].inicio || ''));
 function vPartes() {
-  const all = Object.entries(S.partes).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
+  const all = partesFiltrados();
   const h = all.reduce((a, [, p]) => a + num(p.horas), 0);
-  const body = !all.length ? empty('Aún no hay partes de trabajo.', 'Registra aquí las horas y los trabajos hechos en cada cliente.')
+  const filtros = `<div class="grid2" style="margin-bottom:12px">
+      <label class="fld"><span>Cliente</span><select id="pf-cli">${[['', 'Todos los clientes'], ...clienteOpts().slice(1)].map(([k, t]) => `<option value="${esc(k)}"${k === partesCli ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+      <label class="fld"><span>Mes</span><input id="pf-mes" type="month" value="${esc(partesMes)}"></label></div>
+    ${all.length ? `<div class="actions" style="margin:0 0 14px"><button class="btn small" data-act="pdf-partes">PDF de ${all.length === 1 ? 'este parte' : 'estos ' + all.length + ' partes'}</button>
+      <span class="meta">Para adjuntar a la factura o archivar en papel. Elige cliente y mes para el resumen mensual.</span></div>` : ''}`;
+  const body = !Object.keys(S.partes).length ? empty('Aún no hay partes de trabajo.', 'Registra aquí las horas y los trabajos hechos en cada cliente.')
+    : !all.length ? '<div class="empty">No hay partes con estos filtros.</div>'
     : `<div class="rows">${all.map(([id, p]) => `<button class="row" data-act="edit-parte" data-id="${esc(id)}">
         <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))}${p.inicio ? ' · ' + esc(p.inicio) + '–' + esc(p.fin) : ''} · ${esc(p.operario || 'Sin operario')}</span><span class="line">${esc([(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join(' · '))}</span>${p.incidencias ? `<span class="pill enviado" style="align-self:flex-start;margin-top:4px">Aviso: ${esc(p.incidencias.slice(0, 60))}</span>` : ''}</div>
         <div class="rowr"><b class="amt">${num(p.horas).toLocaleString('es-ES')} h</b></div>
       </button>`).join('')}</div>`;
-  return `<header class="pagehead"><div><h1>Partes de trabajo</h1><p class="sub">${num(h).toLocaleString('es-ES')} h registradas en ${all.length} partes</p></div>
-    <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${body}`;
+  return `<header class="pagehead"><div><h1>Partes de trabajo</h1><p class="sub">${num(h).toLocaleString('es-ES')} h en ${all.length} ${all.length === 1 ? 'parte' : 'partes'}</p></div>
+    <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${filtros}${body}`;
 }
 
 /* ---------- Fotos del equipo ---------- */
@@ -783,6 +793,8 @@ document.addEventListener('click', e => {
     case 'edit-doc': docSheet(el.dataset.k, id); break;
     case 'new-parte': parteSheet(null); break;
     case 'edit-parte': parteSheet(id); break;
+    case 'pdf-parte': pdfPartes([id]); break;
+    case 'pdf-partes': pdfPartes(partesFiltrados().map(([k]) => k)); break;
     case 'edit-empresa': empresaSheet(); break;
     case 'filter': estadoF = el.dataset.v; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === estadoF)); $('#list').innerHTML = listaDocs(view); break;
     case 'addline': {
@@ -926,6 +938,8 @@ async function importarCopia(file) {
 }
 document.addEventListener('change', e => {
   if (e.target.id === 'op-j') { opJ = e.target.value; lastView = ''; render(); return; }
+  if (e.target.id === 'pf-cli') { partesCli = e.target.value; lastView = ''; render(); return; }
+  if (e.target.id === 'pf-mes') { partesMes = e.target.value; lastView = ''; render(); return; }
   if (e.target.id === 'mes-j') { mesJ = e.target.value || mesActual(); lastView = ''; render(); return; }
   if (e.target.matches('.imp') && e.target.files[0]) importarCopia(e.target.files[0]);
 });
@@ -978,7 +992,7 @@ const eurPDF = n => num(n).toLocaleString('es-ES', {minimumFractionDigits: 2, ma
 // El logo se carga al abrir la gestión para que el PDF se pueda generar (y compartir) al instante.
 let LOGO = null;
 function cargarLogo() {
-  fetch('/icon-192.png').then(r => r.ok ? r.blob() : null).then(b => {
+  fetch('/logo.png').then(r => r.ok ? r.blob() : null).then(b => {
     if (!b) return;
     const fr = new FileReader();
     fr.onload = () => { LOGO = fr.result; };
@@ -1106,6 +1120,137 @@ function generarPDF(kind, id) {
   } else {
     d.save(nombre);
   }
+}
+
+/* ---------- PDF de partes (para adjuntar a una factura o archivar en papel) ---------- */
+// Un parte: todos sus datos, fotos y firmas. Varios: tabla con el total de horas y firmas.
+// Los avisos para la oficina no salen: son internos.
+const blobADatos = b => new Promise(ok => { const fr = new FileReader(); fr.onload = () => ok(fr.result); fr.readAsDataURL(b); });
+async function fotoParaPDF(id) {
+  try {
+    const u = await fotoURL(id, false); if (!u) return null;
+    const datos = await blobADatos(await (await fetch(u)).blob());
+    const img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = datos; });
+    return {datos, ancho: img.naturalWidth, alto: img.naturalHeight};
+  } catch (e) { return null; }
+}
+async function pdfPartes(ids) {
+  const partes = ids.map(id => S.partes[id]).filter(Boolean).sort((a, b) => (a.fecha + (a.inicio || '')).localeCompare(b.fecha + (b.inicio || '')));
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if (!partes.length) return;
+  if (!J) return toast('No se pudo cargar el generador de PDF. Revisa la conexión.', true);
+  const uno = partes.length === 1, p0 = partes[0];
+  if (uno && (p0.fotos || []).length) toast('Preparando el PDF con las fotos…');
+  const e = S.ajustes.empresa || DEFAULT_EMPRESA, d = new J({unit: 'mm', format: 'a4'});
+  const L = 18, R = 192, ALTO = 297, PIE = 278, VERDE = [46, 107, 61];
+  const txt = (t, x, y, o) => d.text(String(t), x, y, o);
+  let y = 20;
+  const sitio = h => { if (y + h > PIE) { d.addPage(); y = 20; return true; } return false; };
+  const horasTxt = h => num(h).toLocaleString('es-ES', {maximumFractionDigits: 2}) + ' h';
+  const clientes = [...new Set(partes.map(p => p.clienteId))];
+
+  // Cabecera: empresa a la izquierda, título a la derecha
+  let x0 = L;
+  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 20, 20); x0 = L + 25; } catch (err) {} }
+  d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE); txt(e.nombre || '', x0, y);
+  d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
+  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), e.telefono, e.email].filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
+  d.setFont('helvetica', 'bold'); d.setFontSize(13); d.setTextColor(30, 30, 30);
+  txt(uno ? 'PARTE DE TRABAJO' : 'PARTES DE TRABAJO', R, 20, {align: 'right'});
+  d.setFont('helvetica', 'normal'); d.setFontSize(10);
+  if (uno) { txt('Fecha: ' + fmtFecha(p0.fecha), R, 27, {align: 'right'}); if (p0.inicio) txt('Horario: ' + p0.inicio + ' – ' + p0.fin, R, 33, {align: 'right'}); }
+  else {
+    const f1 = fmtFecha(partes[0].fecha), f2 = fmtFecha(partes[partes.length - 1].fecha);
+    txt(partesMes ? new Date(partesMes + '-15').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'}) : f1 === f2 ? f1 : f1 + ' – ' + f2, R, 27, {align: 'right'});
+    txt(partes.length + ' partes', R, 33, {align: 'right'});
+  }
+
+  // Cliente (si todos son del mismo)
+  y = Math.max(y, 40) + 10;
+  if (clientes.length === 1) {
+    const c = S.clientes[clientes[0]] || {};
+    const filas = [['NIF/CIF', c.cif], ['Dirección', c.direccion], ['Localidad', [c.cp, c.poblacion, c.provincia && '(' + c.provincia + ')'].filter(Boolean).join(' ')], ['Teléfono', c.telefono]].filter(([, v]) => v);
+    const alto = 15 + filas.length * 5;
+    d.setDrawColor(200); d.setFillColor(246, 248, 244); d.roundedRect(L, y, R - L, alto, 2, 2, 'FD');
+    d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...VERDE); txt('CLIENTE', L + 4, y + 5);
+    d.setFontSize(11); d.setTextColor(30, 30, 30); txt(c.nombre || clienteNombre(clientes[0]), L + 4, y + 10.5);
+    d.setFontSize(9);
+    filas.forEach(([k, v], i) => { d.setFont('helvetica', 'bold'); d.setTextColor(90, 90, 90); txt(k + ':', L + 4, y + 15.5 + i * 5); d.setFont('helvetica', 'normal'); d.setTextColor(30, 30, 30); txt(d.splitTextToSize(String(v), R - L - 34)[0], L + 26, y + 15.5 + i * 5); });
+    y += alto + 8;
+  }
+  d.setTextColor(30, 30, 30);
+
+  if (uno) {
+    // Un parte: datos con etiqueta
+    const personas = (p0.operarios || []).map(o => (S.operarios[o] || {}).nombre).filter(Boolean).join(', ') || p0.operario || '';
+    const filas = [['Personas', personas],
+      ['Horas', p0.duracion ? horasTxt(p0.duracion) + ' por persona · ' + horasTxt(p0.horas) + ' en total' : horasTxt(p0.horas)],
+      ['Tareas', (p0.tareas || []).join(', ')], ['Trabajo realizado', p0.descripcion]].filter(([, v]) => v);
+    for (const [k, v] of filas) {
+      const lineas = d.splitTextToSize(String(v), R - L - 40);
+      sitio(lineas.length * 5 + 4);
+      d.setFont('helvetica', 'bold'); d.setFontSize(10); txt(k, L, y);
+      d.setFont('helvetica', 'normal'); lineas.forEach((t, i) => txt(t, L + 40, y + i * 5));
+      y += lineas.length * 5 + 4;
+    }
+    // Fotos, dos por fila
+    const fotos = (await Promise.all((p0.fotos || []).map(fotoParaPDF))).filter(Boolean);
+    if (fotos.length) {
+      sitio(14); y += 4; d.setFont('helvetica', 'bold'); txt('Fotos', L, y); y += 4;
+      const anchoCol = (R - L - 6) / 2;
+      for (let i = 0; i < fotos.length; i += 2) {
+        const par = fotos.slice(i, i + 2), alto = Math.min(80, Math.max(...par.map(f => anchoCol * f.alto / f.ancho)));
+        sitio(alto + 4);
+        par.forEach((f, j) => {
+          const k = Math.min(anchoCol / f.ancho, alto / f.alto);
+          try { d.addImage(f.datos, 'JPEG', L + j * (anchoCol + 6), y, f.ancho * k, f.alto * k); } catch (err) {}
+        });
+        y += alto + 4;
+      }
+    }
+  } else {
+    // Varios partes: tabla
+    const cols = clientes.length === 1 ? [['Fecha', 26], ['Horario', 24], ['Personas', 40], ['Horas', 16], ['Trabajo', 68]] : [['Fecha', 22], ['Cliente', 36], ['Horario', 22], ['Personas', 34], ['Horas', 14], ['Trabajo', 46]];
+    const cabecera = () => {
+      d.setFont('helvetica', 'bold'); d.setFontSize(9); let x = L;
+      cols.forEach(([t, w]) => { txt(t, t === 'Horas' ? x + w - 2 : x, y, t === 'Horas' ? {align: 'right'} : undefined); x += w; });
+      d.setDrawColor(180); d.line(L, y + 2, R, y + 2); y += 7; d.setFont('helvetica', 'normal');
+    };
+    cabecera();
+    for (const p of partes) {
+      const celdas = {Fecha: fmtFecha(p.fecha), Cliente: clienteNombre(p.clienteId), Horario: p.inicio ? p.inicio + '–' + p.fin : '', Personas: p.operario || '', Horas: horasTxt(p.horas), Trabajo: [(p.tareas || []).join(', '), p.descripcion].filter(Boolean).join('. ')};
+      const partidas = cols.map(([t, w]) => d.splitTextToSize(String(celdas[t] || ''), w - 3));
+      const alto = Math.max(...partidas.map(l => l.length)) * 4.3 + 2.5;
+      if (sitio(alto)) cabecera();
+      let x = L;
+      cols.forEach(([t, w], i) => { partidas[i].forEach((l, j) => txt(l, t === 'Horas' ? x + w - 2 : x, y + j * 4.3, t === 'Horas' ? {align: 'right'} : undefined)); x += w; });
+      y += alto; d.setDrawColor(225); d.line(L, y - 3, R, y - 3);
+    }
+    sitio(10); d.setFont('helvetica', 'bold'); d.setFontSize(10);
+    txt('Total de horas: ' + horasTxt(partes.reduce((a, p) => a + num(p.horas), 0)), R, y + 2, {align: 'right'}); y += 8;
+  }
+
+  // Firmas, para archivar en papel
+  sitio(36); y += 10; d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setDrawColor(150);
+  const anchoF = (R - L - 10) / 2;
+  const firmas = clientes.length === 1 ? [['Conforme del cliente (nombre y firma)', L], ['Por ' + (e.nombre || 'la empresa'), L + anchoF + 10]] : [['Revisado por ' + (e.nombre || 'la empresa'), L]];
+  firmas.forEach(([t, x]) => { d.rect(x, y, anchoF, 22); txt(t, x + 3, y + 5); });
+
+  // Pie con número de página
+  const n = d.getNumberOfPages();
+  for (let i = 1; i <= n; i++) {
+    d.setPage(i); d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(140, 140, 140);
+    txt([e.nombre, e.telefono, e.email].filter(Boolean).join(' · '), L, ALTO - 10);
+    if (n > 1) txt('Página ' + i + ' de ' + n, R, ALTO - 10, {align: 'right'});
+  }
+
+  // En el móvil se abre «Compartir»; en el ordenador se descarga.
+  const cli = clientes.length === 1 ? '-' + clienteNombre(clientes[0]).replace(/\(Ejemplo\)/, '').trim().replace(/[^\wáéíóúñü]+/gi, '-').toLowerCase() : '';
+  const nombre = (uno ? 'parte-' + p0.fecha : 'partes-' + (partesMes || p0.fecha)) + cli + '.pdf';
+  const archivo = new File([d.output('blob')], nombre, {type: 'application/pdf'});
+  if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({files: [archivo]})) {
+    navigator.share({files: [archivo], title: uno ? 'Parte de trabajo' : 'Partes de trabajo'}).catch(err => { if (err.name !== 'AbortError') d.save(nombre); });
+  } else d.save(nombre);
 }
 
 /* ---------- Arranque ---------- */

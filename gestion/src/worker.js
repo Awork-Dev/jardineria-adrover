@@ -4,6 +4,7 @@ import AYUDA from './ayuda.html';
 const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA);
 import { icono, manifiesto } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
+import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
 
 const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos'];
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
@@ -54,6 +55,8 @@ export default {
       return new Response(HTML, {headers: {'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer'}});
     }
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');
+    // Los PDF para clientes llevan el logo verde de la empresa, no el dorado de la gestión.
+    if (url.pathname === '/logo.png') return icono('/icon-192.png', ICONOS_WEB);
     const ico = icono(url.pathname, ICONOS); if (ico) return ico;
     if (!url.pathname.startsWith('/api/')) return new Response('No encontrado', {status: 404});
     const ip = req.headers.get('cf-connecting-ip') || 'desconocida';
