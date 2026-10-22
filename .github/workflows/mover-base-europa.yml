@@ -1,0 +1,42 @@
+# Copia la base de la gestión (D1) a una base nueva con jurisdicción UE: los datos se guardan
+# y procesan solo en la Unión Europea. Se lanza a mano y se puede repetir sin peligro:
+# si la base europea ya tiene datos, no los toca.
+name: Mover la base a Europa
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mover:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      VIEJA: jardineria-adrover-gestion
+      NUEVA: jardineria-adrover-gestion-eu
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install -g wrangler@4.152.0
+      - name: Crear la base europea (si no existe)
+        run: |
+          if ! wrangler d1 list --json | grep -q "\"$NUEVA\""; then
+            wrangler d1 create "$NUEVA" --jurisdiction eu
+          fi
+          wrangler d1 list --json | node -e 'const l=JSON.parse(require("fs").readFileSync(0,"utf8"));const d=l.find(x=>x.name===process.env.NUEVA);console.log("ID de la base europea: "+d.uuid)'
+      - name: Copiar los datos
+        run: |
+          set -euo pipefail
+          hay=$(wrangler d1 execute "$NUEVA" --remote --json --command "SELECT count(*) AS n FROM sqlite_master WHERE name = 'docs'" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0,"utf8"))[0].results[0].n)')
+          if [ "$hay" != "0" ]; then echo "La base europea ya tiene datos: no se copia nada."; exit 0; fi
+          wrangler d1 export "$VIEJA" --remote --output vieja.sql
+          echo "Filas a copiar: $(grep -c '^INSERT' vieja.sql || true)"
+          wrangler d1 execute "$NUEVA" --remote --file vieja.sql --yes
+      - name: Comprobar que coinciden
+        run: |
+          for b in "$VIEJA" "$NUEVA"; do
+            echo "== $b"
+            wrangler d1 execute "$b" --remote --json --command "SELECT coleccion, count(*) AS n FROM docs GROUP BY coleccion ORDER BY coleccion" | node -e 'for (const r of JSON.parse(require("fs").readFileSync(0,"utf8"))[0].results) console.log(r.coleccion+": "+r.n)'
+            wrangler d1 execute "$b" --remote --json --command "SELECT (SELECT count(*) FROM sesiones) AS sesiones, (SELECT count(*) FROM intentos) AS intentos, (SELECT count(*) FROM fotos_subidas) AS fotos, (SELECT count(*) FROM borrados) AS borrados" | node -e 'console.log(JSON.stringify(JSON.parse(require("fs").readFileSync(0,"utf8"))[0].results[0]))'
+          done
