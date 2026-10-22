@@ -9,6 +9,10 @@
   "keep_vars": true,
   // Copia diaria de todos los datos a las 03:15 (hora UTC), se guardan 60 días.
   "triggers": { "crons": ["15 3 * * *"] },
-  "kv_namespaces": [{ "binding": "COPIAS", "id": "c74f881c6f0d429689e3d576bc3734cd" }],
+  "kv_namespaces": [
+    { "binding": "COPIAS", "id": "c74f881c6f0d429689e3d576bc3734cd" },
+    // Fotos de tickets y del trabajo que envía el equipo desde la app.
+    { "binding": "FOTOS", "id": "01cf68b53236438f96b5fa6c3a0607c3" }
+  ],
   "d1_databases": [{ "binding": "DB", "database_name": "jardineria-adrover-gestion", "database_id": "e74eb7e7-c0c6-41d0-933f-a6e5772d270e" }]
 }

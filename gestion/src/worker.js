@@ -2,7 +2,7 @@ import HTML from './index.html';
 import { icono, manifiesto } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 
-const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes'];
+const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos'];
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
 async function bloqueada(env, ip) {
@@ -62,7 +62,22 @@ export default {
       return json({error: 'clave'}, 401);
     }
 
-    if (url.pathname === '/api/datos' && req.method === 'GET') return json(await todosLosDatos(env));
+    // Con ?desde=<fecha ISO> devuelve solo lo cambiado y lo borrado desde entonces (usa índices).
+    if (url.pathname === '/api/datos' && req.method === 'GET') {
+      const desde = url.searchParams.get('desde');
+      if (!desde) return json(await todosLosDatos(env));
+      const hasta = new Date().toISOString();
+      const {results} = await env.DB.prepare('SELECT coleccion, id, data FROM docs WHERE actualizado > ?').bind(desde).all();
+      const {results: fuera} = await env.DB.prepare('SELECT coleccion, id FROM borrados WHERE cuando > ?').bind(desde).all();
+      return json({cambios: results.map(r => [r.coleccion, r.id, JSON.parse(r.data)]), borrados: fuera.map(r => [r.coleccion, r.id]), hasta});
+    }
+
+    // Fotos del equipo (tickets y trabajos): /api/fotos/<id> o /api/fotos/<id>?mini=1
+    const f = url.pathname.match(/^\/api\/fotos\/([\w-]{6,60})$/);
+    if (f && req.method === 'GET') {
+      const v = await env.FOTOS.get((url.searchParams.get('mini') === '1' ? 'mini:' : 'foto:') + f[1], 'arrayBuffer');
+      return v ? new Response(v, {headers: {'content-type': 'image/jpeg', 'cache-control': 'private, max-age=86400'}}) : json({error: 'no existe'}, 404);
+    }
 
     // Lista de copias automáticas y descarga de una de ellas.
     if (url.pathname === '/api/copias' && req.method === 'GET') {
@@ -83,12 +98,19 @@ export default {
       if (req.method === 'PUT') {
         const body = await req.json().catch(() => null);
         if (!body || typeof body !== 'object' || Array.isArray(body)) return json({error: 'cuerpo'}, 400);
-        await env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET data = excluded.data, actualizado = excluded.actualizado')
-          .bind(col, id, JSON.stringify(body), new Date().toISOString()).run();
+        await env.DB.batch([
+          env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET data = excluded.data, actualizado = excluded.actualizado')
+            .bind(col, id, JSON.stringify(body), new Date().toISOString()),
+          env.DB.prepare('DELETE FROM borrados WHERE coleccion = ? AND id = ?').bind(col, id),
+        ]);
         return json({ok: true});
       }
       if (req.method === 'DELETE') {
-        await env.DB.prepare('DELETE FROM docs WHERE coleccion = ? AND id = ?').bind(col, id).run();
+        const cuando = new Date().toISOString();
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM docs WHERE coleccion = ? AND id = ?').bind(col, id),
+          env.DB.prepare('INSERT INTO borrados (coleccion, id, cuando) VALUES (?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET cuando = excluded.cuando').bind(col, id, cuando),
+        ]);
         return json({ok: true});
       }
     }

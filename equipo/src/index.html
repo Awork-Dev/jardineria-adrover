@@ -58,8 +58,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .parte{background:var(--panel2);border-radius:16px;padding:14px 16px;margin-top:10px;display:block;width:100%;text-align:left;border:0}
 .parte b{display:block}
 .parte .pend{color:var(--lima);font-size:.85rem}
-#hoja{position:fixed;inset:0;background:var(--bg);overflow:auto;z-index:20;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
-#hoja[hidden]{display:none}
+.hoja{position:fixed;inset:0;background:var(--bg);overflow:auto;z-index:20;padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.hoja[hidden]{display:none}
+.fotos{display:flex;flex-direction:column;gap:10px}
+.fotos label.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;cursor:pointer}
+.miniaturas{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:8px}
+.miniaturas figure{position:relative;margin:0;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--panel2)}
+.miniaturas img{width:100%;height:100%;object-fit:cover;display:block}
+.miniaturas button{position:absolute;top:4px;right:4px;width:30px;height:30px;border-radius:50%;border:0;background:rgba(0,0,0,.7);color:#fff;font-size:1.1rem;line-height:1}
+.importe input{font-size:1.5rem;font-weight:700}
+.estado-g{font-size:.82rem;font-weight:700;border-radius:999px;padding:3px 10px;background:#3a2f12;color:#ffd98a}
+.estado-g.pagado{background:var(--lima);color:var(--lima-ink)}
+.sync{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:.88rem;margin:-4px 0 12px}
+.sync.ok #sync-txt:before{content:"● ";color:var(--lima)}
+.fallidos{border:2px solid var(--rojo)}
+.fallidos .parte{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.fallidos .parte small{display:block;color:var(--rojo)}
 .campo{display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 .campo>span{font-weight:700;font-size:.95rem}
 .campo input,.campo select,.campo textarea{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;width:100%;min-width:0}
@@ -99,7 +113,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="marca"><img src="/icon-192.png" alt=""><div><h1 id="nombre"></h1><small id="rol"></small></div></div>
       <button class="btn borde peq" id="salir">Salir</button>
     </header>
+    <div class="sync" id="sync"><span id="sync-txt"></span><button class="btn borde peq" id="sincronizar">Sincronizar</button></div>
     <div id="cola" class="aviso" hidden></div>
+    <section class="card fallidos" id="fallidos" hidden aria-labelledby="t-fallidos">
+      <h2 id="t-fallidos">No se ha podido guardar</h2>
+      <p class="meta" style="margin:-4px 0 10px">El servidor no aceptó estos datos. Siguen guardados en tu móvil: reinténtalo o avisa a la oficina.</p>
+      <div id="fallidos-lista"></div>
+      <button class="btn lima" id="reintentar" style="margin-top:12px">Reintentar todo</button>
+    </section>
 
     <section class="card" aria-labelledby="t-fichaje">
       <h2 id="t-fichaje">Jornada de hoy</h2>
@@ -115,6 +136,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div id="partes"></div>
     </section>
 
+    <section class="card" aria-labelledby="t-fotos">
+      <h2 id="t-fotos">Fotos del trabajo</h2>
+      <button class="btn lima" id="nuevas-fotos">+ Enviar fotos</button>
+      <div id="envios"></div>
+    </section>
+
+    <section class="card" aria-labelledby="t-gastos">
+      <h2 id="t-gastos">Gastos</h2>
+      <p class="meta" style="margin:-4px 0 12px">Gasolina, material, comidas… con la foto del ticket.</p>
+      <button class="btn lima" id="nuevo-gasto">+ Nuevo gasto</button>
+      <div id="gastos"></div>
+    </section>
+
     <section class="card" aria-labelledby="t-horas">
       <h2 id="t-horas">Mis horas</h2>
       <div class="total" id="total-mes"></div>
@@ -124,7 +158,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   </section>
 </main>
 
-<form id="hoja" hidden autocomplete="off">
+<form id="hoja" class="hoja" hidden autocomplete="off">
   <header class="top"><h1 id="hoja-titulo">Nuevo parte</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
   <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
   <div class="fila">
@@ -139,7 +173,29 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <fieldset class="campo" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:700;margin-bottom:6px">Qué se ha hecho</legend><div class="chips" id="tareas"></div></fieldset>
   <label class="campo"><span>Detalles del trabajo</span><textarea name="descripcion" rows="3" placeholder="Opcional"></textarea></label>
   <label class="campo"><span>Avisos para la oficina</span><textarea name="incidencias" rows="2" placeholder="Plagas, averías, el cliente pide algo…"></textarea></label>
+  <div class="campo"><span>Fotos (opcional)</span><div class="fotos" data-fotos><label class="btn">📷 Hacer o elegir fotos<input type="file" accept="image/*" multiple hidden></label><div class="miniaturas"></div></div></div>
   <div class="acciones"><button class="btn lima">Guardar parte</button></div>
+</form>
+
+<form id="hoja-gasto" class="hoja" hidden autocomplete="off">
+  <header class="top"><h1>Nuevo gasto</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
+  <div class="campo"><span>Foto del ticket</span><div class="fotos" data-fotos><label class="btn">📷 Hacer o elegir fotos<input type="file" accept="image/*" multiple hidden></label><div class="miniaturas"></div></div></div>
+  <fieldset class="campo" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:700;margin-bottom:6px">Tipo de gasto</legend><div class="chips" id="tipos-gasto"></div></fieldset>
+  <div class="fila">
+    <label class="campo importe"><span>Importe (€)</span><input name="importe" inputmode="decimal" placeholder="0,00" required></label>
+    <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
+  </div>
+  <label class="campo"><span>Nota</span><textarea name="nota" rows="2" placeholder="Opcional: para qué trabajo, qué se compró…"></textarea></label>
+  <div class="acciones"><button class="btn lima">Guardar gasto</button></div>
+</form>
+
+<form id="hoja-fotos" class="hoja" hidden autocomplete="off">
+  <header class="top"><h1>Fotos del trabajo</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
+  <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
+  <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
+  <div class="campo"><span>Fotos</span><div class="fotos" data-fotos><label class="btn">📷 Hacer o elegir fotos<input type="file" accept="image/*" multiple hidden></label><div class="miniaturas"></div></div></div>
+  <label class="campo"><span>Comentario</span><textarea name="nota" rows="2" placeholder="Opcional: antes, después, algo que deba ver la oficina…"></textarea></label>
+  <div class="acciones"><button class="btn lima">Enviar fotos</button></div>
 </form>
 <div id="toast" role="status"></div>
 
@@ -148,7 +204,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
 const guardado = (k, def) => { try { return JSON.parse(localStorage.getItem(k)) ?? def; } catch (e) { return def; } };
-const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const guardar = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } };
 const uid = () => Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
 const dos = (n) => String(n).padStart(2, '0');
 const hoyISO = () => { const d = new Date(); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
@@ -162,46 +218,175 @@ function toast(msg, mal) {
   clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = ''; }, 3000);
 }
 
+// ---------- Fotos: se reducen en el móvil y esperan en IndexedDB hasta que se envían ----------
+const almacen = (() => {
+  let abierta;
+  const db = () => abierta ||= new Promise((ok, ko) => {
+    const r = indexedDB.open('equipo', 1);
+    r.onupgradeneeded = () => r.result.createObjectStore('fotos');
+    r.onsuccess = () => ok(r.result); r.onerror = () => ko(r.error);
+  });
+  const tx = (modo, f) => db().then((d) => new Promise((ok, ko) => {
+    const t = d.transaction('fotos', modo), q = f(t.objectStore('fotos'));
+    t.oncomplete = () => ok(q.result); t.onerror = () => ko(t.error);
+  }));
+  return {poner: (k, v) => tx('readwrite', (s) => s.put(v, k)), leer: (k) => tx('readonly', (s) => s.get(k)), quitar: (k) => tx('readwrite', (s) => s.delete(k))};
+})();
+// Reduce la foto (lado mayor 1600 px) y hace una miniatura de 400 px, ambas en JPEG.
+async function reducir(archivo) {
+  let img;
+  try { img = await createImageBitmap(archivo, {imageOrientation: 'from-image'}); }
+  catch (e) { img = await new Promise((ok, ko) => { const i = new Image(); i.onload = () => ok(i); i.onerror = ko; i.src = URL.createObjectURL(archivo); }); }
+  const lado = (max, q) => new Promise((ok) => {
+    const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas');
+    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    c.toBlob(ok, 'image/jpeg', q);
+  });
+  return {foto: await lado(1600, .75), mini: await lado(400, .7)};
+}
+// Selector de fotos de cada formulario: lo elegido se guarda aquí hasta pulsar Guardar.
+const elegidas = new Map(); // formulario → [{id, foto, mini, url}]
+document.addEventListener('change', async (e) => {
+  const caja = e.target.closest('[data-fotos]'); if (!caja || e.target.type !== 'file') return;
+  const form = caja.closest('form'), lista = elegidas.get(form) || [];
+  for (const f of e.target.files) {
+    if (lista.length >= 12) { toast('Máximo 12 fotos.', true); break; }
+    try { const r = await reducir(f); lista.push({id: uid(), ...r, url: URL.createObjectURL(r.mini)}); }
+    catch (err) { toast('No se pudo leer una de las fotos.', true); }
+  }
+  e.target.value = ''; elegidas.set(form, lista); pintarElegidas(form);
+});
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-quitar]'); if (!b) return;
+  const form = b.closest('form'), lista = (elegidas.get(form) || []).filter((x) => x.id !== b.dataset.quitar);
+  elegidas.set(form, lista); pintarElegidas(form);
+});
+function pintarElegidas(form) {
+  form.querySelector('.miniaturas').innerHTML = (elegidas.get(form) || []).map((x) => `<figure><img src="${x.url}" alt=""><button type="button" data-quitar="${x.id}" aria-label="Quitar foto">×</button></figure>`).join('');
+}
+function limpiarFotos(form) { (elegidas.get(form) || []).forEach((x) => URL.revokeObjectURL(x.url)); elegidas.delete(form); pintarElegidas(form); }
+// Guarda las fotos elegidas en el móvil, las pone en la cola (antes que el dato que las usa) y devuelve sus ids.
+async function encolarFotos(form) {
+  const lista = elegidas.get(form) || [];
+  try { for (const x of lista) await almacen.poner(x.id, {foto: x.foto, mini: x.mini}); }
+  catch (e) { throw new Error('No hay espacio en el móvil para guardar las fotos. Libera espacio e inténtalo de nuevo.'); }
+  cambiarCola((c) => [...c, ...lista.map((x) => ({k: uid(), ruta: '/api/fotos', cuerpo: {foto: x.id}}))]);
+  limpiarFotos(form);
+  return lista.map((x) => x.id);
+}
+
 // ---------- Datos: lo último que se recibió del servidor y lo que falta por enviar ----------
+// Reglas para no perder nada:
+// · Todo se guarda primero en el móvil (cola en localStorage, fotos en IndexedDB) y se borra de ahí solo
+//   cuando el servidor confirma que lo ha guardado. Reenviar lo mismo no duplica: cada dato lleva su id.
+// · Si el servidor rechaza algo, pasa a «No se ha podido guardar», visible, para reintentarlo; nunca se tira.
+// · Cada persona tiene su propia cola: si otra entra en el mismo móvil o se pulsa «Salir», lo pendiente
+//   se conserva y se envía cuando esa persona vuelva a entrar.
+// · La cola se relee del almacenamiento antes de cada cambio y se envía con un candado, por si hay dos
+//   ventanas de la app abiertas.
 let token = guardado('token', '');
 let D = guardado('datos', null);          // respuesta de /api/inicio
-let cola = guardado('cola', []);          // envíos pendientes: [{ruta, cuerpo}]
+let cola = guardado('cola', []);          // envíos pendientes: [{k, ruta, cuerpo}]
+// Si el móvil no puede guardar (sin espacio), se avisa y el dato no se da por hecho.
+const cambiarCola = (f) => {
+  const nueva = f(guardado('cola', []));
+  if (!guardar('cola', nueva)) { toast('El móvil no tiene espacio para guardar. Libera espacio e inténtalo de nuevo.', true); throw new Error('sin espacio'); }
+  cola = nueva;
+};
+// Lo pendiente de una versión anterior de la app recibe su identificador.
+if (cola.some((c) => !c.k)) { cola = cola.map((c) => c.k ? c : {...c, k: Math.random().toString(36).slice(2)}); guardar('cola', cola); }
+const fallidos = () => guardado('fallidos', []);
+// Hora del servidor: corrige el reloj del móvil si va adelantado o atrasado.
+const ahora = () => Date.now() + (guardado('desfase', 0) || 0);
 
-async function api(ruta, cuerpo) {
-  const r = await fetch(ruta, {method: cuerpo ? 'POST' : 'GET', headers: {'content-type': 'application/json', authorization: 'Bearer ' + token}, body: cuerpo ? JSON.stringify(cuerpo) : undefined});
-  if (r.status === 401) { cerrarSesion(false); throw new Error('sesion'); }
+async function api(ruta, cuerpo, tipo = 'application/json') {
+  const crudo = cuerpo instanceof Blob;
+  const r = await fetch(ruta, {method: cuerpo ? 'POST' : 'GET', headers: {'content-type': tipo, authorization: 'Bearer ' + token}, body: cuerpo ? (crudo ? cuerpo : JSON.stringify(cuerpo)) : undefined});
+  if (r.status === 401) { cerrarSesion(); throw new Error('sesion'); }
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) { const e = new Error(j.error || 'Error del servidor'); e.rechazo = r.status < 500; throw e; }
+  if (!r.ok) { const e = new Error(j.error || 'Error del servidor'); e.rechazo = r.status < 500 && r.status !== 429; throw e; }
   return j;
 }
-// Sin cobertura, todo se guarda en la cola y se envía en cuanto vuelve la conexión.
+async function enviarUno(c) {
+  if (c.ruta !== '/api/fotos') return api(c.ruta, c.cuerpo);
+  const id = c.cuerpo.foto, f = await almacen.leer(id).catch(() => null);
+  if (!f) return; // ya se envió y se borró del móvil
+  await api('/api/fotos?id=' + encodeURIComponent(id), f.foto, 'image/jpeg');
+  await api('/api/fotos?id=' + encodeURIComponent(id) + '&mini=1', f.mini, 'image/jpeg');
+  await almacen.quitar(id).catch(() => {});
+}
+const conCandado = (f) => navigator.locks ? navigator.locks.request('cola-equipo', f) : f();
 let enviando = false;
 async function enviarCola() {
-  if (enviando || !cola.length || !token) return pintarCola();
+  if (enviando || !token) return pintarCola();
   enviando = true;
-  while (cola.length) {
-    try { await api(cola[0].ruta, cola[0].cuerpo); }
-    catch (e) {
-      if (e.message === 'sesion') break;
-      if (e.rechazo) { toast('No se pudo guardar: ' + e.message, true); }
-      else break; // sin conexión: se reintenta más tarde
+  await conCandado(async () => {
+    for (;;) {
+      const c = guardado('cola', [])[0];
+      if (!c) break;
+      try { await enviarUno(c); }
+      catch (e) {
+        if (!e.rechazo) break; // sin cobertura, sesión cerrada o servidor caído: se reintenta más tarde
+        // Rechazado: se aparta a «No se ha podido guardar» con el motivo, sin perderlo.
+        guardar('fallidos', [...fallidos(), {...c, motivo: e.message}]);
+        toast('No se pudo guardar: ' + e.message, true);
+      }
+      cambiarCola((q) => q.filter((x) => x.k !== c.k));
     }
-    cola.shift(); guardar('cola', cola);
-  }
+  }).catch(() => {});
   enviando = false;
-  pintarCola();
+  cola = guardado('cola', []);
+  pintarCola(); pintarFallidos();
   if (!cola.length) actualizar();
 }
-function encolar(ruta, cuerpo) { cola.push({ruta, cuerpo}); guardar('cola', cola); enviarCola(); }
+function encolar(ruta, cuerpo) {
+  try { cambiarCola((c) => [...c, {k: uid(), ruta, cuerpo}]); } catch (e) { return false; }
+  enviarCola(); return true;
+}
 function pintarCola() {
   const n = cola.length;
   $('#cola').hidden = !n;
-  $('#cola').textContent = n ? (n === 1 ? 'Hay 1 dato pendiente de enviar.' : 'Hay ' + n + ' datos pendientes de enviar.') + ' Se enviará solo cuando haya cobertura.' : '';
+  const fotos = cola.filter((c) => c.ruta === '/api/fotos').length, datos = n - fotos;
+  const partes = [datos && (datos === 1 ? '1 dato' : datos + ' datos'), fotos && (fotos === 1 ? '1 foto' : fotos + ' fotos')].filter(Boolean).join(' y ');
+  $('#cola').textContent = n ? 'Pendiente de enviar: ' + partes + '. Se enviará solo cuando haya cobertura.' : '';
+  pintarSync();
 }
+function pintarSync() {
+  const ult = guardado('ultimaSync', 0), min = Math.round((Date.now() - ult) / 60e3);
+  const hace = !ult ? 'aún no' : min < 1 ? 'ahora mismo' : min < 60 ? 'hace ' + min + ' min' : 'a las ' + horaDe(ult);
+  const todo = !cola.length && !fallidos().length;
+  $('#sync').className = 'sync' + (todo && ult ? ' ok' : '');
+  $('#sync-txt').textContent = (todo ? 'Todo enviado' : 'Hay datos sin enviar') + ' · actualizado ' + hace;
+}
+const QUE = {'/api/fichar': 'Fichaje', '/api/partes': 'Parte', '/api/gastos': 'Gasto', '/api/fotos-trabajo': 'Fotos del trabajo', '/api/fotos': 'Foto'};
+function pintarFallidos() {
+  const f = fallidos();
+  $('#fallidos').hidden = !f.length;
+  $('#fallidos-lista').innerHTML = f.map((c) => `<div class="parte"><div><b>${QUE[c.ruta] || 'Dato'}${c.cuerpo.fecha ? ' · ' + esc(fecha(c.cuerpo.fecha)) : c.cuerpo.ts ? ' · ' + esc(fecha(diaDe(c.cuerpo.ts))) + ' ' + horaDe(c.cuerpo.ts) : ''}</b>
+    <small>${esc(c.motivo)}</small></div><button class="btn borde peq" data-descartar="${esc(c.k)}">Descartar</button></div>`).join('');
+}
+$('#reintentar').onclick = () => {
+  const f = fallidos(); guardar('fallidos', []);
+  cambiarCola((c) => [...f.map(({motivo, ...x}) => x), ...c]);
+  enviarCola();
+};
+$('#fallidos-lista').onclick = (e) => {
+  const b = e.target.closest('[data-descartar]'); if (!b) return;
+  if (!confirm('¿Descartar este dato? Se borrará del móvil y no se podrá recuperar.')) return;
+  const c = fallidos().find((x) => x.k === b.dataset.descartar);
+  if (c && c.ruta === '/api/fotos') almacen.quitar(c.cuerpo.foto).catch(() => {});
+  guardar('fallidos', fallidos().filter((x) => x.k !== b.dataset.descartar)); pintarFallidos(); pintarSync();
+};
+$('#sincronizar').onclick = async () => { $('#sincronizar').disabled = true; await enviarCola(); await actualizar(); $('#sincronizar').disabled = false; toast(cola.length ? 'Sin cobertura: se enviará más tarde.' : 'Todo al día'); };
 let cargando = null;
 function actualizar() {
   if (!token) return Promise.resolve();
-  return cargando ||= api('/api/inicio').then((d) => { D = d; guardar('datos', D); pintar(); }).catch(() => {}).finally(() => { cargando = null; });
+  const t0 = Date.now();
+  return cargando ||= api('/api/inicio').then((d) => {
+    guardar('desfase', Math.round(d.servidor - (t0 + Date.now()) / 2));
+    D = d; guardar('datos', D); guardar('ultimaSync', Date.now()); pintar(); pintarSync();
+  }).catch(() => {}).finally(() => { cargando = null; });
 }
 
 // ---------- Fichajes: los del servidor más los que aún están en la cola ----------
@@ -244,6 +429,19 @@ function pintar() {
   $('#mes-nombre').textContent = 'Este mes · ' + delMes.length + (delMes.length === 1 ? ' día' : ' días');
   $('#dias').innerHTML = js.slice(0, 31).map((j) => `<div class="${j.raro ? 'raro' : ''}"><span>${esc(fecha(j.dia))}${j.raro ? ' · falta un fichaje' : ''}</span><b>${horas(j.ms)}</b></div>`).join('') || '<p class="meta">Aún no hay fichajes.</p>';
 
+  const eur = (n) => Number(n).toLocaleString('es-ES', {style: 'currency', currency: 'EUR'});
+  const gPend = cola.filter((c) => c.ruta === '/api/gastos').map((c) => ({...c.cuerpo, pendiente: true}));
+  const gIds = new Set(gPend.map((g) => g.id));
+  const gastos = [...gPend, ...(D.gastos || []).filter((g) => !gIds.has(g.id))].sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, 20);
+  $('#gastos').innerHTML = gastos.map((g) => `<div class="parte"><b>${esc(g.tipo)} · ${eur(g.importe)}</b>
+    <span class="meta">${esc(fecha(g.fecha))}${g.nota ? ' · ' + esc(g.nota) : ''}</span>
+    <div style="margin-top:6px">${g.pendiente ? '<span class="pend">Pendiente de enviar</span>' : `<span class="estado-g ${g.estado === 'pagado' ? 'pagado' : ''}">${g.estado === 'pagado' ? 'Pagado' : 'Pendiente de pago'}</span>`}</div></div>`).join('');
+  const cliN = Object.fromEntries((D.clientes || []).map((c) => [c.id, c.nombre]));
+  const ePend = cola.filter((c) => c.ruta === '/api/fotos-trabajo').map((c) => ({...c.cuerpo, pendiente: true}));
+  const envios = [...ePend, ...guardado('enviados', []).filter((x) => !ePend.some((p) => p.id === x.id))].slice(0, 10);
+  $('#envios').innerHTML = envios.map((x) => `<div class="parte"><b>${esc(cliN[x.clienteId] || 'Cliente')}</b>
+    <span class="meta">${esc(fecha(x.fecha))} · ${x.fotos.length} ${x.fotos.length === 1 ? 'foto' : 'fotos'}</span>${x.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</div>`).join('');
+
   const jefe = D.yo.rol === 'jefe';
   $('#partes-card').hidden = !jefe;
   if (jefe) {
@@ -252,7 +450,7 @@ function pintar() {
     const lista = [...pend, ...(D.partes || []).filter((p) => !ids.has(p.id))].sort((a, b) => (b.fecha + b.inicio).localeCompare(a.fecha + a.inicio));
     const cli = Object.fromEntries((D.clientes || []).map((c) => [c.id, c.nombre]));
     $('#partes').innerHTML = lista.length ? lista.map((p) => `<button class="parte" data-parte="${esc(p.id)}"><b>${esc(cli[p.clienteId] || 'Cliente')}</b>
-      <span class="meta">${esc(fecha(p.fecha))} · ${esc(p.inicio)}–${esc(p.fin)} · ${(p.operarios || []).length} pers.</span>${p.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</button>`).join('')
+      <span class="meta">${esc(fecha(p.fecha))} · ${esc(p.inicio)}–${esc(p.fin)} · ${(p.operarios || []).length} pers.${(p.fotos || []).length ? ' · 📷 ' + p.fotos.length : ''}</span>${p.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</button>`).join('')
       : '<p class="meta" style="margin:12px 0 0">Los partes de las últimas dos semanas aparecerán aquí.</p>';
   }
 }
@@ -260,9 +458,10 @@ function pintar() {
 // ---------- Fichar ----------
 $('#fichar').onclick = () => {
   const tipo = $('#fichar').dataset.tipo;
-  encolar('/api/fichar', {id: uid(), tipo, ts: Date.now()});
+  const ts = ahora();
+  if (!encolar('/api/fichar', {id: uid(), tipo, ts})) return;
   pintar();
-  toast(tipo === 'entrada' ? 'Entrada fichada a las ' + horaDe(Date.now()) : 'Salida fichada a las ' + horaDe(Date.now()));
+  toast((tipo === 'entrada' ? 'Entrada fichada a las ' : 'Salida fichada a las ') + horaDe(ts));
 };
 
 // ---------- Parte de trabajo ----------
@@ -282,6 +481,7 @@ function abrirParte(p) {
   $('#tareas').innerHTML = (D.tareas || []).map((t) => `<label><input type="checkbox" name="tareas" value="${esc(t)}"${p && (p.tareas || []).includes(t) ? ' checked' : ''}><span>${esc(t)}</span></label>`).join('');
   hoja.descripcion.value = p ? p.descripcion || '' : '';
   hoja.incidencias.value = p ? p.incidencias || '' : '';
+  limpiarFotos(hoja);
   hoja.hidden = false; scrollTo(0, 0);
 }
 // Recién entrado, la lista de clientes puede no haber llegado aún: se espera a tenerla.
@@ -296,12 +496,13 @@ $('#partes').onclick = (e) => {
   const p = cola.map((c) => c.cuerpo).find((x) => x.id === id && x.clienteId !== undefined) || (D.partes || []).find((x) => x.id === id);
   if (p) abrirParte(p);
 };
-hoja.addEventListener('click', (e) => {
-  if (e.target.closest('[data-cerrar]')) { hoja.hidden = true; return; }
+document.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-cerrar]');
+  if (c) { const f = c.closest('form'); limpiarFotos(f); f.hidden = true; return; }
   const a = e.target.closest('[data-ahora]');
   if (a) { const h = new Date(); hoja[a.dataset.ahora].value = dos(h.getHours()) + ':' + dos(h.getMinutes()); }
 });
-hoja.onsubmit = (e) => {
+hoja.onsubmit = async (e) => {
   e.preventDefault();
   const fd = new FormData(hoja), p = {
     id: editando, clienteId: fd.get('clienteId'), fecha: fd.get('fecha'), inicio: fd.get('inicio'), fin: fd.get('fin'),
@@ -311,10 +512,52 @@ hoja.onsubmit = (e) => {
   if (!p.clienteId) return toast('Elige un cliente.', true);
   if (!p.inicio || !p.fin || p.fin <= p.inicio) return toast('Revisa las horas: el fin debe ser después del inicio.', true);
   if (!p.operarios.length) return toast('Marca quién ha ido.', true);
-  // Si se edita un parte que aún no se había enviado, se sustituye en la cola.
-  cola = cola.filter((c) => !(c.ruta === '/api/partes' && c.cuerpo.id === p.id)); guardar('cola', cola);
-  encolar('/api/partes', p);
+  // Si se edita un parte que aún no se había enviado, se sustituye en la cola (conservando sus fotos).
+  const antes = guardado('cola', []).find((c) => c.ruta === '/api/partes' && c.cuerpo.id === p.id);
+  try { p.fotos = [...((antes && antes.cuerpo.fotos) || []), ...(await encolarFotos(hoja))]; }
+  catch (err) { return toast(err.message, true); }
+  if (antes) cambiarCola((c) => c.filter((x) => x.k !== antes.k));
+  if (!encolar('/api/partes', p)) return;
   hoja.hidden = true; pintar(); toast('Parte guardado');
+};
+
+// ---------- Gastos ----------
+const hGasto = $('#hoja-gasto');
+$('#nuevo-gasto').onclick = () => {
+  hGasto.reset(); limpiarFotos(hGasto); hGasto.fecha.value = hoyISO();
+  $('#tipos-gasto').innerHTML = ((D && D.tiposGasto) || ['Gasolina', 'Material', 'Comida', 'Peaje o parking', 'Otros']).map((t, i) => `<label><input type="radio" name="tipo" value="${esc(t)}"${i ? '' : ' checked'}><span>${esc(t)}</span></label>`).join('');
+  hGasto.hidden = false; scrollTo(0, 0);
+};
+hGasto.onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(hGasto), importe = Number(String(fd.get('importe')).replace(',', '.'));
+  if (!(elegidas.get(hGasto) || []).length) return toast('Haz una foto del ticket.', true);
+  if (!(importe > 0)) return toast('Pon el importe del ticket.', true);
+  const g = {id: uid(), tipo: fd.get('tipo'), importe, fecha: fd.get('fecha'), nota: String(fd.get('nota') || '').trim()};
+  try { g.fotos = await encolarFotos(hGasto); } catch (err) { return toast(err.message, true); }
+  if (!encolar('/api/gastos', g)) return;
+  hGasto.hidden = true; pintar(); toast('Gasto guardado');
+};
+
+// ---------- Fotos del trabajo ----------
+const hFotos = $('#hoja-fotos');
+$('#nuevas-fotos').onclick = async () => {
+  if (!D.clientes) { toast('Cargando clientes…'); await actualizar(); }
+  if (!D.clientes) return toast('Sin conexión. La primera vez hace falta cobertura para cargar los clientes.', true);
+  hFotos.reset(); limpiarFotos(hFotos); hFotos.fecha.value = hoyISO();
+  hFotos.clienteId.innerHTML = '<option value="">Elige un cliente</option>' + D.clientes.map((c) => `<option value="${esc(c.id)}">${esc(c.nombre)}${c.lugar ? ' · ' + esc(c.lugar) : ''}</option>`).join('');
+  hFotos.hidden = false; scrollTo(0, 0);
+};
+hFotos.onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(hFotos);
+  if (!fd.get('clienteId')) return toast('Elige un cliente.', true);
+  if (!(elegidas.get(hFotos) || []).length) return toast('Añade al menos una foto.', true);
+  const x = {id: uid(), clienteId: fd.get('clienteId'), fecha: fd.get('fecha'), nota: String(fd.get('nota') || '').trim()};
+  try { x.fotos = await encolarFotos(hFotos); } catch (err) { return toast(err.message, true); }
+  if (!encolar('/api/fotos-trabajo', x)) return;
+  guardar('enviados', [{id: x.id, clienteId: x.clienteId, fecha: x.fecha, fotos: x.fotos}, ...guardado('enviados', [])].slice(0, 10));
+  hFotos.hidden = true; pintar(); toast('Fotos guardadas');
 };
 
 // ---------- Acceso con PIN ----------
@@ -331,30 +574,35 @@ document.querySelector('.teclado').onclick = async (e) => {
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(j.error || 'No se pudo entrar.');
     token = j.token; guardar('token', token);
-    // Lo pendiente de enviar solo se conserva si vuelve a entrar la misma persona.
-    if (guardado('colaDe', '') !== j.yo.id) { cola = []; guardar('cola', cola); }
+    // Si entra otra persona, lo pendiente de la anterior se aparta (se enviará cuando ella vuelva a entrar)
+    // y se recupera lo que esta tuviera apartado.
+    const antes = guardado('colaDe', '');
+    if (antes !== j.yo.id) {
+      if (antes) for (const k of ['cola', 'fallidos', 'enviados']) { const v = guardado(k, []); if (v.length) guardar(k + '-de-' + antes, v); }
+      for (const k of ['cola', 'fallidos', 'enviados']) { guardar(k, guardado(k + '-de-' + j.yo.id, [])); try { localStorage.removeItem(k + '-de-' + j.yo.id); } catch (e) {} }
+      cola = guardado('cola', []);
+    }
     guardar('colaDe', j.yo.id);
     D = {yo: j.yo, fichajes: []}; guardar('datos', D);
-    mostrar(); actualizar();
+    mostrar(); actualizar(); enviarCola();
   } catch (err) {
     $('#pin-error').textContent = err.message === 'Failed to fetch' ? 'Sin conexión. Para entrar la primera vez hace falta internet.' : err.message;
   }
   pin = ''; pintarPin();
 };
-// Si el servidor cierra la sesión (PIN cambiado), lo pendiente se guarda para enviarlo al volver a entrar.
-function cerrarSesion(borrarCola = true) {
+// Al salir (o si la oficina cambia el PIN) no se borra nada pendiente: se envía al volver a entrar.
+function cerrarSesion() {
   token = ''; D = null;
-  if (borrarCola) cola = [];
-  ['token', 'datos', ...(borrarCola ? ['cola', 'colaDe'] : [])].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} });
+  ['token', 'datos'].forEach((k) => { try { localStorage.removeItem(k); } catch (e) {} });
   mostrar();
 }
 $('#salir').onclick = () => {
-  if (cola.length && !confirm('Hay datos sin enviar. Si sales ahora se perderán. ¿Salir igualmente?')) return;
+  if ((cola.length || fallidos().length) && !confirm('Hay datos sin enviar. Se quedan guardados en este móvil y se enviarán cuando vuelvas a entrar. ¿Salir?')) return;
   api('/api/salir', {}).catch(() => {}).finally(cerrarSesion);
 };
 function mostrar() {
   $('#acceso').hidden = !!token; $('#app').hidden = !token;
-  if (token) { pintar(); pintarCola(); }
+  if (token) { pintar(); pintarCola(); pintarFallidos(); }
 }
 
 // ---------- Arranque ----------
@@ -362,7 +610,9 @@ mostrar();
 enviarCola(); actualizar();
 addEventListener('online', enviarCola);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { enviarCola(); actualizar(); } });
-setInterval(() => { enviarCola(); if (token) pintar(); }, 60e3);
+// Si otra ventana de la app cambia la cola, esta se entera.
+addEventListener('storage', (e) => { if (e.key === 'cola' || e.key === 'fallidos') { cola = guardado('cola', []); if (token) { pintar(); pintarCola(); pintarFallidos(); } } });
+setInterval(() => { enviarCola(); if (token && !document.hidden) { actualizar(); pintar(); } }, 60e3);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
 })();
 </script>

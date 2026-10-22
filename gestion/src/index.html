@@ -75,6 +75,11 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}
 .panel h2{margin-bottom:12px}
 .panel a{color:var(--brand)}
+.galeria{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:8px}
+.galeria img,.mini-foto{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:var(--soft);cursor:zoom-in;display:block}
+.mini-foto{width:48px;height:48px;flex:none}
+.foto-grande{width:100%;border-radius:12px;display:block;background:var(--soft)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
 .panel svg{width:100%;height:auto;display:block}
 .bar{fill:var(--brand)}
 .axis{stroke:var(--line);stroke-width:1.5}
@@ -218,7 +223,7 @@ const DOCS = {
     estados: {pendiente: 'Pendiente de cobro', cobrada: 'Cobrada', anulada: 'Anulada'},
     aviso: 'Este documento no es una factura.'},
 };
-const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}, operarios:{}, fichajes:{}};
+const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}, operarios:{}, fichajes:{}, gastos:{}, fotos:{}};
 const APP_EQUIPO = 'https://equipo.jardineriaadrover.workers.dev';
 const COLS = Object.keys(S);
 let db = null, loaded = 0, view = 'resumen', lastView = '', estadoF = 'todos', q = '', sheetSave = null, sheetDel = null;
@@ -365,6 +370,7 @@ function parteSheet(id) {
       <span class="meta">Enviado desde la app del equipo por ${esc(v.autor || '')} · ${esc(v.inicio)}–${esc(v.fin)} (${num(v.duracion).toLocaleString('es-ES')} h × ${(v.operarios || []).length} pers.)</span>
       ${(v.tareas || []).length ? `<span class="line"><b>Tareas:</b> ${esc(v.tareas.join(', '))}</span>` : ''}
       ${v.incidencias ? `<span class="line" style="color:var(--pend-ink);background:var(--pend-bg);padding:8px 10px;border-radius:10px"><b>Aviso para la oficina:</b> ${esc(v.incidencias)}</span>` : ''}
+      ${miniaturas(v.fotos)}
     </div>` : '';
   const html = `${info}<div class="grid2">
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
@@ -377,7 +383,7 @@ function parteSheet(id) {
     if (!fd.get('clienteId')) throw new Error('Elige un cliente.');
     const {id: _, ...antes} = v;
     await put('partes', id || uid('t'), {
-      ...antes,
+      ...antes, ...(deApp ? {editadoOficina: Date.now()} : {}),
       fecha: fd.get('fecha') || today(), clienteId: fd.get('clienteId'),
       operario: String(fd.get('operario') || '').trim(), horas: num(fd.get('horas')),
       descripcion: String(fd.get('descripcion') || '').trim()
@@ -516,9 +522,40 @@ function vPartes() {
     <button class="btn primary" data-act="new-parte">+ Nuevo</button></header>${body}`;
 }
 
+/* ---------- Fotos del equipo ---------- */
+// Las imágenes piden la clave, así que se descargan con fetch y se muestran como blob.
+// Basta con poner <img data-foto="id" data-mini="1"> en cualquier sitio: se cargan solas.
+const fotosCache = new Map();
+function fotoURL(id, mini) {
+  const k = id + (mini ? ':m' : '');
+  if (!fotosCache.has(k)) fotosCache.set(k, fetch('/api/fotos/' + encodeURIComponent(id) + (mini ? '?mini=1' : ''), {headers: {'X-Clave': clave}})
+    .then(r => r.ok ? r.blob() : Promise.reject()).then(b => URL.createObjectURL(b)).catch(() => { fotosCache.delete(k); return ''; }));
+  return fotosCache.get(k);
+}
+function cargarFotos() {
+  document.querySelectorAll('img[data-foto]:not([data-cargando])').forEach(img => {
+    img.dataset.cargando = '1';
+    fotoURL(img.dataset.foto, img.dataset.mini === '1').then(u => { if (u) img.src = u; });
+  });
+}
+new MutationObserver(cargarFotos).observe(document.body, {childList: true, subtree: true});
+const miniaturas = ids => (ids || []).length ? `<div class="galeria">${ids.map(id => `<img data-foto="${esc(id)}" data-mini="1" data-ampliar="${esc(id)}" alt="Foto">`).join('')}</div>` : '';
+function verFoto(id) {
+  $('#sheet-title').textContent = 'Foto';
+  sheetSave = sheetDel = null;
+  $('#sheet-form').innerHTML = `<img class="foto-grande" data-foto="${esc(id)}" alt="Foto">
+    <div class="actions"><button type="button" class="btn ghost" data-act="bajar-foto" data-id="${esc(id)}">Descargar</button><span class="grow"></span><button type="button" class="btn primary" data-act="close">Cerrar</button></div>`;
+  $('#overlay').hidden = false;
+}
+async function bajarFoto(id) {
+  const u = await fotoURL(id, false); if (!u) return toast('No se pudo descargar la foto.', true);
+  const a = document.createElement('a'); a.href = u; a.download = 'foto-' + id + '.jpg'; document.body.appendChild(a); a.click(); a.remove();
+}
+
 /* ---------- Equipo: operarios con su PIN y registro de jornada ---------- */
 const mesActual = () => today().slice(0, 7);
-let mesJ = mesActual(), opJ = '';
+let mesJ = mesActual(), opJ = '', equipoTab = 'personas', estadoG = 'pendiente';
+const eur2 = n => num(n).toLocaleString('es-ES', {style: 'currency', currency: 'EUR'});
 const dos = n => String(n).padStart(2, '0');
 const diaDe = ts => { const d = new Date(ts); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
 const horaDe = ts => new Date(ts).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
@@ -560,7 +597,48 @@ function operarioSheet(id) {
     await put('operarios', id || uid('o'), {nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin});
   }, null);
 }
+function gastoSheet(id) {
+  const v = S.gastos[id]; if (!v) return;
+  openSheet('Gasto de ' + (v.operario || ''), `${(v.fotos || []).map(f => `<img class="foto-grande" data-foto="${esc(f)}" data-ampliar="${esc(f)}" alt="Foto del ticket">`).join('')}
+    <div class="empresa" style="margin:0"><b>${esc(v.tipo)} · ${eur2(v.importe)}</b><span class="meta">${esc(fmtFecha(v.fecha))} · ${esc(v.operario || '')}</span>${v.nota ? `<span class="line">${esc(v.nota)}</span>` : ''}</div>
+    <div class="grid2">${fld('estado', 'Estado', {options: [['pendiente', 'Pendiente de pago'], ['pagado', 'Pagado']], value: v.estado})}
+      ${fld('notaOficina', 'Nota de la oficina', {value: v.notaOficina})}</div>`, async fd => {
+    const {id: _, ...datos} = v;
+    await put('gastos', id, {...datos, estado: fd.get('estado'), notaOficina: String(fd.get('notaOficina') || '').trim()});
+  }, () => del('gastos', id));
+}
+function vGastos() {
+  const todos = Object.entries(S.gastos).filter(([, g]) => (g.fecha || '').startsWith(mesJ)).sort((a, b) => b[1].fecha.localeCompare(a[1].fecha));
+  const lista = todos.filter(([, g]) => estadoG === 'todos' || g.estado === estadoG);
+  const pend = todos.filter(([, g]) => g.estado !== 'pagado').reduce((a, [, g]) => a + num(g.importe), 0);
+  const chips = [['pendiente', 'Pendientes'], ['pagado', 'Pagados'], ['todos', 'Todos']].map(([k, t]) => `<button class="chip${estadoG === k ? ' on' : ''}" data-act="estado-g" data-v="${k}">${t}</button>`).join('');
+  return `<section class="panel"><div class="grid2" style="margin-bottom:12px"><label class="fld"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label>
+      <div class="kpi" style="padding:10px 14px"><span>Pendiente de pagar este mes</span><b style="font-size:1.3rem">${eur2(pend)}</b></div></div>
+    <div class="chips">${chips}</div>
+    ${lista.length ? `<div class="rows">${lista.map(([id, g]) => `<button class="row" data-act="edit-gasto" data-id="${esc(id)}">
+      <div style="display:flex;gap:12px;align-items:center;flex-direction:row">${(g.fotos || [])[0] ? `<img class="mini-foto" data-foto="${esc(g.fotos[0])}" data-mini="1" alt="">` : ''}
+        <div style="display:flex;flex-direction:column;min-width:0"><b>${esc(g.tipo)} · ${esc(g.operario || '')}</b><span class="meta">${esc(fmtFecha(g.fecha))}${g.nota ? ' · ' + esc(g.nota) : ''}</span></div></div>
+      <div class="rowr"><span class="pill ${g.estado === 'pagado' ? 'cobrada' : 'pendiente'}">${g.estado === 'pagado' ? 'Pagado' : 'Pendiente'}</span><b class="amt">${eur2(g.importe)}</b></div></button>`).join('')}</div>`
+      : '<div class="empty">No hay gastos en este mes con este estado.</div>'}</section>`;
+}
+function vFotos() {
+  const envios = [...Object.values(S.fotos).map(x => ({...x, de: 'Fotos'})), ...Object.values(S.partes).filter(p => (p.fotos || []).length).map(p => ({...p, de: 'Parte', operario: p.autor, nota: p.descripcion}))]
+    .filter(x => (x.fecha || '').startsWith(mesJ)).sort((a, b) => b.fecha.localeCompare(a.fecha) || (b.creado || 0) - (a.creado || 0));
+  return `<section class="panel"><label class="fld" style="max-width:260px;margin-bottom:12px"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label>
+    ${envios.length ? envios.map(x => `<div class="panel" style="padding:14px;margin-bottom:12px"><b>${esc(clienteNombre(x.clienteId))}</b>
+      <div class="meta">${esc(fmtFecha(x.fecha))} · ${esc(x.operario || '')} · ${x.de === 'Parte' ? 'en un parte' : 'fotos del trabajo'}</div>${x.nota ? `<p style="margin:6px 0 0">${esc(x.nota)}</p>` : ''}${miniaturas(x.fotos)}</div>`).join('')
+      : '<div class="empty">No hay fotos en este mes.</div>'}</section>`;
+}
 function vEquipo() {
+  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
+    `<button class="chip${equipoTab === k ? ' on' : ''}" data-act="tab-equipo" data-v="${k}">${t}${k === 'gastos' ? ((n => n ? ' (' + n + ')' : '')(Object.values(S.gastos).filter(g => g.estado !== 'pagado').length)) : ''}</button>`).join('');
+  const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, jornada, gastos y fotos que llegan desde la app</p></div>
+    ${equipoTab === 'personas' ? '<button class="btn primary" data-act="new-operario">+ Nuevo</button>' : ''}</header><div class="tabs">${tabs}</div>`;
+  if (equipoTab === 'gastos') return cab + vGastos();
+  if (equipoTab === 'fotos') return cab + vFotos();
+  return cab + vPersonasJornada();
+}
+function vPersonasJornada() {
   const ops = Object.entries(S.operarios).sort(byNombre);
   if (!opJ || !S.operarios[opJ]) opJ = ops.length ? ops[0][0] : '';
   const lista = ops.length ? `<div class="cards">${ops.map(([id, o]) => `<button class="card" data-act="edit-operario" data-id="${esc(id)}">
@@ -573,11 +651,9 @@ function vEquipo() {
       <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) : '¿?') + ' – ' + (s ? horaDe(s.ts) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
       <div class="rowr"><b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
     : '<div class="empty">No hay fichajes en este mes.</div>';
-  return `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, PIN de acceso y registro de jornada</p></div>
-    <button class="btn primary" data-act="new-operario">+ Nuevo</button></header>
-    <section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
-      · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>
-    <section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Registro de jornada</h2>
+  if (equipoTab === 'personas') return `<section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
+      · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>`;
+  return `<section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Registro de jornada</h2>
       ${opJ ? `<button class="btn small" data-act="pdf-jornada">Descargar PDF</button>` : ''}</div>
       ${ops.length ? `<div class="grid2" style="margin-bottom:14px">
         <label class="fld"><span>Persona</span><select id="op-j">${ops.map(([id, o]) => `<option value="${esc(id)}"${id === opJ ? ' selected' : ''}>${esc(o.nombre)}</option>`).join('')}</select></label>
@@ -628,6 +704,8 @@ function render() {
 
 /* ---------- Eventos ---------- */
 document.addEventListener('click', e => {
+  const am = e.target.closest('[data-ampliar]');
+  if (am) { e.preventDefault(); e.stopPropagation(); verFoto(am.dataset.ampliar); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   const a = el.dataset.act, id = el.dataset.id;
@@ -639,6 +717,10 @@ document.addEventListener('click', e => {
     case 'new-operario': operarioSheet(null); break;
     case 'edit-operario': operarioSheet(id); break;
     case 'pdf-jornada': pdfJornada(); break;
+    case 'estado-g': estadoG = el.dataset.v; lastView = ''; render(); break;
+    case 'tab-equipo': equipoTab = el.dataset.v; lastView = ''; render(); break;
+    case 'edit-gasto': gastoSheet(id); break;
+    case 'bajar-foto': bajarFoto(id); break;
     case 'copias': copiasSheet(); break;
     case 'copia-ahora': copiaAhora(); break;
     case 'copia-bajar': bajarCopia(el.dataset.f); break;
@@ -994,12 +1076,25 @@ function generarPDF(kind, id) {
   }
   cargarEnPantalla();
   cargarLogo();
+  // Lo que llega de la app del equipo aparece solo: al volver a la gestión y cada minuto mientras está
+  // a la vista. No se recarga con una ficha abierta, para no perder lo que se está escribiendo.
   let ultima = Date.now();
-  document.addEventListener('visibilitychange', async () => {
-    if (document.hidden || Date.now() - ultima < 30e3 || !$('#overlay').hidden) return;
+  // Solo se piden los cambios desde la última vez (con 2 minutos de solape, por si algo se guardaba
+  // justo en ese momento: recibir dos veces lo mismo no estropea nada).
+  let marca = new Date(Date.now() - 120e3).toISOString();
+  const refrescar = async (minimo) => {
+    if (document.hidden || Date.now() - ultima < minimo || !$('#overlay').hidden || !$('#login').hidden) return;
     ultima = Date.now();
-    try { mem = await api('GET', '/api/datos'); cargarEnPantalla(); } catch (e) {}
-  });
+    try {
+      const r = await api('GET', '/api/datos?desde=' + encodeURIComponent(marca));
+      for (const [col, id, d] of r.cambios) (mem[col] ||= {})[id] = d;
+      for (const [col, id] of r.borrados) if (mem[col]) delete mem[col][id];
+      marca = new Date(Date.parse(r.hasta) - 120e3).toISOString();
+      if (r.cambios.length || r.borrados.length) cargarEnPantalla();
+    } catch (e) {}
+  };
+  document.addEventListener('visibilitychange', () => refrescar(30e3));
+  setInterval(() => refrescar(55e3), 60e3);
 })();
 })();
 </script>
