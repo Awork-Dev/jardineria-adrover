@@ -54,7 +54,9 @@ export default {
     if (!url.pathname.startsWith('/api/')) return new Response('No encontrado', {status: 404});
     const ip = req.headers.get('cf-connecting-ip') || 'desconocida';
     if (await bloqueada(env, ip)) return json({error: 'demasiados intentos'}, 429);
-    if (!env.CLAVE || !(await igual(req.headers.get('x-clave') || '', env.CLAVE))) {
+    // Sin la clave configurada en Cloudflare no se puede entrar: se avisa en vez de decir «clave incorrecta».
+    if (!env.CLAVE) return json({error: 'sin clave configurada'}, 503);
+    if (!(await igual(req.headers.get('x-clave') || '', env.CLAVE))) {
       await fallo(env, ip);
       return json({error: 'clave'}, 401);
     }

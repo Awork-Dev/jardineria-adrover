@@ -5,6 +5,8 @@
   "main": "src/worker.js",
   "compatibility_date": "2025-06-01",
   "workers_dev": true,
+  // No borrar al publicar las variables puestas a mano en el panel de Cloudflare.
+  "keep_vars": true,
   // Copia diaria de todos los datos a las 03:15 (hora UTC), se guardan 60 días.
   "triggers": { "crons": ["15 3 * * *"] },
   "kv_namespaces": [{ "binding": "COPIAS", "id": "c74f881c6f0d429689e3d576bc3734cd" }],

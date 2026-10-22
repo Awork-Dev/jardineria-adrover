@@ -630,6 +630,7 @@ async function api(method, path, body) {
       r = await fetch(path, {method, headers: {'Content-Type': 'application/json', 'X-Clave': clave},
         body: body ? JSON.stringify(body) : undefined});
     } catch (e) { throw new Error('Sin conexión. Revisa internet e inténtalo de nuevo.'); }
+    if (r.status === 503) throw new Error('Falta configurar la clave de la gestión en Cloudflare.');
     if (r.status === 429) throw new Error('Demasiados intentos con una clave incorrecta. Espera unos minutos.');
     if (r.status === 401) { clave = ''; await pedirClave(tecleada ? 'Clave incorrecta. Inténtalo de nuevo.' : ''); tecleada = true; continue; }
     if (!r.ok) throw new Error('El servidor no pudo guardar. Revisa la conexión e inténtalo de nuevo.');
