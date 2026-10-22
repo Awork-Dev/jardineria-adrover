@@ -1,7 +1,7 @@
 import HTML from './index.html';
 import { icono, manifiesto } from '../../compartido/iconos.js';
 
-const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'partes', 'ajustes'];
+const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes'];
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
 async function bloqueada(env, ip) {

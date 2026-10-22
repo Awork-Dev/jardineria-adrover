@@ -15,8 +15,9 @@
    con presupuesto, aviso legal y mapa del sitio. Cambia de colores y avisos según la temporada.
 2. **Vigilante de noticias:** cada 3 horas busca noticias de jardinería y plantas y las guarda
    para la sección de noticias.
-3. **Gestión interna** con clave: clientes, proveedores, presupuestos con IVA del 21 %, numeración
-   automática (`P-AAAA-NNN`) y PDF, partes de trabajo y resumen por meses. Permite guardar y cargar copias.
+3. **Gestión interna** con clave: clientes, proveedores, presupuestos (`P-AAAA-NNN`) y notas (`N-AAAA-NNN`)
+   con IVA del 21 % y PDF, partes de trabajo y resumen por meses. Una nota se puede crear desde un presupuesto
+   con un botón; su PDF lleva el título «NOTA» y la frase «Este documento no es una factura».
 4. **Página de accesos** para el cliente.
 5. **Web app:** la web y la gestión se pueden añadir a la pantalla de inicio del móvil (iPhone y Android)
    con el icono de la empresa. En el iPhone se llaman «Adrover» y «Gestión».
@@ -46,6 +47,6 @@ Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`
 
 ## Decisiones
 
-- **Facturas:** la gestión hace presupuestos, no facturas. En España, los programas de facturación deben
+- **Facturas:** la gestión hace presupuestos y notas, no facturas. En España, los programas de facturación deben
   cumplir el reglamento VERI*FACTU (registro encadenado y envío a Hacienda). Para facturar conviene usar un
   programa homologado y, si hace falta, importar los presupuestos aceptados.
