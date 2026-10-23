@@ -36,4 +36,10 @@ await p.click('#overlay .sheet-head [data-act=close]');
 
 await p.click('.ay-btn');
 ok(await p.$$eval('.ay-indice a', as => { const t = as.map(a => a.getBoundingClientRect()); return t.length > 1 && t[1].left - t[0].right < 20; }), 'el índice de la ayuda sale seguido, no repartido');
+// Icono dorado al añadirla a la pantalla de inicio: la dirección lleva versión para que el móvil no use uno viejo guardado.
+const G = process.env.GESTION || 'http://localhost:8788';
+const ico = await p.getAttribute('link[rel=apple-touch-icon]', 'href'), man = await p.getAttribute('link[rel=manifest]', 'href');
+const m = await (await fetch(G + man)).json(), r = await fetch(G + ico);
+ok(/[?]v=\d+$/.test(ico) && r.ok && r.headers.get('content-type') === 'image/png' && m.theme_color === '#b8862f' && m.icons.every((i) => /[?]v=\d+$/.test(i.src)),
+  'icono de la pantalla de inicio: dorado y con versión en la dirección');
 await fin(nav);

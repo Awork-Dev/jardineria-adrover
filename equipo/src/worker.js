@@ -1,8 +1,8 @@
 import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
 // El manual (docs/manual-equipo.md) va dentro de la página, en el botón «?»: se puede leer sin cobertura.
-const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA);
-import { icono, manifiesto } from '../../compartido/iconos.js';
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA);
+import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
 import { TAREAS, TIPOS_GASTO } from '../../compartido/constantes.js';
 

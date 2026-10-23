@@ -2,8 +2,8 @@ import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
 import { constantesJS } from '../../compartido/constantes.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
-const HTML = PAGINA.replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
-import { icono, manifiesto } from '../../compartido/iconos.js';
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
+import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
 
