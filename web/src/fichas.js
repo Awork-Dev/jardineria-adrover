@@ -1,0 +1,132 @@
+// Fichas ampliadas de las plantas de la guía: una página por planta (/guia/<ficha>) en los cuatro idiomas.
+// Se enlazan con PLANTAS_G por el nombre en latín. Los meses van de 1 (enero) a 12 (diciembre).
+//   ficha: dirección de la página · tipo · alto: [mínimo, máximo] en metros
+//   costa: aguanta viento y salitre · maceta: se puede tener en maceta
+//   riego: [verano, invierno] días entre riegos con la planta arraigada (0 = solo con la lluvia)
+//   plantar (o trasplantar, en las de interior), flor, poda y abono: meses · plagas y usos: claves de FT
+const F = (ficha, tipo, alto, costa, maceta, riego, plantar, flor, poda, abono, plagas, usos) =>
+  ({ ficha, tipo, alto, costa, maceta, riego, plantar, flor, poda, abono, plagas, usos });
+const DE = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+
+export const FICHAS = {
+  "Salvia rosmarinus": F("romero", "aromatica", [0.5, 1.5], true, true, [15, 0], [10, 11, 2, 3], [11, 12, 1, 2, 3, 4], [4, 5], [], ["podredumbre"], ["seto", "rocalla", "cocina", "abejas", "seco", "costa"]),
+  "Pistacia lentiscus": F("lentisco", "arbusto", [1, 3], true, true, [21, 0], [10, 11, 12, 2, 3], [3, 4], [2, 3, 9], [], [], ["seto", "seco", "costa"]),
+  "Olea europaea var. sylvestris": F("acebuche", "arbol", [2, 6], true, true, [21, 0], [10, 11, 12, 2, 3], [4, 5], [1, 2, 3], [3], ["cochinilla", "xylella"], ["aislada", "seto", "seco", "costa"]),
+  "Chamaerops humilis": F("palmito", "palmera", [1, 3], true, true, [15, 0], [4, 5, 9, 10], [4, 5], [12, 1, 2], [4], ["paysandisia", "picudo"], ["aislada", "maceta", "seco", "costa"]),
+  "Myrtus communis": F("mirto", "arbusto", [1, 3], true, true, [10, 0], [10, 11, 3, 4], [6, 7, 8], [3, 9], [3], ["cochinilla", "pulgon"], ["seto", "maceta", "abejas", "seco"]),
+  "Cistus albidus": F("jara-blanca", "arbusto", [0.5, 1], true, false, [21, 0], [10, 11, 2, 3], [3, 4, 5, 6], [6], [], ["podredumbre"], ["rocalla", "seco", "abejas", "costa"]),
+  "Ceratonia siliqua": F("algarrobo", "arbol", [5, 10], true, false, [21, 0], [10, 11, 12, 1, 2], [9, 10, 11], [1, 2], [], ["cochinilla"], ["sombra", "aislada", "seco"]),
+  "Prunus dulcis": F("almendro", "frutal", [3, 6], false, false, [21, 0], [11, 12, 1], [1, 2, 3], [9, 10, 11], [2], ["xylella", "pulgon"], ["frutal", "aislada", "seco", "abejas"]),
+  "Punica granatum": F("granado", "frutal", [2, 5], false, true, [10, 0], [11, 12, 1, 2, 3], [5, 6, 7], [1, 2], [3], ["pulgon", "mosca"], ["frutal", "aislada", "seto", "seco"]),
+  "Arbutus unedo": F("madrono", "arbol", [2, 5], false, true, [15, 0], [10, 11, 12, 2, 3], [10, 11, 12], [3], [], [], ["seto", "aislada", "seco", "abejas"]),
+  "Lavandula angustifolia / dentata": F("lavanda", "aromatica", [0.4, 1], true, true, [10, 0], [10, 11, 3, 4], [4, 5, 6, 7, 8], [8, 9], [], ["podredumbre"], ["rocalla", "seto", "maceta", "abejas", "seco"]),
+  "Nerium oleander": F("adelfa", "arbusto", [1.5, 4], true, true, [10, 0], [3, 4, 5, 10], DE(5, 10), [1, 2], [3, 4], ["pulgon", "cochinilla"], ["seto", "aislada", "seco", "costa"]),
+  "Gazania rigens": F("gazania", "tapizante", [0.2, 0.3], true, true, [7, 21], [3, 4, 5, 9, 10], DE(3, 10), [], [4, 6], ["podredumbre"], ["tapizante", "maceta", "seco", "costa"]),
+  "Pelargonium spp.": F("geranio", "flor", [0.3, 0.6], false, true, [3, 10], [3, 4, 5, 9, 10], DE(3, 11), [2, 3], DE(3, 9), ["taladro", "mosca"], ["maceta"]),
+  "Hibiscus rosa-sinensis": F("hibisco", "arbusto", [1, 3], false, true, [3, 10], [4, 5, 6], DE(5, 10), [3], DE(4, 8), ["pulgon", "mosca", "cochinilla"], ["maceta", "seto", "aislada"]),
+  "Trachelospermum jasminoides": F("jazmin-estrellado", "trepadora", [2, 6], false, true, [5, 15], [3, 4, 10], [4, 5, 6], [7, 8], [3, 4, 5], ["cochinilla", "pulgon"], ["pergola", "maceta", "aroma"]),
+  "Citrus × limon": F("limonero", "frutal", [2, 5], false, true, [4, 15], [3, 4, 5], [3, 4, 5], [2, 3], [2, 3, 5, 6, 9], ["pulgon", "cochinilla", "minador"], ["frutal", "maceta", "aislada", "aroma"]),
+  "Aloe vera": F("aloe-vera", "suculenta", [0.4, 0.6], true, true, [15, 30], [3, 4, 5, 9], [2, 3, 4], [], [], ["cochinilla", "podredumbre"], ["maceta", "rocalla", "seco"]),
+  "Chlorophytum comosum": F("cinta", "interior", [0.2, 0.4], false, true, [5, 10], [3, 4], [5, 6, 7], [], DE(4, 8), ["cochinilla"], ["interior", "colgante"]),
+  "Calathea spp.": F("calathea", "interior", [0.4, 0.8], false, true, [4, 7], [4, 5], [], [], DE(4, 8), ["arana"], ["interior"]),
+  "Epipremnum aureum": F("potus", "interior", [1, 3], false, true, [7, 12], [3, 4, 5], [], [3, 4], DE(4, 8), ["cochinilla"], ["interior", "colgante"]),
+  "Dracaena trifasciata (Sansevieria)": F("sansevieria", "interior", [0.3, 1], false, true, [14, 30], [4, 5], [], [], [5], ["podredumbre"], ["interior"]),
+  "Monstera deliciosa": F("monstera", "interior", [1, 3], false, true, [7, 12], [4, 5], [], [4], DE(4, 9), ["cochinilla", "arana"], ["interior"]),
+  "Pinus halepensis": F("pino-carrasco", "arbol", [10, 20], true, false, [21, 0], [11, 12, 1, 2], [3, 4], [11, 12, 1, 2], [], ["procesionaria"], ["sombra", "aislada", "seco", "costa"]),
+  "Phlomis italica": F("estepa-blenera", "arbusto", [0.5, 1], true, true, [21, 0], [10, 11, 2, 3], [4, 5, 6], [6, 7], [], [], ["rocalla", "seco", "abejas"]),
+  "Thymus vulgaris": F("tomillo", "aromatica", [0.2, 0.4], true, true, [15, 0], [10, 11, 3, 4], [3, 4, 5, 6], [6, 7], [], ["podredumbre"], ["rocalla", "cocina", "abejas", "seco"]),
+  "Rosa spp.": F("rosal", "arbusto", [0.5, 2], false, true, [3, 10], [11, 12, 1, 2], [4, 5, 6, 9, 10, 11], [1], [3, 5, 9], ["pulgon", "oidio", "arana"], ["maceta", "aislada", "aroma"]),
+  "Bougainvillea spectabilis": F("buganvilla", "trepadora", [3, 8], true, true, [7, 0], [4, 5, 6], DE(5, 11), [2, 3], [4, 6], ["pulgon", "cochinilla"], ["pergola", "seco", "costa"]),
+  "Plumbago auriculata": F("plumbago", "arbusto", [1, 3], true, true, [7, 0], [3, 4, 5, 10], DE(4, 11), [2, 3], [4, 6], ["cochinilla"], ["seto", "pergola", "maceta"]),
+  "Strelitzia reginae": F("ave-del-paraiso", "flor", [1, 1.5], false, true, [5, 15], [4, 5], [11, 12, 1, 2, 3, 4, 5], [], DE(3, 9), ["cochinilla"], ["maceta", "aislada"]),
+  "Agave americana": F("pita", "suculenta", [1, 2], true, true, [30, 0], [3, 4, 5, 9, 10], [], [], [], ["picudoAgave"], ["rocalla", "seco", "costa", "aislada"]),
+  "Euphorbia pulcherrima": F("flor-de-pascua", "interior", [0.3, 0.6], false, true, [5, 7], [4, 5], [11, 12, 1, 2], [4, 5], DE(4, 9), ["mosca", "cochinilla"], ["interior"]),
+  "Zamioculcas zamiifolia": F("zamioculca", "interior", [0.4, 1], false, true, [14, 28], [4, 5], [], [], [5, 7], ["podredumbre"], ["interior"]),
+  "Spathiphyllum wallisii": F("espatifilo", "interior", [0.3, 0.7], false, true, [5, 8], [3, 4], DE(3, 9), [], DE(4, 9), ["arana", "cochinilla"], ["interior"]),
+};
+
+// Textos de las fichas. {p} = nombre de la planta, {l} = nombre en latín, {a} y {b} = metros, {n} = días.
+export const FT = {
+  es: {
+    ficha: "Ficha de planta", volver: "Todas las plantas", cuidados: "Cuidados", tam: "Tamaño", alto: "De {a} a {b} m de alto",
+    costa: "Aguanta viento y salitre", maceta: "Maceta", macetaSi: "Sí, con buen drenaje", macetaNo: "Mejor plantada en el suelo",
+    riego: "Riego", verano: "Verano", invierno: "Invierno", cada: "cada {n} días", lluvia: "solo con la lluvia",
+    notaFuera: "Orientativo, con la planta ya arraigada. El primer año y en maceta, más a menudo.",
+    notaDentro: "Orientativo: riega cuando la tierra esté seca en los primeros centímetros.",
+    cal: "Calendario", filas: ["Plantar", "Flor", "Poda", "Abono"], trasplantar: "Trasplantar", hoy: "Este mes", si: "sí",
+    nada: { flor: "Se cultiva por sus hojas: no tiene una flor destacable.", poda: "No necesita poda: basta con quitar lo seco.", abono: "No necesita abono." },
+    plagas: "Qué vigilar", sinPlagas: "Da muy pocos problemas.", doctor: "Consulta el doctor de plantas",
+    usos: "Para qué va bien", pedir: "¿La tenéis en el vivero?", msg: "Hola, me interesa esta planta: {p} ({l}). ¿La tenéis en el vivero?",
+    parecidas: "Plantas parecidas", verFicha: "Ver ficha",
+    meta: ["{p}: cuidados, riego y poda en Mallorca · Jardinería Adrover", "{p} ({l}): cuándo plantarla, regarla, podarla y abonarla en Mallorca, y qué plagas vigilar. Ficha del vivero Jardinería Adrover."],
+    tipos: { arbol: "Árbol", arbusto: "Arbusto", palmera: "Palmera", aromatica: "Aromática", trepadora: "Trepadora", tapizante: "Tapizante", suculenta: "Suculenta", interior: "Planta de interior", frutal: "Frutal", flor: "Planta de flor" },
+    usosT: { seto: "Setos", rocalla: "Rocallas y bordes", maceta: "Maceta y terraza", seco: "Jardín de bajo consumo", costa: "Jardines junto al mar", abejas: "Atrae abejas y mariposas", cocina: "Para cocinar", sombra: "Da sombra", aislada: "Planta protagonista", tapizante: "Cubrir suelos y taludes", pergola: "Vallas y pérgolas", interior: "Interior", colgante: "Colgante", frutal: "Fruta en casa", aroma: "Perfuma el jardín" },
+    plagasT: { pulgon: "Pulgón", cochinilla: "Cochinilla", arana: "Araña roja", mosca: "Mosca blanca", oidio: "Oídio", podredumbre: "Podredumbre por exceso de riego", taladro: "Taladro del geranio (mariposa)", picudo: "Picudo rojo", paysandisia: "Paysandisia (mariposa de las palmeras)", procesionaria: "Procesionaria", xylella: "Xylella", minador: "Minador de los cítricos", picudoAgave: "Picudo negro del agave" },
+  },
+  ca: {
+    ficha: "Fitxa de planta", volver: "Totes les plantes", cuidados: "Cures", tam: "Mida", alto: "De {a} a {b} m d'alçada",
+    costa: "Aguanta vent i salnitre", maceta: "Test", macetaSi: "Sí, amb bon drenatge", macetaNo: "Millor plantada a terra",
+    riego: "Reg", verano: "Estiu", invierno: "Hivern", cada: "cada {n} dies", lluvia: "només amb la pluja",
+    notaFuera: "Orientatiu, amb la planta ja arrelada. El primer any i en test, més sovint.",
+    notaDentro: "Orientatiu: rega quan la terra estigui seca als primers centímetres.",
+    cal: "Calendari", filas: ["Plantar", "Flor", "Poda", "Adob"], trasplantar: "Trasplantar", hoy: "Aquest mes", si: "sí",
+    nada: { flor: "Es cultiva per les fulles: no té una flor destacable.", poda: "No necessita poda: basta llevar el que és sec.", abono: "No necessita adob." },
+    plagas: "Què vigilar", sinPlagas: "Dona molt pocs problemes.", doctor: "Consulta el doctor de plantes",
+    usos: "Per a què va bé", pedir: "La teniu al viver?", msg: "Hola, m'interessa aquesta planta: {p} ({l}). La teniu al viver?",
+    parecidas: "Plantes semblants", verFicha: "Veure fitxa",
+    meta: ["{p}: cures, reg i poda a Mallorca · Jardinería Adrover", "{p} ({l}): quan plantar-la, regar-la, podar-la i adobar-la a Mallorca, i quines plagues vigilar. Fitxa del viver Jardinería Adrover."],
+    tipos: { arbol: "Arbre", arbusto: "Arbust", palmera: "Palmera", aromatica: "Aromàtica", trepadora: "Enfiladissa", tapizante: "Entapissant", suculenta: "Suculenta", interior: "Planta d'interior", frutal: "Fruiter", flor: "Planta de flor" },
+    usosT: { seto: "Tanques", rocalla: "Rocalles i vores", maceta: "Test i terrassa", seco: "Jardí de baix consum", costa: "Jardins vora la mar", abejas: "Atreu abelles i papallones", cocina: "Per cuinar", sombra: "Fa ombra", aislada: "Planta protagonista", tapizante: "Cobrir sòls i talussos", pergola: "Tanques i pèrgoles", interior: "Interior", colgante: "Penjant", frutal: "Fruita a casa", aroma: "Perfuma el jardí" },
+    plagasT: { pulgon: "Pugó", cochinilla: "Cotxinilla", arana: "Aranya vermella", mosca: "Mosca blanca", oidio: "Oïdi", podredumbre: "Podridura per excés de reg", taladro: "Barrinadora del gerani (papallona)", picudo: "Morrut roig", paysandisia: "Paysandisia (papallona de les palmeres)", procesionaria: "Processionària", xylella: "Xylella", minador: "Minador dels cítrics", picudoAgave: "Morrut negre de l'atzavara" },
+  },
+  en: {
+    ficha: "Plant profile", volver: "All plants", cuidados: "Care", tam: "Size", alto: "{a} to {b} m tall",
+    costa: "Copes with wind and salt spray", maceta: "Pots", macetaSi: "Yes, with good drainage", macetaNo: "Best planted in the ground",
+    riego: "Watering", verano: "Summer", invierno: "Winter", cada: "every {n} days", lluvia: "rain only",
+    notaFuera: "A guide for established plants. Water more often in the first year and in pots.",
+    notaDentro: "A guide: water when the top few centimetres of soil are dry.",
+    cal: "Calendar", filas: ["Plant", "Flowers", "Prune", "Feed"], trasplantar: "Repot", hoy: "This month", si: "yes",
+    nada: { flor: "Grown for its leaves: no notable flowers.", poda: "No pruning needed: just remove dead growth.", abono: "No feeding needed." },
+    plagas: "What to watch for", sinPlagas: "Very few problems.", doctor: "See the plant doctor",
+    usos: "Good for", pedir: "Do you have it at the nursery?", msg: "Hello, I'm interested in this plant: {p} ({l}). Do you have it at the nursery?",
+    parecidas: "Similar plants", verFicha: "See profile",
+    meta: ["{p}: care, watering and pruning in Mallorca · Jardinería Adrover", "{p} ({l}): when to plant, water, prune and feed it in Mallorca, and which pests to watch for. Plant profile from the Jardinería Adrover nursery."],
+    tipos: { arbol: "Tree", arbusto: "Shrub", palmera: "Palm", aromatica: "Herb", trepadora: "Climber", tapizante: "Ground cover", suculenta: "Succulent", interior: "Houseplant", frutal: "Fruit tree", flor: "Flowering plant" },
+    usosT: { seto: "Hedges", rocalla: "Rockeries and edges", maceta: "Pots and terraces", seco: "Low-water gardens", costa: "Seaside gardens", abejas: "Attracts bees and butterflies", cocina: "Cooking", sombra: "Gives shade", aislada: "Feature plant", tapizante: "Covering ground and slopes", pergola: "Fences and pergolas", interior: "Indoors", colgante: "Hanging", frutal: "Home-grown fruit", aroma: "Scented" },
+    plagasT: { pulgon: "Aphids", cochinilla: "Mealybugs and scale", arana: "Spider mites", mosca: "Whitefly", oidio: "Powdery mildew", podredumbre: "Root rot from overwatering", taladro: "Geranium bronze butterfly", picudo: "Red palm weevil", paysandisia: "Palm moth (Paysandisia)", procesionaria: "Pine processionary caterpillar", xylella: "Xylella", minador: "Citrus leaf miner", picudoAgave: "Agave snout weevil" },
+  },
+  de: {
+    ficha: "Pflanzenprofil", volver: "Alle Pflanzen", cuidados: "Pflege", tam: "Größe", alto: "{a} bis {b} m hoch",
+    costa: "Verträgt Wind und Salz", maceta: "Kübel", macetaSi: "Ja, mit guter Drainage", macetaNo: "Besser ins Beet",
+    riego: "Gießen", verano: "Sommer", invierno: "Winter", cada: "alle {n} Tage", lluvia: "nur Regen",
+    notaFuera: "Richtwert für eingewachsene Pflanzen. Im ersten Jahr und im Kübel öfter gießen.",
+    notaDentro: "Richtwert: gießen, wenn die obersten Zentimeter der Erde trocken sind.",
+    cal: "Kalender", filas: ["Pflanzen", "Blüte", "Schnitt", "Düngen"], trasplantar: "Umtopfen", hoy: "Dieser Monat", si: "ja",
+    nada: { flor: "Wegen der Blätter beliebt: keine auffällige Blüte.", poda: "Kein Schnitt nötig: nur Trockenes entfernen.", abono: "Kein Dünger nötig." },
+    plagas: "Worauf achten", sinPlagas: "Macht kaum Probleme.", doctor: "Zum Pflanzendoktor",
+    usos: "Gut für", pedir: "Haben Sie sie in der Gärtnerei?", msg: "Hallo, ich interessiere mich für diese Pflanze: {p} ({l}). Haben Sie sie in der Gärtnerei?",
+    parecidas: "Ähnliche Pflanzen", verFicha: "Profil ansehen",
+    meta: ["{p}: Pflege, Gießen und Schnitt auf Mallorca · Jardinería Adrover", "{p} ({l}): wann pflanzen, gießen, schneiden und düngen auf Mallorca und auf welche Schädlinge achten. Pflanzenprofil der Gärtnerei Jardinería Adrover."],
+    tipos: { arbol: "Baum", arbusto: "Strauch", palmera: "Palme", aromatica: "Kräuterpflanze", trepadora: "Kletterpflanze", tapizante: "Bodendecker", suculenta: "Sukkulente", interior: "Zimmerpflanze", frutal: "Obstbaum", flor: "Blühpflanze" },
+    usosT: { seto: "Hecken", rocalla: "Steingärten und Ränder", maceta: "Kübel und Terrasse", seco: "Wassersparende Gärten", costa: "Gärten am Meer", abejas: "Lockt Bienen und Schmetterlinge an", cocina: "Zum Kochen", sombra: "Spendet Schatten", aislada: "Blickfang", tapizante: "Boden und Böschungen bedecken", pergola: "Zäune und Pergolen", interior: "Innenräume", colgante: "Ampelpflanze", frutal: "Eigenes Obst", aroma: "Duftet" },
+    plagasT: { pulgon: "Blattläuse", cochinilla: "Woll- und Schildläuse", arana: "Spinnmilben", mosca: "Weiße Fliege", oidio: "Echter Mehltau", podredumbre: "Wurzelfäule durch zu viel Wasser", taladro: "Geranien-Bläuling", picudo: "Roter Palmrüssler", paysandisia: "Palmenfalter (Paysandisia)", procesionaria: "Pinien-Prozessionsspinner", xylella: "Xylella", minador: "Zitrusminiermotte", picudoAgave: "Agavenrüssler" },
+  },
+};
+
+// Dibujo de cada tipo de planta, mientras no haya foto propia. Colores de la marca.
+const V = { o: "#2f5d3f", m: "#4f8a4f", c: "#7fae6a", p: "#a9d39a", t: "#7a5a3a", s: "#e3d8c3", z: "#c8693a" };
+const suelo = `<ellipse cx="120" cy="204" rx="92" ry="10" fill="${V.s}"/>`;
+const maceta = `<path d="M84 150h72l-9 54h-54Z" fill="${V.z}"/><rect x="78" y="142" width="84" height="14" rx="4" fill="#b55a2e"/>`;
+const hojaG = (x, y, r, rx, ry, c) => `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${r} ${x} ${y})" fill="${c}"/>`;
+export const DIBUJOS = {
+  arbol: `${suelo}<path d="M114 204V128h12v76Z" fill="${V.t}"/><circle cx="86" cy="112" r="34" fill="${V.o}"/><circle cx="156" cy="110" r="36" fill="${V.m}"/><circle cx="120" cy="96" r="46" fill="${V.m}"/><circle cx="118" cy="70" r="32" fill="${V.c}"/>`,
+  frutal: `${suelo}<path d="M114 204V128h12v76Z" fill="${V.t}"/><circle cx="86" cy="112" r="34" fill="${V.o}"/><circle cx="156" cy="110" r="36" fill="${V.m}"/><circle cx="120" cy="96" r="46" fill="${V.m}"/><circle cx="118" cy="70" r="32" fill="${V.c}"/>${[[92, 104], [140, 88], [116, 124], [162, 120], [104, 76], [78, 128]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="8" ry="10" fill="#e9c44a"/>`).join("")}`,
+  palmera: `${suelo}<path d="M118 204c4-40 6-78 2-112" stroke="${V.t}" stroke-width="12" fill="none" stroke-linecap="round"/>${[[-62, V.m], [-28, V.c], [8, V.m], [40, V.o], [72, V.c], [104, V.m], [140, V.o], [-96, V.o]].map(([r, c]) => hojaG(120 + 38 * Math.cos(r * Math.PI / 180), 92 + 22 * Math.sin(r * Math.PI / 180), r, 44, 11, c)).join("")}`,
+  arbusto: `${suelo}<ellipse cx="120" cy="164" rx="84" ry="42" fill="${V.o}"/><ellipse cx="86" cy="150" rx="46" ry="38" fill="${V.m}"/><ellipse cx="154" cy="146" rx="48" ry="40" fill="${V.c}"/>${[[70, 138], [102, 128], [140, 124], [170, 140], [122, 152]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="5" fill="#fff"/>`).join("")}`,
+  aromatica: `${suelo}${[84, 100, 116, 132, 148, 164].map((x, i) => `<path d="M${x} 204c${i % 2 ? 4 : -4}-34 0-60 ${i % 2 ? 6 : -6}-${86 + (i % 3) * 14}" stroke="${V.m}" stroke-width="4" fill="none" stroke-linecap="round"/>`).join("")}${[[78, 112], [96, 96], [112, 104], [130, 90], [148, 108], [166, 100]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="12" fill="#9b7cc6"/>`).join("")}${[[86, 160], [104, 150], [126, 166], [146, 148], [160, 172]].map(([x, y], i) => hojaG(x, y, i % 2 ? 40 : -40, 9, 4, V.c)).join("")}`,
+  trepadora: `${suelo}<path d="M56 204V96a64 64 0 0 1 128 0v108" stroke="${V.t}" stroke-width="8" fill="none"/><path d="M56 190c14-20-12-40 4-62s-4-44 22-62 52-10 70 0 22 36 30 50-6 40 2 70" stroke="${V.m}" stroke-width="4" fill="none"/>${[[60, 168, 30], [66, 128, -30], [74, 80, 20], [104, 50, -10], [140, 48, 15], [170, 72, -20], [178, 118, 30], [182, 160, -30]].map(([x, y, r]) => hojaG(x, y, r, 11, 6, V.c)).join("")}${[[84, 62], [122, 44], [158, 58], [62, 108], [180, 98], [178, 140]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#fff"/><circle cx="${x}" cy="${y}" r="2" fill="#e9c44a"/>`).join("")}`,
+  tapizante: `${suelo}<path d="M28 204c18-40 166-40 184 0Z" fill="${V.m}"/>${[[64, 180, "#e58a3a"], [98, 172, "#e9c44a"], [134, 170, "#e58a3a"], [168, 180, "#e9c44a"], [116, 188, "#d9483b"], [82, 194, "#e9c44a"], [150, 194, "#d9483b"]].map(([x, y, c]) => `<circle cx="${x}" cy="${y}" r="11" fill="${c}"/><circle cx="${x}" cy="${y}" r="4" fill="${V.o}"/>`).join("")}`,
+  suculenta: `${suelo}${[[-70, 70], [-45, 84], [-20, 92], [0, 96], [20, 92], [45, 84], [70, 70], [-58, 54], [58, 54], [-30, 62], [30, 62]].map(([r, l], i) => `<path d="M120 200 L${120 + Math.sin(r * Math.PI / 180) * l - 10} ${200 - Math.cos(r * Math.PI / 180) * l} L${120 + Math.sin(r * Math.PI / 180) * l + 4} ${200 - Math.cos(r * Math.PI / 180) * l - 8} Z" fill="${i % 2 ? "#6f9c8a" : "#8fb8a5"}"/>`).join("")}`,
+  interior: `${maceta}${[[96, 120, -40, 30, 14], [144, 116, 40, 32, 15], [120, 92, 0, 16, 34], [100, 84, -25, 14, 30], [142, 82, 25, 14, 30]].map(([x, y, r, rx, ry], i) => hojaG(x, y, r, rx, ry, i % 2 ? V.m : V.o)).join("")}<path d="M120 146v-50M120 140l-22-18M120 140l24-20" stroke="${V.o}" stroke-width="3" fill="none"/>`,
+  flor: `${maceta}${[[100, 128, -30], [140, 126, 30], [120, 120, 0]].map(([x, y, r]) => hojaG(x, y, r, 18, 11, V.m)).join("")}${[[96, 92], [120, 78], [146, 94]].map(([x, y]) => [0, 72, 144, 216, 288].map((a) => `<circle cx="${x + 9 * Math.cos(a * Math.PI / 180)}" cy="${y + 9 * Math.sin(a * Math.PI / 180)}" r="7" fill="#d9483b"/>`).join("") + `<circle cx="${x}" cy="${y}" r="4" fill="#f4c0b6"/>`).join("")}<path d="M96 100l8 30M120 86v34M146 102l-8 28" stroke="${V.o}" stroke-width="3"/>`,
+};

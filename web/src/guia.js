@@ -38,6 +38,21 @@ export const PLANTAS_G = [
     ca: ["Garrover", "Arbre tradicional de Mallorca, fa bona ombra i gairebé no necessita reg quan està arrelat."],
     en: ["Carob tree", "A traditional Majorcan tree that gives good shade and needs little water once rooted."],
     de: ["Johannisbrotbaum", "Traditioneller Baum Mallorcas, spendet Schatten und braucht eingewurzelt kaum Wasser."] }],
+  ["Prunus dulcis", "sol", "bajo", "no", false, {
+    es: ["Almendro", "El árbol del paisaje mallorquín. Florece en pleno invierno, apenas necesita riego y da almendras en verano. Pódalo después de la cosecha."],
+    ca: ["Ametller", "L'arbre del paisatge mallorquí. Floreix en ple hivern, gairebé no necessita reg i fa ametlles a l'estiu. Poda'l després de la collita."],
+    en: ["Almond tree", "The tree of the Mallorcan landscape. It blooms in midwinter, needs hardly any water and gives almonds in summer. Prune it after the harvest."],
+    de: ["Mandelbaum", "Der Baum der mallorquinischen Landschaft. Blüht mitten im Winter, braucht kaum Wasser und trägt im Sommer Mandeln. Nach der Ernte schneiden."] }],
+  ["Punica granatum", "sol", "bajo", "?", false, {
+    es: ["Granado", "Árbol pequeño muy resistente al calor y la sequía. Flores rojas en primavera y granadas en otoño. Admite poda para mantenerlo bajo."],
+    ca: ["Magraner", "Arbre petit molt resistent a la calor i la sequera. Flors vermelles a la primavera i magranes a la tardor. Admet poda per mantenir-lo baix."],
+    en: ["Pomegranate", "A small tree that stands up well to heat and drought. Red flowers in spring and pomegranates in autumn. It can be pruned to keep it low."],
+    de: ["Granatapfel", "Kleiner Baum, sehr hitze- und trockenheitsfest. Rote Blüten im Frühling, Granatäpfel im Herbst. Lässt sich niedrig halten."] }],
+  ["Arbutus unedo", "sol semi", "bajo", "?", true, {
+    es: ["Madroño", "Arbolito autóctono de hoja perenne. En otoño luce a la vez flores blancas y frutos rojos comestibles. Una vez arraigado aguanta bien la sequía y el viento."],
+    ca: ["Arboç", "Arbret autòcton de fulla perenne. A la tardor llueix alhora flors blanques i fruits vermells comestibles. Un cop arrelat aguanta bé la sequera i el vent."],
+    en: ["Strawberry tree", "A native evergreen small tree. In autumn it shows white flowers and edible red fruit at the same time. Once established it copes well with drought and wind."],
+    de: ["Erdbeerbaum", "Heimischer immergrüner kleiner Baum. Im Herbst trägt er gleichzeitig weiße Blüten und essbare rote Früchte. Eingewachsen verträgt er Trockenheit und Wind gut."] }],
   ["Lavandula angustifolia / dentata", "sol", "bajo", "no", false, {
     es: ["Lavanda", "Sol y suelo bien drenado. Pódala ligeramente tras la floración para que no se abra. Tóxica para perros y gatos si la comen."],
     ca: ["Espígol (lavanda)", "Sol i sòl ben drenat. Poda-la lleugerament després de la floració perquè no s'obri. Tòxica per a cans i moixos si la mengen."],

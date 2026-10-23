@@ -14,6 +14,9 @@
    guía verde (plantas, calendario, doctor de plantas, xerojardinería), herramientas, noticias, contacto
    con presupuesto, aviso legal y mapa del sitio. Cambia de colores y avisos según la temporada.
    La dirección, el teléfono fijo y «Cómo llegar» (Google Maps) salen en contacto, en vivero y al pie de todas las páginas.
+   Cada una de las 34 plantas de la guía tiene su ficha (`/guia/romero`, `/ca/guia/romero`…): tipo, tamaño, riego en
+   verano e invierno, calendario de plantar, flor, poda y abono, qué plagas vigilar, para qué va bien, plantas parecidas
+   y botón de WhatsApp «¿La tenéis en el vivero?» con el nombre de la planta. Datos en `web/src/fichas.js`.
 2. **Vigilante de noticias:** cada 3 horas busca noticias de jardinería y plantas y las guarda
    para la sección de noticias. Deja fuera las campañas y contratos de los ayuntamientos, las polémicas
    y las «plantas» solares o industriales (filtro en `web/src/noticias.js`).
@@ -91,3 +94,5 @@ la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con un
 ## Pendiente
 
 - **Horario del vivero:** en cuanto lo tengamos, se pone en la web (contacto, vivero y pie) y en la ficha para Google.
+- **Fotos de las plantas:** mientras no las haya, cada ficha lleva un dibujo según el tipo de planta. Cuando la propietaria
+  las pase, se suben a Google Drive y se apuntan en `FOTOS_PLANTAS` (`web/src/datos.js`).

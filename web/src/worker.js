@@ -1,15 +1,16 @@
 // Jardinería Adrover — web + vigilante de noticias
 // Requiere: binding KV llamado DATOS y un Cron Trigger cada 3 horas
 
-import { TEL, EMAIL, TEL_FIJO, IDIOMAS, FOTOS, DIRECCION, MAPA } from './datos.js';
+import { TEL, EMAIL, TEL_FIJO, IDIOMAS, FOTOS, DIRECCION, MAPA, FOTOS_PLANTAS } from './datos.js';
 import { vigilar, noticias } from './noticias.js';
 import { T, G, CULT_G, HT } from './textos.js';
 import { PLANTAS_G, CAL_G, DOC_G, XERO_G, PLANTA_MES, PM_T } from './guia.js';
+import { FICHAS, FT, DIBUJOS } from './fichas.js';
 import { TITULAR, LEGAL_LISTO, LEGAL, ACTUALIZADO } from './legal.js';
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { ICONOS } from '../../compartido/iconos-web.js';
 
-const TODAS = new Set([FOTOS.hero, FOTOS.vivero, FOTOS.mant, FOTOS.poda, FOTOS.diseno, FOTOS.flor, ...FOTOS.galeria,
+const TODAS = new Set([FOTOS.hero, FOTOS.vivero, FOTOS.mant, FOTOS.poda, FOTOS.diseno, FOTOS.flor, ...FOTOS.galeria, ...Object.values(FOTOS_PLANTAS),
   "1ifQJNiTOw-VO1CCIOSpnTPiVg4vUtCYB", "1insih4dhc_okLA8toUKb1whvDuSzPc-q", "1Uj5v5HCLCmlNs7ugBB-54LO0MjsSEvvU",
   "16O1eYhY7DvQfKhdsPt34RzDZK3NsBNti", "1uOPLB0PIp0tf2PjPHcnalYgEciSNshid"]);
 
@@ -131,16 +132,61 @@ CUERPOS["/guia"] = (t, lang) => {
 <select id="fl" aria-label="${g.f.luz[0]}">${op(["", "sol", "semi", "sombra"], g.f.luz)}</select>
 <select id="fr" aria-label="${g.f.riego[0]}">${op(["", "bajo", "medio", "alto"], g.f.riego)}</select>
 <label class="chk"><input type="checkbox" id="fm"> ${g.f.mascotas}</label><label class="chk"><input type="checkbox" id="fa"> ${g.f.auto}</label></div>
-<div class="plantas">${PLANTAS_G.map((p) => {
-    const [nom, txt] = p[5][lang];
-    return `<article class="pl" data-luz="${p[1]}" data-riego="${p[2]}" data-pet="${p[3]}" data-auto="${p[4] ? 1 : 0}" data-q="${(nom + " " + p[0]).toLowerCase()}"><h3>${nom}</h3><i>${p[0]}</i><p>${txt}</p><div class="meta">${p[1].split(" ").map((x) => `<span class="chip">${g.et[x]}</span>`).join("")}<span class="chip">${g.et[p[2]]}</span><span class="chip${p[3] === "no" ? " mal" : p[3] === "si" ? " bien" : ""}">${g.et[p[3]]}</span>${p[4] ? `<span class="chip auto">${g.et.auto}</span>` : ""}</div></article>`;
-  }).join("")}</div>
+<div class="plantas">${PLANTAS_G.map((p) => tarjetaPlanta(p, lang)).join("")}</div>
 <p id="pnada" hidden>${g.f.nada}</p><p class="nota">${g.petNota}</p></div></section>
 <section id="doctor"><div class="wrap faqw"><div class="rv"><div class="eyebrow">${g.doc[0]}</div><h2>${g.doc[1]}</h2><p style="color:var(--gris)">${g.doc[2]}</p>${TEL ? `<a class="canal wa" href="https://wa.me/${TEL}?text=${encodeURIComponent(g.docMsg)}" target="_blank" rel="noopener">${ICO.chat}<span>${g.docFoto}</span></a>` : ""}</div>
 <div class="faq rv">${DOC_G[lang].map((d, i) => `<details${i ? "" : " open"}><summary>${d[0]}</summary><p><b>${g.docEt[0]}:</b> ${d[1]}</p><p><b>${g.docEt[1]}:</b> ${d[2]}</p></details>`).join("")}</div></div></section>
 <section id="xero" class="oscuro"><div class="wrap">${cab(g.xero)}<div class="pasos xero">${XERO_G[lang].map((p, i) => `<div class="paso rv"><span>0${i + 1}</span><h3>${p[0]}</h3><p>${p[1]}</p></div>`).join("")}
 <div class="paso poli rv"><h3>${g.poli[0]}</h3><p>${g.poli[1]}</p><a class="btn" href="#plantas" id="verauto">${g.poli[2]}</a></div></div></div></section>`;
 };
+
+// ===== Fichas de plantas: una página por planta (/guia/romero, /ca/guia/romero…) =====
+const rutaFicha = (p) => "/guia/" + FICHAS[p[0]].ficha;
+const FICHA = Object.fromEntries(PLANTAS_G.map((p) => [rutaFicha(p), p]));
+function tarjetaPlanta(p, lang) {
+  const g = G[lang], [nom, txt] = p[5][lang];
+  return `<a class="pl" href="${u(lang, rutaFicha(p))}" data-luz="${p[1]}" data-riego="${p[2]}" data-pet="${p[3]}" data-auto="${p[4] ? 1 : 0}" data-q="${(nom + " " + p[0]).toLowerCase()}"><span class="tipo">${FT[lang].tipos[FICHAS[p[0]].tipo]}</span><h3>${nom}</h3><i>${p[0]}</i><p>${txt}</p><div class="meta">${p[1].split(" ").map((x) => `<span class="chip">${g.et[x]}</span>`).join("")}<span class="chip">${g.et[p[2]]}</span><span class="chip${p[3] === "no" ? " mal" : p[3] === "si" ? " bien" : ""}">${g.et[p[3]]}</span>${p[4] ? `<span class="chip auto">${g.et.auto}</span>` : ""}</div><span class="ver">${FT[lang].verFicha} →</span></a>`;
+}
+function fichaHtml(t, lang, p) {
+  const f = FICHAS[p[0]], x = FT[lang], g = G[lang], [nom, txt] = p[5][lang];
+  const n = (v) => v.toLocaleString(t.nj.loc), hoy = mesHoy() + 1, dentro = f.tipo === "interior";
+  const foto = FOTOS_PLANTAS[f.ficha];
+  const fig = foto ? `<img src="${img(foto, 900)}" ${srcset(foto, "(max-width:980px) 100vw, 460px")} alt="${nom}" fetchpriority="high">`
+    : `<svg viewBox="0 0 240 240" role="img" aria-label="${nom}">${DIBUJOS[f.tipo]}</svg>`;
+  const chips = [...p[1].split(" ").map((k) => [g.et[k]]), [g.et[p[2]]], [g.et[p[3]], p[3] === "no" ? "mal" : p[3] === "si" ? "bien" : ""], ...(p[4] ? [[g.et.auto, "auto"]] : []), ...(f.costa ? [[x.costa]] : [])]
+    .map(([s, c]) => `<span class="chip${c ? " " + c : ""}">${s}</span>`).join("");
+  const msg = x.msg.replace("{p}", nom).replace("{l}", p[0]);
+  const filas = [["plantar", dentro ? x.trasplantar : x.filas[0], "p"], ["flor", x.filas[1], "f"], ["poda", x.filas[2], "d"], ["abono", x.filas[3], "a"]];
+  const hoyC = (i) => (i + 1 === hoy ? " hoy" : "");
+  const cal = `<div class="calw"><table class="calg"><thead><tr><td></td>${g.meses.map((m, i) => `<th scope="col" class="${hoyC(i).trim()}"><span class="ml">${m}</span><span class="mc" aria-hidden="true">${m[0]}</span></th>`).join("")}</tr></thead>
+<tbody>${filas.map(([k, et, c]) => `<tr><th scope="row">${et}</th>${g.meses.map((m, i) => f[k].includes(i + 1) ? `<td class="on ${c}${hoyC(i)}"><span class="sr">${x.si}</span></td>` : `<td class="${hoyC(i).trim()}"></td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+  const notas = ["flor", "poda", "abono"].filter((k) => !f[k].length).map((k) => `<li>${x.nada[k]}</li>`).join("");
+  const riego = (d) => (d ? x.cada.replace("{n}", d) : x.lluvia);
+  const datos = [[x.tam, x.alto.replace("{a}", n(f.alto[0])).replace("{b}", n(f.alto[1]))],
+    [x.riego, `${x.verano}: ${riego(f.riego[0])} · ${x.invierno}: ${riego(f.riego[1])}<small>${dentro ? x.notaDentro : x.notaFuera}</small>`],
+    [x.maceta, f.maceta ? x.macetaSi : x.macetaNo]];
+  const lista = (ks, T) => `<div class="fchips2">${ks.map((k) => `<span class="chip">${T[k]}</span>`).join("")}</div>`;
+  // Parecidas: mismo tipo de planta, mismo riego y misma luz, por este orden.
+  const pareci = PLANTAS_G.filter((q) => q !== p)
+    .map((q) => [q, (FICHAS[q[0]].tipo === f.tipo ? 2 : 0) + (q[2] === p[2] ? 1 : 0) + (q[1].split(" ").some((l) => p[1].split(" ").includes(l)) ? 1 : 0)])
+    .sort((a, b) => b[1] - a[1]).slice(0, 3).map(([q]) => q);
+  return `<section class="fhead"><div class="wrap fgrid"><div><a class="volver" href="${u(lang, "/guia")}#plantas">← ${x.volver}</a>
+<div class="eyebrow">${x.ficha} · ${x.tipos[f.tipo]}</div><h1>${nom}</h1><p class="lat">${p[0]}</p><p class="intro">${txt}</p>
+<div class="fchips">${chips}</div>
+<div class="canales">${TEL ? `<a class="canal wa" href="https://wa.me/${TEL}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${ICO.chat}<span>${x.pedir}</span></a>` : ""}<a class="canal" href="${MAPA}" target="_blank" rel="noopener">${ICO.pin}<span>${t.visita.llegar}</span></a></div></div>
+<figure class="fimg">${fig}</figure></div></section>
+<section class="fcuerpo"><div class="wrap fcols">
+<article class="fbox fcal"><h2>${x.cal}</h2>${cal}${notas ? `<ul class="fnotas">${notas}</ul>` : ""}</article>
+<article class="fbox fcuid"><h2>${x.cuidados}</h2><dl class="fdl">${datos.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join("")}</dl></article>
+<article class="fbox"><h2>${x.plagas}</h2>${f.plagas.length ? lista(f.plagas, x.plagasT) + `<a class="flink" href="${u(lang, "/guia")}#doctor">${x.doctor} →</a>` : `<p class="fnota">${x.sinPlagas}</p>`}</article>
+<article class="fbox"><h2>${x.usos}</h2>${lista(f.usos, x.usosT)}</article>
+</div></section>
+<section class="suave fpar"><div class="wrap"><h2 class="grupo" style="margin-top:0">${x.parecidas}</h2><div class="plantas">${pareci.map((q) => tarjetaPlanta(q, lang)).join("")}</div></div></section>`;
+}
+for (const [r, p] of Object.entries(FICHA)) {
+  CUERPOS[r] = (t, lang) => fichaHtml(t, lang, p);
+  for (const l of IDIOMAS) T[l].meta[r] = FT[l].meta.map((x) => x.replace("{p}", p[5][l][0]).replace("{l}", p[0]));
+}
 
 function guiaJs() {
   return `const mb=[...document.querySelectorAll('#meses .tab')],ms=[...document.querySelectorAll('.mes')];
@@ -419,8 +465,8 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 @media(min-width:981px) and (max-width:1280px){nav a{margin-left:15px;font-size:.88rem}.langs{margin-left:12px}}
 @media(max-width:980px){.plantas,.xero{grid-template-columns:repeat(2,1fr)}.mes ul{grid-template-columns:1fr}.tools,.pre{grid-template-columns:1fr}}
 @media(max-width:600px){.plantas,.xero,.campos{grid-template-columns:1fr}.subnav{top:72px}.pre{padding:30px 22px}.tool{padding:22px}.mes{padding:24px 20px}}
-/* Dónde estamos: contacto, vivero y pie */.datos h3{font-family:Inter,sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#a9d39a;margin:0 0 6px;font-weight:600}.datos a{display:flex;gap:12px;align-items:flex-start;font-size:1.05rem;line-height:1.4;margin:12px 0}.datos svg{width:20px;height:20px;flex:none;margin-top:2px;color:#a9d39a}.datos small,.donde small{display:block;font-size:.82rem;color:#a9d39a;margin-top:2px}.donde{display:flex;justify-content:center;flex-wrap:wrap;gap:14px 40px;margin:0 0 30px}.donde a{display:flex;gap:10px;align-items:flex-start;color:var(--verde2);text-decoration:none;font-size:.95rem;line-height:1.4}.donde a:hover span{text-decoration:underline}.donde svg{width:20px;height:20px;flex:none;margin-top:1px}.donde small{color:var(--gris)}.botones{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.btn.llegar{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--verde2);border:1.5px solid var(--verde2);padding:12.5px 24.5px}.btn.llegar svg{width:18px;height:18px}.dir{color:var(--gris);font-size:.9rem;margin:14px 0 0}@media(max-width:600px){.donde{flex-direction:column;align-items:flex-start;gap:16px}}</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
-<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
+/* Dónde estamos: contacto, vivero y pie */.datos h3{font-family:Inter,sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#a9d39a;margin:0 0 6px;font-weight:600}.datos a{display:flex;gap:12px;align-items:flex-start;font-size:1.05rem;line-height:1.4;margin:12px 0}.datos svg{width:20px;height:20px;flex:none;margin-top:2px;color:#a9d39a}.datos small,.donde small{display:block;font-size:.82rem;color:#a9d39a;margin-top:2px}.donde{display:flex;justify-content:center;flex-wrap:wrap;gap:14px 40px;margin:0 0 30px}.donde a{display:flex;gap:10px;align-items:flex-start;color:var(--verde2);text-decoration:none;font-size:.95rem;line-height:1.4}.donde a:hover span{text-decoration:underline}.donde svg{width:20px;height:20px;flex:none;margin-top:1px}.donde small{color:var(--gris)}.botones{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.btn.llegar{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--verde2);border:1.5px solid var(--verde2);padding:12.5px 24.5px}.btn.llegar svg{width:18px;height:18px}.dir{color:var(--gris);font-size:.9rem;margin:14px 0 0}@media(max-width:600px){.donde{flex-direction:column;align-items:flex-start;gap:16px}}/* Fichas de plantas */a.pl{text-decoration:none;color:inherit;transition:transform .2s,box-shadow .2s}a.pl:hover{transform:translateY(-3px);box-shadow:0 14px 30px -20px rgba(31,61,43,.45)}.pl .tipo{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--verde2)}.pl .ver{font-weight:600;color:var(--verde2);font-size:.9rem;margin-top:6px}.fhead{background:var(--verde);color:#fff;padding:130px 0 64px}.fgrid{display:grid;grid-template-columns:1.25fr .75fr;gap:56px;align-items:center}.volver{color:#a9d39a;text-decoration:none;font-weight:600;font-size:.92rem}.volver:hover{text-decoration:underline}.fhead .eyebrow{color:#a9d39a;margin-top:22px}.fhead h1{font-size:clamp(2.6rem,6vw,4.4rem);margin:10px 0 4px}.lat{font-family:Fraunces,Georgia,serif;font-style:italic;color:#c5d3c8;margin:0 0 18px;font-size:1.15rem}.intro{font-size:1.12rem;max-width:56ch;margin:0 0 22px;color:#e6eee7}.fchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}.fchips .chip{background:rgba(255,255,255,.14);color:#fff;padding:6px 14px;font-size:.85rem}.fchips .chip.bien{background:#dcefd3;color:#24572c}.fchips .chip.mal{background:#f6dcd5;color:#8a2f1d}.fchips .chip.auto{background:#a9d39a;color:var(--verde)}.fimg{margin:0;border-radius:28px;overflow:hidden;background:radial-gradient(circle at 50% 38%,#fbf8f2,#e9e1d1);aspect-ratio:1}.fimg svg,.fimg img{width:100%;height:100%;object-fit:cover;display:block}.fcuerpo{padding:60px 0}.fcols{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}.fbox{background:#fff;border-radius:22px;padding:28px}.fbox h2{font-size:1.55rem;margin:0 0 18px}.fcal{grid-column:1/-1}.fcuid{grid-row:span 2}.calg{width:100%;border-collapse:separate;border-spacing:4px;table-layout:fixed;font-size:.8rem}.calg thead th{color:var(--gris);font-weight:600;padding-bottom:2px}.calg thead td{background:none}.calg thead th.hoy{color:var(--verde2)}.calg tbody th{text-align:left;font-weight:600;width:96px;padding-right:6px}.calg td{height:26px;border-radius:7px;background:#f1ece2}.calg td.on.p{background:#7fae6a}.calg td.on.f{background:#d97a95}.calg td.on.d{background:#a77b52}.calg td.on.a{background:#6f9fc4}.calg td.hoy{box-shadow:inset 0 0 0 2px var(--verde)}.calg .mc{display:none}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.fnotas{margin:16px 0 0;padding:0 0 0 18px;color:var(--gris);font-size:.92rem}.fnota{margin:0;color:var(--gris)}.fdl{margin:0}.fdl div{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--arena)}.fdl div:last-child{border:0}.fdl dt{font-weight:600}.fdl dd{margin:0;color:var(--tinta)}.fdl small{display:block;color:var(--gris);font-size:.85rem;margin-top:6px}.fchips2{display:flex;flex-wrap:wrap;gap:8px}.fchips2 .chip{padding:6px 14px;font-size:.88rem}.flink{display:inline-block;margin-top:16px;color:var(--verde2);font-weight:600;text-decoration:none}.flink:hover{text-decoration:underline}.fpar{padding:60px 0}@media(max-width:980px){.fgrid,.fcols{grid-template-columns:1fr}.fcuid{grid-row:auto}.fimg{max-width:360px}}@media(max-width:600px){.fhead{padding:108px 0 44px}.fimg{max-width:240px}.fbox{padding:22px 16px}.calg{border-spacing:2px;font-size:.7rem}.calg tbody th{width:74px}.calg td{height:20px;border-radius:5px}.calg .ml{display:none}.calg .mc{display:inline}.fdl div{grid-template-columns:1fr;gap:4px}}</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
+<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, FICHA[ruta] ? "/guia" : ruta, t)}</nav></div></header>
 
 ${CUERPOS[ruta](t, lang)}
 
@@ -475,7 +521,7 @@ return `<style>
 <div class="pm-arte">${HOJA_SVG}<span class="pm-temp">${s.n[lang]}</span><div class="pm-mes">${g.mesesL[m]}</div></div>
 <div class="pm-txt"><div class="eyebrow">${k.et}</div><h2>${nom}</h2><i>${p[0]}</i>
 <p class="pm-por">${porque[lang]}</p><p>${txt}</p><div class="pm-chips">${chips}</div>
-<div class="pm-acc">${TEL ? `<a class="btn" href="https://wa.me/${TEL}?text=${encodeURIComponent(k.msg + nom)}" target="_blank" rel="noopener">${k.btn}</a>` : ""}<a class="lnk" href="${u(lang, "/guia")}#plantas">${k.guia}</a></div></div>
+<div class="pm-acc">${TEL ? `<a class="btn" href="https://wa.me/${TEL}?text=${encodeURIComponent(k.msg + nom)}" target="_blank" rel="noopener">${k.btn}</a>` : ""}<a class="lnk" href="${u(lang, rutaFicha(p))}">${FT[lang].verFicha} →</a></div></div>
 </article></div></section>`;
 }
 {
@@ -564,7 +610,7 @@ export default {
     if (url.pathname === "/robots.txt") return new Response(`User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${url.origin}/sitemap.xml\n`, { headers: { "content-type": "text/plain; charset=utf-8" } });
     if (url.pathname === "/sitemap.xml") {
       const hoy = new Date().toISOString().slice(0, 10);
-      const urls = [...RUTAS, ...(LEGAL_LISTO ? ["/legal"] : [])].flatMap((r) => IDIOMAS.map((l) => `<url><loc>${url.origin}${u(l, r)}</loc><lastmod>${hoy}</lastmod>${IDIOMAS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${url.origin}${u(x, r)}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="${url.origin}${u("es", r)}"/></url>`)).join("");
+      const urls = [...RUTAS, ...(LEGAL_LISTO ? ["/legal"] : []), ...Object.keys(FICHA)].flatMap((r) => IDIOMAS.map((l) => `<url><loc>${url.origin}${u(l, r)}</loc><lastmod>${hoy}</lastmod>${IDIOMAS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${url.origin}${u(x, r)}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="${url.origin}${u("es", r)}"/></url>`)).join("");
       return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}</urlset>`, { headers: { "content-type": "application/xml; charset=utf-8" } });
     }
     const m = url.pathname.match(/^\/img\/([\w-]+)$/);
@@ -574,7 +620,7 @@ export default {
     const lm = p.match(/^\/(ca|en|de)(\/.*)?$/);
     if (lm) { lang = lm[1]; p = lm[2] || "/"; }
     if (url.pathname.startsWith("/fonts/")) return fuentes(url.pathname, env);
-    if (RUTAS.includes(p) || (p === "/legal" && LEGAL_LISTO))
+    if (RUTAS.includes(p) || (p === "/legal" && LEGAL_LISTO) || FICHA[p])
       return new Response(pagina(lang, p, url.origin), { headers: {
         "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300",
         "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN",
