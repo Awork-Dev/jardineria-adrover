@@ -2,7 +2,7 @@
 // enseñan dónde está el vivero y cómo llegar, y el vigilante deja fuera las noticias que no interesan.
 import fs from 'fs';
 import { lanzar, pagina, ok, fin, IMG } from './comun.mjs';
-import { interesa } from '../web/src/noticias.js';
+import { interesa, vigilar } from '../web/src/noticias.js';
 const W = process.env.WEB || 'http://localhost:8790';
 console.log('Web pública');
 const nav = await lanzar();
@@ -46,4 +46,12 @@ ok(!interesa(n('El Ayuntamiento inicia la campaña de poda del arbolado urbano')
 ok(interesa(n('Sant Lluís será el primer municipio de Menorca en restringir el uso de césped en todos los jardines'), 'baleares')
   && !interesa(n('SAMPOL invierte cerca de 20M€ en dos plantas solares con baterías en Mallorca'), 'baleares'),
   'noticias de Baleares: sí las normas de riego y césped, no las «plantas» solares');
+// Si Google News no responde justo al cambiar el filtro, no se pierde lo que ya había guardado.
+{
+  const kv = new Map([['noticias4', JSON.stringify({ actualizado: Date.now(), jardineria: [{ ...noticia('Ideas para un jardín mediterráneo que casi no necesita riego'), resumen: '' }, { ...noticia('El Ayuntamiento inicia la campaña de poda del arbolado urbano'), resumen: '' }], ciencia: [], baleares: [] })]]);
+  const DATOS = { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) };
+  const fetchReal = globalThis.fetch; globalThis.fetch = async () => ({ ok: false });
+  const out = await vigilar({ DATOS }); globalThis.fetch = fetchReal;
+  ok(out.jardineria.length === 1 && out.jardineria[0].titulo.startsWith('Ideas para'), 'noticias: sin respuesta de Google se conserva lo guardado, ya filtrado');
+}
 await fin(nav);

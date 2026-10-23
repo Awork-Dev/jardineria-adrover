@@ -66,15 +66,19 @@ export function interesa(n, cat) {
   return true;
 }
 // La clave cambia cuando cambia el filtro, para que la web no siga enseñando noticias que ya no pasarían.
-const CLAVE = "noticias5";
+// Mientras la nueva no tenga de todo, se parte de lo guardado con la anterior (pasado por el filtro nuevo):
+// desde Cloudflare, Google News a veces no responde y la sección se quedaría vacía.
+const CLAVE = "noticias5", ANTERIOR = "noticias4";
 export async function vigilar(env) {
   const prev = env.DATOS ? await env.DATOS.get(CLAVE, "json") : null;
+  const falta = (d, c) => !((d && d[c]) || []).length;
+  const viejo = env.DATOS && Object.keys(FUENTES).some((c) => falta(prev, c)) ? await env.DATOS.get(ANTERIOR, "json") : null;
   const out = { actualizado: Date.now() };
   const limite = Date.now() - 30 * 86400e3;
   for (const [cat, urls] of Object.entries(FUENTES)) {
     const listas = await Promise.all(urls.map(leerFeed));
     const vistos = new Set();
-    out[cat] = [...listas.flat(), ...((prev && prev[cat]) || [])].sort((a, b) => b.fecha - a.fecha).filter((n) => {
+    out[cat] = [...listas.flat(), ...((falta(prev, cat) ? viejo && viejo[cat] : prev[cat]) || [])].sort((a, b) => b.fecha - a.fecha).filter((n) => {
       if (n.fecha < limite || !interesa(n, cat)) return false;
       const k = n.titulo.toLowerCase().replace(/[^a-záéíóúñü0-9]/g, "").slice(0, 60);
       if (vistos.has(k)) return false; vistos.add(k); return true;
