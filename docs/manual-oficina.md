@@ -10,6 +10,8 @@ Jardinería Adrover funciona con tres apps: la **web** para los clientes, la **g
 
 **Ponerla en el móvil:** ábrela en Safari (iPhone) y pulsa **Compartir → Añadir a pantalla de inicio**; en Android, menú **⋮ → Añadir a pantalla de inicio**.
 
+**En el móvil:** las secciones están en la barra de abajo. Las fichas se abren a pantalla completa y **Guardar** queda siempre a la vista, abajo.
+
 ## Entrar
 
 La gestión pide la clave la primera vez y la recuerda en ese aparato hasta que pulses **Cerrar sesión**.

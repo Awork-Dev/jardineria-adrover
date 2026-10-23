@@ -73,6 +73,8 @@ datos vacía, y pasa todas las pruebas con un navegador real:
 - `pruebas/3-fiabilidad.mjs`: cortes de red, respuestas perdidas, servidor caído, rechazos, dos personas en el
   mismo móvil, dos ventanas, reloj desajustado y correcciones de la oficina.
 - `pruebas/4-hermanas.mjs`: circuitos entre las dos apps (avisos, partes a nota, gastos pagados…).
+- `pruebas/5-movil.mjs`: la gestión en un móvil pequeño (barra de secciones, nada se sale de la pantalla y
+  «Guardar» siempre a la vista).
 
 GitHub las pasa antes de publicar la gestión o la app del equipo: si alguna falla, no se publica.
 Si Playwright no tiene su navegador, se le indica con `CHROMIUM=/ruta/a/chrome`.
