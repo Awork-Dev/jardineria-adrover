@@ -5,7 +5,7 @@ console.log('Gestión en el móvil');
 const nav = await lanzar();
 const p = await pagina(nav, { viewport: { width: 360, height: 740 }, hasTouch: true, isMobile: true }, 'móvil');
 await entrarGestion(p);
-const cabe = () => p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+const cabe = () => p.evaluate(() => { const d = document.documentElement, m = document.querySelector('main'); return d.scrollWidth <= d.clientWidth && m.scrollWidth <= m.clientWidth; });
 const ficha = () => p.evaluate(() => {
   const s = document.querySelector('#overlay .sheet'), r = s.getBoundingClientRect();
   const g = document.querySelector('#sheet-form .btn.primary').getBoundingClientRect();
@@ -21,6 +21,19 @@ for (const v of ['resumen', 'clientes', 'proveedores', 'presupuestos', 'notas', 
   if (!await cabe()) salen.push(v);
 }
 ok(!salen.length, 'ninguna sección se sale de lo ancho de la pantalla' + (salen.length ? ' (se salen: ' + salen.join(', ') + ')' : ''));
+
+// La barra de abajo no se mueve: la página no se desplaza, solo el contenido (en el iPhone se descolocaba).
+await p.click('[data-view=resumen]');
+const quieta = await p.evaluate(async () => {
+  const m = document.querySelector('main'), nav = document.querySelector('.side');
+  const antes = nav.getBoundingClientRect().bottom;
+  m.scrollTop = m.scrollHeight; window.scrollTo(0, 99999); await new Promise((r) => setTimeout(r, 100));
+  const r = nav.getBoundingClientRect();
+  return m.scrollTop > 0 && scrollY === 0 && Math.abs(r.bottom - innerHeight) < 1 && r.bottom === antes;
+});
+ok(quieta, 'al desplazar, solo se mueve el contenido y la barra de abajo se queda en su sitio');
+await p.click('[data-view=clientes]');
+ok(await p.evaluate(() => document.querySelector('main').scrollTop === 0), 'al cambiar de sección se empieza arriba');
 
 await p.click('[data-view=presupuestos]'); await p.click('#list .row');
 let f = await ficha();
