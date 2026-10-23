@@ -37,7 +37,7 @@ compartido/
   iconos.js             Sirve los iconos y el manifiesto de la web app
   iconos-<app>.js       Iconos en base64 de cada app (se generan con generar-iconos.mjs)
   generar-pngs.mjs      Dibuja los PNG de las tres apps a partir del logo
-pruebas/                Pruebas automáticas de la gestión y la app del equipo (ver «Pruebas»)
+pruebas/                Pruebas automáticas de la web, la gestión y la app del equipo (ver «Pruebas»)
 accesos/index.html      Accesos rápidos: web, gestión y panel de Cloudflare
 docs/cliente.md         Ficha del proyecto
 ```
@@ -65,7 +65,7 @@ npm run local:equipo     # la app del equipo en local (http://localhost:8789), c
 
 ## Pruebas
 
-`npm run pruebas` (o `bash pruebas/correr.sh`) levanta la gestión y la app del equipo en local, con una base de
+`npm run pruebas` (o `bash pruebas/correr.sh`) levanta la web, la gestión y la app del equipo en local, con una base de
 datos vacía, y pasa todas las pruebas con un navegador real:
 
 - `pruebas/1-gestion.mjs`: acceso, clientes, presupuestos, notas, IVA, PDF y ediciones a la vez.
@@ -75,8 +75,10 @@ datos vacía, y pasa todas las pruebas con un navegador real:
 - `pruebas/4-hermanas.mjs`: circuitos entre las dos apps (avisos, partes a nota, gastos pagados…).
 - `pruebas/5-movil.mjs`: la gestión en un móvil pequeño (barra de secciones, nada se sale de la pantalla y
   «Guardar» siempre a la vista).
+- `pruebas/6-web.mjs`: la web pública en los cuatro idiomas (caben en el móvil, sin partir palabras, con la
+  dirección y «Cómo llegar») y el filtro del vigilante de noticias.
 
-GitHub las pasa antes de publicar la gestión o la app del equipo: si alguna falla, no se publica.
+GitHub las pasa antes de publicar cualquiera de las tres apps: si alguna falla, no se publica.
 Si Playwright no tiene su navegador, se le indica con `CHROMIUM=/ruta/a/chrome`.
 
 ## Publicar

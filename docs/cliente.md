@@ -13,8 +13,10 @@
 1. **Web pública** en cuatro idiomas (castellano, catalán, inglés y alemán): inicio, servicios, vivero,
    guía verde (plantas, calendario, doctor de plantas, xerojardinería), herramientas, noticias, contacto
    con presupuesto, aviso legal y mapa del sitio. Cambia de colores y avisos según la temporada.
+   La dirección, el teléfono fijo y «Cómo llegar» (Google Maps) salen en contacto, en vivero y al pie de todas las páginas.
 2. **Vigilante de noticias:** cada 3 horas busca noticias de jardinería y plantas y las guarda
-   para la sección de noticias.
+   para la sección de noticias. Deja fuera las campañas y contratos de los ayuntamientos, las polémicas
+   y las «plantas» solares o industriales (filtro en `web/src/noticias.js`).
 3. **Gestión interna** con clave: clientes, proveedores, presupuestos (`P-AAAA-NNN`) y notas (`N-AAAA-NNN`)
    con IVA a elegir (21, 10, 4 o 0 %) y PDF, partes de trabajo y resumen por meses. Una nota se puede crear desde un presupuesto
    con un botón; su PDF lleva el título «NOTA» y la frase «Este documento no es una factura».
@@ -85,3 +87,7 @@ la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con un
 - **Facturas:** la gestión hace presupuestos y notas, no facturas. En España, los programas de facturación deben
   cumplir el reglamento VERI*FACTU (registro encadenado y envío a Hacienda). Para facturar conviene usar un
   programa homologado y, si hace falta, importar los presupuestos aceptados.
+
+## Pendiente
+
+- **Horario del vivero:** en cuanto lo tengamos, se pone en la web (contacto, vivero y pie) y en la ficha para Google.

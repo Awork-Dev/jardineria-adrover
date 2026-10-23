@@ -1,7 +1,7 @@
 // Jardinería Adrover — web + vigilante de noticias
 // Requiere: binding KV llamado DATOS y un Cron Trigger cada 3 horas
 
-import { TEL, EMAIL, TEL_FIJO, IDIOMAS, FOTOS } from './datos.js';
+import { TEL, EMAIL, TEL_FIJO, IDIOMAS, FOTOS, DIRECCION, MAPA } from './datos.js';
 import { vigilar, noticias } from './noticias.js';
 import { T, G, CULT_G, HT } from './textos.js';
 import { PLANTAS_G, CAL_G, DOC_G, XERO_G, PLANTA_MES, PM_T } from './guia.js';
@@ -42,7 +42,12 @@ const ICO = {
   chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 9.5c.3 2.6 3.4 5.7 6 6l1.3-1.4-2-1-1 .8c-1-.4-2.3-1.7-2.7-2.7l.8-1-1-2Z" fill="currentColor"/></svg>',
   sms: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 17v4l4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.5" cy="10.5" r="1.2" fill="currentColor"/><circle cx="12" cy="10.5" r="1.2" fill="currentColor"/><circle cx="15.5" cy="10.5" r="1.2" fill="currentColor"/></svg>',
   mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  tel: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 3.5 9 3l1.6 4.2-2 1.4a12 12 0 0 0 6.8 6.8l1.4-2L21 15l-.5 2.4a2.4 2.4 0 0 1-2.5 1.9C10.6 18.8 5.2 13.4 4.7 6a2.4 2.4 0 0 1 1.9-2.5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
 };
+// Teléfono fijo del vivero para llamar desde el móvil, y la dirección con su enlace a Google Maps.
+const TEL_LLAMAR = "tel:+34" + TEL_FIJO.replace(/\s/g, "");
+const donde = (t, cls = "donde") => `<div class="${cls}"><a href="${MAPA}" target="_blank" rel="noopener">${ICO.pin}<span>${DIRECCION}<small>${t.visita.llegar} →</small></span></a><a href="${TEL_LLAMAR}">${ICO.tel}<span>${TEL_FIJO}<small>${t.visita.tel}</small></span></a></div>`;
 
 const RUTAS = ["/", "/servicios", "/vivero", "/guia", "/herramientas", "/noticias", "/contacto"];
 const u = (lang, ruta) => (lang === "es" ? "" : "/" + lang) + (ruta === "/" ? (lang === "es" ? "/" : "") : ruta);
@@ -86,7 +91,8 @@ const CUERPOS = {
   "/vivero": (t, lang) => `${phead(FOTOS.vivero, t.vivPh)}
 <section id="vivero"><div class="wrap split"><img class="rv" loading="lazy" src="${img(FOTOS.vivero, 1600)}" ${srcset(FOTOS.vivero, "(max-width:980px) 100vw, 620px")} alt="${t.viv[0]}">
 <div class="rv"><div class="eyebrow">${t.viv[0]}</div><h2>${t.viv[1]}</h2><p style="color:var(--gris)">${t.viv[2]}</p><p style="color:var(--gris)">${t.viv[3]}</p>
-<ul>${t.viv[4].map((x) => `<li>${x}</li>`).join("")}</ul><a class="btn" href="${u(lang, "/contacto")}" style="background:var(--verde2);color:#fff">${t.viv[5]}</a></div></div></section>
+<ul>${t.viv[4].map((x) => `<li>${x}</li>`).join("")}</ul><div class="botones"><a class="btn" href="${u(lang, "/contacto")}" style="background:var(--verde2);color:#fff">${t.viv[5]}</a>
+<a class="btn llegar" href="${MAPA}" target="_blank" rel="noopener">${ICO.pin}${t.visita.llegar}</a></div><p class="dir">${DIRECCION}</p></div></div></section>
 <section id="galeria" class="oscuro"><div class="wrap">${cab(t.gal)}
 <div class="galeria">${FOTOS.galeria.map((id, i) => `<figure class="g g${i}"><img loading="lazy" src="${img(id, 900)}" ${srcset(id, "(max-width:600px) 100vw, (max-width:980px) 66vw, 400px")} alt="${t.gal[3]}"></figure>`).join("")}</div></div></section>`,
 
@@ -99,7 +105,7 @@ const CUERPOS = {
   "/contacto": (t) => `${phead("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", t.contPh)}
 <section id="contacto" style="padding-bottom:0"><div class="wrap"><div class="contacto rv"><div><div class="eyebrow">${t.cont[0]}</div><h2>${t.cont[1]}</h2><p>${t.cont[2]}</p>
 <p style="margin:26px 0 12px;color:#fff;font-weight:600">${t.cont[3]}</p>${canales(t)}
-<div class="datos" style="margin-top:22px"><a href="mailto:${EMAIL}">${EMAIL}</a></div></div>
+<div class="datos" style="margin-top:26px"><h3>${t.visita.tit}</h3>${donde(t, "lugar")}<a href="mailto:${EMAIL}">${ICO.mail}<span>${EMAIL}</span></a></div></div>
 <img loading="lazy" src="${img("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", 1600)}" ${srcset("1oC5cZAisaPJDb3VU2dSulUxZzmPE8AQv", "(max-width:980px) 100vw, 600px")} alt="${t.cont[0]}"></div></div></section>
 <section id="preguntas" class="suave"><div class="wrap faqw"><div class="rv"><div class="eyebrow">${t.faqH[0]}</div><h2>${t.faqH[1]}</h2><p style="color:var(--gris)">${t.faqH[2]}</p></div>
 <div class="faq rv">${t.faq.map((q, i) => `<details${i ? "" : " open"}><summary>${q[0]}</summary><p>${q[1]}</p></details>`).join("")}</div></div></section>`,
@@ -275,7 +281,7 @@ const NEGOCIO = JSON.stringify({
   name: "Jardinería Adrover", legalName: "Zones Verdes S.L.", url: DOMINIO + "/", email: EMAIL,
   telephone: ["+34 " + TEL_FIJO, "+" + TEL], image: DOMINIO + img(FOTOS.hero, 1600), logo: DOMINIO + "/icon-512.png",
   address: { "@type": "PostalAddress", streetAddress: "Ctra. Son Servera-Capdepera, km 11,600", postalCode: "07580", addressLocality: "Capdepera", addressRegion: "Illes Balears", addressCountry: "ES" },
-  areaServed: "Mallorca",
+  areaServed: "Mallorca", hasMap: MAPA,
 }).replace(/</g, "\\u003c");
 function compartir(lang, ruta, titulo, desc) {
   const url = DOMINIO + u(lang, ruta);
@@ -413,13 +419,13 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 @media(min-width:981px) and (max-width:1280px){nav a{margin-left:15px;font-size:.88rem}.langs{margin-left:12px}}
 @media(max-width:980px){.plantas,.xero{grid-template-columns:repeat(2,1fr)}.mes ul{grid-template-columns:1fr}.tools,.pre{grid-template-columns:1fr}}
 @media(max-width:600px){.plantas,.xero,.campos{grid-template-columns:1fr}.subnav{top:72px}.pre{padding:30px 22px}.tool{padding:22px}.mes{padding:24px 20px}}
-</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
+/* Dónde estamos: contacto, vivero y pie */.datos h3{font-family:Inter,sans-serif;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:#a9d39a;margin:0 0 6px;font-weight:600}.datos a{display:flex;gap:12px;align-items:flex-start;font-size:1.05rem;line-height:1.4;margin:12px 0}.datos svg{width:20px;height:20px;flex:none;margin-top:2px;color:#a9d39a}.datos small,.donde small{display:block;font-size:.82rem;color:#a9d39a;margin-top:2px}.donde{display:flex;justify-content:center;flex-wrap:wrap;gap:14px 40px;margin:0 0 30px}.donde a{display:flex;gap:10px;align-items:flex-start;color:var(--verde2);text-decoration:none;font-size:.95rem;line-height:1.4}.donde a:hover span{text-decoration:underline}.donde svg{width:20px;height:20px;flex:none;margin-top:1px}.donde small{color:var(--gris)}.botones{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.btn.llegar{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:var(--verde2);border:1.5px solid var(--verde2);padding:12.5px 24.5px}.btn.llegar svg{width:18px;height:18px}.dir{color:var(--gris);font-size:.9rem;margin:14px 0 0}@media(max-width:600px){.donde{flex-direction:column;align-items:flex-start;gap:16px}}</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
 <header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}"><svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg><span><i>Jardinería</i><b>ADROVER</b></span></a><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, ruta, t)}</nav></div></header>
 
 ${CUERPOS[ruta](t, lang)}
 
 ${flotante(t)}
-<footer><div class="wrap"><blockquote class="cita">${t.cita.join("<br>")}</blockquote><div class="pie"><span>© ${new Date().getFullYear()} Jardinería Adrover${LEGAL_LISTO ? ` · <a href="${u(lang, "/legal")}">${LEGAL[lang].pie}</a>` : ""}</span><span>${t.tag}</span></div></div></footer>
+<footer><div class="wrap"><blockquote class="cita">${t.cita.join("<br>")}</blockquote>${donde(t)}<div class="pie"><span>© ${new Date().getFullYear()} Jardinería Adrover${LEGAL_LISTO ? ` · <a href="${u(lang, "/legal")}">${LEGAL[lang].pie}</a>` : ""}</span><span>${t.tag}</span></div></div></footer>
 <script>
 const nav=document.getElementById('nav');addEventListener('scroll',()=>nav.classList.toggle('solid',scrollY>40));
 const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('in');io.unobserve(x.target)}}),{threshold:.12});

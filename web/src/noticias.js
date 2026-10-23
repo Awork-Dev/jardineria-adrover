@@ -22,6 +22,12 @@ export const FUENTES = {
 export const FUERA = /coca[ií]na|de coca\b|marihuana|narco|ratas|ratones|\bkit\b|modelos de|oferta|descuento|amazon|lidl|aldi/i;
 // Webs de ofertas y anuncios de productos que se cuelan como noticias.
 export const FUENTES_FUERA = /poder ?popular/i;
+// Noticias de ayuntamientos (campañas de poda, contratos, plenos…) y polémicas: no ayudan a quien busca ideas
+// para su jardín. En Baleares sí interesan las normas locales (riego, césped…), pero no la política ni los contratos.
+export const MUNICIPAL = /ayuntamiento|ajuntament|concello|consistorio|municipal|\bpleno\b|concejal|regidor|alcald|privatiz|licitaci|adjudica|contrato|campaña de poda|plan de poda|labores de poda|trabajos de poda|brigadas?\b|al tráfico|\btalan\b|enfada|polémic|denuncia|urbaniz|viviendas|derrumbe|linaje/i;
+export const POLITICA = /privatiz|licitaci|adjudica|contrato|\bpleno\b|concejal|regidor|polémic|denuncia|urbaniz|viviendas|\baena\b|aeropuerto/i;
+// «Planta» de energía o de tratamiento, no de jardín.
+export const INDUSTRIA = /plantas? (solar|fotovolt|de (hidr|biog|tratamiento|reciclaje|baterías))/i;
 export const PRODUCTO = /\bpack de \d|\b\d+([.,]\d+)?\s?(mm|cm|uds?|unidades|piezas)\b|\b\d+\s?m\b.*[–-]/i;
 export const PLANTAS = /plant|tree|flower|crop|soil|seed|root|leaf|leaves|forest|botan|pollinat|\bbees?\b|garden|fung|photosynth|weed|fruit|grass|árbol|arbol|flor|semilla|cultivo|bosque|suelo|hoja|polin|abeja|jard|vegetal|xylella|hongo|palmer|vivero|agricult|agrono/i;
 export const NATURA = /sequ[ií]a|sequera|riego|\breg\b|plaga|plague|picudo|morrut|xylella|oliv|almendr|ametl|pinar|pinos?\b|pins\b|parque natural|parc natural|espacio natural|espai natural|tramuntana|posidonia|medio ambiente|medi ambient|incendio forestal|incendi forestal|zona verde|zones verdes|zonas verdes|poda|tala\b|vivers?\b|viveros?\b|natural/i;
@@ -49,29 +55,36 @@ export async function leerFeed(url) {
     }).filter((n) => n.titulo && /^https?:\/\//.test(n.enlace));
   } catch { return []; }
 }
+// Si una noticia merece salir en la web, según su categoría.
+export function interesa(n, cat) {
+  const txt = n.titulo + " " + n.resumen;
+  if (FUERA.test(txt) || FUENTES_FUERA.test(n.fuente) || PRODUCTO.test(n.titulo) || INDUSTRIA.test(txt)) return false;
+  if (n.titulo.split(/\s+/).length < 4) return false; // titulares vacíos, como «AyuntamientoJaen»
+  if (cat === "jardineria" && (MUNICIPAL.test(txt) || !(PLANTAS.test(n.titulo) || NATURA.test(n.titulo)))) return false;
+  if (cat === "ciencia" && !PLANTAS.test(txt)) return false;
+  if (cat === "baleares" && (POLITICA.test(txt) || (!PLANTAS.test(txt) && !NATURA.test(txt)))) return false;
+  return true;
+}
+// La clave cambia cuando cambia el filtro, para que la web no siga enseñando noticias que ya no pasarían.
+const CLAVE = "noticias5";
 export async function vigilar(env) {
-  const prev = env.DATOS ? await env.DATOS.get("noticias4", "json") : null;
+  const prev = env.DATOS ? await env.DATOS.get(CLAVE, "json") : null;
   const out = { actualizado: Date.now() };
   const limite = Date.now() - 30 * 86400e3;
   for (const [cat, urls] of Object.entries(FUENTES)) {
     const listas = await Promise.all(urls.map(leerFeed));
     const vistos = new Set();
     out[cat] = [...listas.flat(), ...((prev && prev[cat]) || [])].sort((a, b) => b.fecha - a.fecha).filter((n) => {
-      if (n.fecha < limite) return false;
-      const txt = n.titulo + " " + n.resumen;
-      if (FUERA.test(txt) || FUENTES_FUERA.test(n.fuente) || PRODUCTO.test(n.titulo)) return false;
-      if (n.titulo.split(/\s+/).length < 4) return false; // titulares vacíos, como «AyuntamientoJaen»
-      if (cat === "ciencia" && !PLANTAS.test(txt)) return false;
-      if (cat === "baleares" && !PLANTAS.test(txt) && !NATURA.test(txt)) return false;
+      if (n.fecha < limite || !interesa(n, cat)) return false;
       const k = n.titulo.toLowerCase().replace(/[^a-záéíóúñü0-9]/g, "").slice(0, 60);
       if (vistos.has(k)) return false; vistos.add(k); return true;
     }).slice(0, 45);
   }
-  if (env.DATOS) await env.DATOS.put("noticias4", JSON.stringify(out));
+  if (env.DATOS) await env.DATOS.put(CLAVE, JSON.stringify(out));
   return out;
 }
 export async function noticias(env, ctx) {
-  let datos = env.DATOS ? await env.DATOS.get("noticias4", "json") : null;
+  let datos = env.DATOS ? await env.DATOS.get(CLAVE, "json") : null;
   if (!datos) datos = await vigilar(env);
   else {
     const edad = Date.now() - datos.actualizado;

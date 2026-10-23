@@ -40,11 +40,11 @@ jobs:
           echo "$c" | grep -qE '^(gestion/|compartido/|pruebas/|\.github/)' && echo "gestion=true" >> "$GITHUB_OUTPUT" || true
           echo "$c" | grep -qE '^(equipo/|compartido/|pruebas/|\.github/)' && echo "equipo=true" >> "$GITHUB_OUTPUT" || true
 
-  # Antes de publicar la gestión o la app del equipo, se pasan todas las pruebas (pruebas/correr.sh).
-  # Si alguna falla, no se publica nada de esas dos apps.
+  # Antes de publicar cualquiera de las tres apps, se pasan todas las pruebas (pruebas/correr.sh).
+  # Si alguna falla, no se publica nada.
   pruebas:
     needs: cambios
-    if: needs.cambios.outputs.gestion == 'true' || needs.cambios.outputs.equipo == 'true'
+    if: needs.cambios.outputs.web == 'true' || needs.cambios.outputs.gestion == 'true' || needs.cambios.outputs.equipo == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
       - run: bash pruebas/correr.sh
 
   web:
-    needs: cambios
+    needs: [cambios, pruebas]
     if: needs.cambios.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:

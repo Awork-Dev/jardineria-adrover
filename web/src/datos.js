@@ -21,3 +21,6 @@ export const EMAIL = "jardineriaadrover@gmail.com";
 export const IDIOMAS = ["es", "ca", "en", "de"];
 // ===== Planta del mes, avisos y temporada =====
 export const TEL_FIJO = "971 563 213";
+// Vivero y oficina: dirección que sale en la web y enlace para llegar con Google Maps.
+export const DIRECCION = "Ctra. Son Servera–Capdepera, km 11,600 · 07580 Capdepera (Mallorca)";
+export const MAPA = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("Jardinería Adrover, Ctra. Son Servera-Capdepera km 11,600, 07580 Capdepera, Illes Balears");
