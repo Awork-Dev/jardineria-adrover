@@ -40,6 +40,21 @@ ok(await p.locator('.btn.llegar').isVisible() && (await p.textContent('.btn.lleg
 await p.goto(W + '/guia');
 const enlaces = await p.$$eval('.plantas a.pl', (as) => as.map((a) => new URL(a.href).pathname));
 ok(enlaces.length === FICHAS_R.length && FICHAS_R.every((r) => enlaces.includes(r)), 'la guía enlaza cada planta con su ficha');
+// «Ideas para…»: cada selección deja solo las plantas que valen para eso, también desde la dirección (?uso=).
+const usoDe = (u) => Object.values(FICHAS).filter((f) => f.usos.includes(u)).length;
+await p.click('.idea[data-uso=costa]');
+const vis = () => p.$$eval('.plantas .pl:not([hidden])', (as) => as.map((a) => a.dataset.usos));
+let v = await vis();
+ok(v.length === usoDe('costa') && v.every((x) => x.split(' ').includes('costa')), 'ideas: «Jardines junto al mar» deja solo esas plantas');
+await p.click('.idea[data-uso=costa]');
+ok((await vis()).length === FICHAS_R.length, 'ideas: al pulsar otra vez se ven todas');
+await p.goto(W + '/en/guia?uso=interior#plantas'); v = await vis();
+ok(v.length === usoDe('interior') && await p.getAttribute('.idea[data-uso=interior]', 'aria-pressed') === 'true', 'ideas: la ficha enlaza con la guía ya filtrada');
+ok(await p.locator('.mes[data-m="9"] .mesp a.chip').count() > 0, 'cada mes dice qué florece, qué plantar y qué podar, con enlace a la ficha');
+await p.goto(W + '/contacto');
+await p.fill('#fpre [name=nombre]', 'Ana'); await p.selectOption('#fpre [name=para]', { index: 1 });
+const texto = await p.evaluate(() => ptxt());
+ok(await p.locator('#fpre [name=para] option').count() === 4 && texto.includes('¿Para quién es? Una comunidad de vecinos'), 'presupuesto: pregunta para quién es y lo pone en el mensaje');
 await p.goto(W + '/ca/guia/romero');
 ok(await p.locator('.calg td.on').count() > 0 && (await p.getAttribute('.fhead a.canal.wa', 'href')).includes(encodeURIComponent('Salvia rosmarinus')),
   'ficha: calendario y botón de WhatsApp con el nombre de la planta');

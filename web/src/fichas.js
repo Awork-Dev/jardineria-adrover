@@ -57,6 +57,7 @@ export const FT = {
     nada: { flor: "Se cultiva por sus hojas: no tiene una flor destacable.", poda: "No necesita poda: basta con quitar lo seco.", abono: "No necesita abono." },
     plagas: "Qué vigilar", sinPlagas: "Da muy pocos problemas.", doctor: "Consulta el doctor de plantas",
     usos: "Para qué va bien", pedir: "¿La tenéis en el vivero?", msg: "Hola, me interesa esta planta: {p} ({l}). ¿La tenéis en el vivero?",
+    ideas: "Ideas para", florecen: "Florecen", aPlantar: "Buen momento para plantar", aPodar: "Toca podar",
     parecidas: "Plantas parecidas", verFicha: "Ver ficha",
     meta: ["{p}: cuidados, riego y poda en Mallorca · Jardinería Adrover", "{p} ({l}): cuándo plantarla, regarla, podarla y abonarla en Mallorca, y qué plagas vigilar. Ficha del vivero Jardinería Adrover."],
     tipos: { arbol: "Árbol", arbusto: "Arbusto", palmera: "Palmera", aromatica: "Aromática", trepadora: "Trepadora", tapizante: "Tapizante", suculenta: "Suculenta", interior: "Planta de interior", frutal: "Frutal", flor: "Planta de flor" },
@@ -73,6 +74,7 @@ export const FT = {
     nada: { flor: "Es cultiva per les fulles: no té una flor destacable.", poda: "No necessita poda: basta llevar el que és sec.", abono: "No necessita adob." },
     plagas: "Què vigilar", sinPlagas: "Dona molt pocs problemes.", doctor: "Consulta el doctor de plantes",
     usos: "Per a què va bé", pedir: "La teniu al viver?", msg: "Hola, m'interessa aquesta planta: {p} ({l}). La teniu al viver?",
+    ideas: "Idees per a", florecen: "Floreixen", aPlantar: "Bon moment per plantar", aPodar: "Toca podar",
     parecidas: "Plantes semblants", verFicha: "Veure fitxa",
     meta: ["{p}: cures, reg i poda a Mallorca · Jardinería Adrover", "{p} ({l}): quan plantar-la, regar-la, podar-la i adobar-la a Mallorca, i quines plagues vigilar. Fitxa del viver Jardinería Adrover."],
     tipos: { arbol: "Arbre", arbusto: "Arbust", palmera: "Palmera", aromatica: "Aromàtica", trepadora: "Enfiladissa", tapizante: "Entapissant", suculenta: "Suculenta", interior: "Planta d'interior", frutal: "Fruiter", flor: "Planta de flor" },
@@ -89,6 +91,7 @@ export const FT = {
     nada: { flor: "Grown for its leaves: no notable flowers.", poda: "No pruning needed: just remove dead growth.", abono: "No feeding needed." },
     plagas: "What to watch for", sinPlagas: "Very few problems.", doctor: "See the plant doctor",
     usos: "Good for", pedir: "Do you have it at the nursery?", msg: "Hello, I'm interested in this plant: {p} ({l}). Do you have it at the nursery?",
+    ideas: "Ideas for", florecen: "In flower", aPlantar: "Good time to plant", aPodar: "Time to prune",
     parecidas: "Similar plants", verFicha: "See profile",
     meta: ["{p}: care, watering and pruning in Mallorca · Jardinería Adrover", "{p} ({l}): when to plant, water, prune and feed it in Mallorca, and which pests to watch for. Plant profile from the Jardinería Adrover nursery."],
     tipos: { arbol: "Tree", arbusto: "Shrub", palmera: "Palm", aromatica: "Herb", trepadora: "Climber", tapizante: "Ground cover", suculenta: "Succulent", interior: "Houseplant", frutal: "Fruit tree", flor: "Flowering plant" },
@@ -105,6 +108,7 @@ export const FT = {
     nada: { flor: "Wegen der Blätter beliebt: keine auffällige Blüte.", poda: "Kein Schnitt nötig: nur Trockenes entfernen.", abono: "Kein Dünger nötig." },
     plagas: "Worauf achten", sinPlagas: "Macht kaum Probleme.", doctor: "Zum Pflanzendoktor",
     usos: "Gut für", pedir: "Haben Sie sie in der Gärtnerei?", msg: "Hallo, ich interessiere mich für diese Pflanze: {p} ({l}). Haben Sie sie in der Gärtnerei?",
+    ideas: "Ideen für", florecen: "Blühen jetzt", aPlantar: "Gute Pflanzzeit", aPodar: "Jetzt schneiden",
     parecidas: "Ähnliche Pflanzen", verFicha: "Profil ansehen",
     meta: ["{p}: Pflege, Gießen und Schnitt auf Mallorca · Jardinería Adrover", "{p} ({l}): wann pflanzen, gießen, schneiden und düngen auf Mallorca und auf welche Schädlinge achten. Pflanzenprofil der Gärtnerei Jardinería Adrover."],
     tipos: { arbol: "Baum", arbusto: "Strauch", palmera: "Palme", aromatica: "Kräuterpflanze", trepadora: "Kletterpflanze", tapizante: "Bodendecker", suculenta: "Sukkulente", interior: "Zimmerpflanze", frutal: "Obstbaum", flor: "Blühpflanze" },
@@ -112,6 +116,9 @@ export const FT = {
     plagasT: { pulgon: "Blattläuse", cochinilla: "Woll- und Schildläuse", arana: "Spinnmilben", mosca: "Weiße Fliege", oidio: "Echter Mehltau", podredumbre: "Wurzelfäule durch zu viel Wasser", taladro: "Geranien-Bläuling", picudo: "Roter Palmrüssler", paysandisia: "Palmenfalter (Paysandisia)", procesionaria: "Pinien-Prozessionsspinner", xylella: "Xylella", minador: "Zitrusminiermotte", picudoAgave: "Agavenrüssler" },
   },
 };
+
+// Selecciones de la guía («Ideas para…»): se filtran las plantas por estos usos.
+export const IDEAS = ["maceta", "seto", "costa", "seco", "abejas", "interior", "pergola", "sombra"];
 
 // Dibujo de cada tipo de planta, mientras no haya foto propia. Colores de la marca.
 const V = { o: "#2f5d3f", m: "#4f8a4f", c: "#7fae6a", p: "#a9d39a", t: "#7a5a3a", s: "#e3d8c3", z: "#c8693a" };
