@@ -70,6 +70,21 @@ for (const k of conFoto) {
 ok(conFoto.length > 0 && !sinCargar.length, `las ${conFoto.length} fichas con foto la enseñan con su autor y licencia` + (sinCargar.length ? ': fallan ' + sinCargar.join(', ') : ''));
 await p.goto(W + '/guia/fotos');
 ok(await p.locator('.creditos li').count() === conFoto.length, 'la página de créditos cita todas las fotos');
+// Buscador de plantas: por nombre común en cualquier idioma o científico, sin tildes; si no está, ofrece preguntar.
+await p.goto(W + '/');
+await p.click('#lupa');
+const busca = async (q) => { await p.fill('#bq', q); await p.waitForFunction(() => document.querySelector('#bres').textContent.trim() !== ''); return p.$$eval('#bres a.bitem', (as) => as.map((a) => new URL(a.href).pathname)); };
+ok((await busca('halepensis'))[0] === '/guia/pino-carrasco' && (await busca('jazmin')).includes('/guia/jazmin-estrellado') && (await busca('lavender'))[0] === '/guia/lavanda',
+  'buscador: encuentra por nombre científico, sin tildes y en otros idiomas');
+ok((await busca('olivo centenario')).length === 0 && await p.locator('#bres a.canal.wa').count() === 1, 'buscador: si no está en la guía, ofrece preguntar por WhatsApp');
+await p.keyboard.press('Escape');
+ok(await p.evaluate(() => document.getElementById('buscador').hidden), 'buscador: se cierra con Escape');
+// La sección del menú en la que se está se distingue con fondo propio, arriba sobre la foto y con la cabecera clara.
+await p.setViewportSize({ width: 1280, height: 800 }); await p.goto(W + '/vivero');
+const fondo = () => p.$eval('header nav > a.on', (a) => getComputedStyle(a).backgroundColor);
+const f1 = await fondo(); await p.evaluate(() => { scrollTo(0, 900); dispatchEvent(new Event('scroll')); }); await p.waitForTimeout(400); const f2 = await fondo();
+ok(f1 !== 'rgba(0, 0, 0, 0)' && f2 !== 'rgba(0, 0, 0, 0)' && f1 !== f2, 'menú: la sección actual se ve sobre la foto y con la cabecera clara');
+await p.setViewportSize({ width: 360, height: 740 });
 await p.goto(W + '/ca/guia/romero');
 ok(await p.locator('.calg td.on').count() > 0 && (await p.getAttribute('.fhead a.canal.wa', 'href')).includes(encodeURIComponent('Salvia rosmarinus')),
   'ficha: calendario y botón de WhatsApp con el nombre de la planta');
