@@ -2,7 +2,7 @@
 // enseñan dónde está el vivero y cómo llegar, y el vigilante deja fuera las noticias que no interesan.
 import fs from 'fs';
 import { lanzar, pagina, ok, fin, IMG } from './comun.mjs';
-import { interesa, vigilar } from '../web/src/noticias.js';
+import { interesa, vigilar, ANTERIOR } from '../web/src/noticias.js';
 import { FICHAS } from '../web/src/fichas.js';
 import { FOTOS_COMMONS } from '../web/src/fotos-plantas.js';
 const W = process.env.WEB || 'http://localhost:8790';
@@ -106,10 +106,31 @@ ok(interesa(n('Sant Lluís será el primer municipio de Menorca en restringir el
   'noticias de Baleares: sí las normas de riego y césped, no las «plantas» solares');
 // Si Google News no responde justo al cambiar el filtro, no se pierde lo que ya había guardado.
 {
-  const kv = new Map([['noticias4', JSON.stringify({ actualizado: Date.now(), jardineria: [{ ...noticia('Ideas para un jardín mediterráneo que casi no necesita riego'), resumen: '' }, { ...noticia('El Ayuntamiento inicia la campaña de poda del arbolado urbano'), resumen: '' }], ciencia: [], baleares: [] })]]);
+  const kv = new Map([[ANTERIOR, JSON.stringify({ actualizado: Date.now(), jardineria: [{ ...noticia('Ideas para un jardín mediterráneo que casi no necesita riego'), resumen: '' }, { ...noticia('El Ayuntamiento inicia la campaña de poda del arbolado urbano'), resumen: '' }], ciencia: [], baleares: [] })]]);
   const DATOS = { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) };
   const fetchReal = globalThis.fetch; globalThis.fetch = async () => ({ ok: false });
   const out = await vigilar({ DATOS }); globalThis.fetch = fetchReal;
   ok(out.jardineria.length === 1 && out.jardineria[0].titulo.startsWith('Ideas para'), 'noticias: sin respuesta de Google se conserva lo guardado, ya filtrado');
+}
+// Si Google News deja de responder (a veces pasa desde Cloudflare), entran noticias de Bing y de webs de jardinería;
+// el enlace de Bing se cambia por el de la noticia y en Baleares solo quedan las que nombran las islas.
+{
+  const rss = (items) => `<?xml version="1.0"?><rss><channel>${items.map(([t, l, d = '']) => `<item><title>${t}</title><link>${l}</link><description>${d}</description><pubDate>${new Date().toUTCString()}</pubDate></item>`).join('')}</channel></rss>`;
+  const bing = (u) => 'http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;url=' + encodeURIComponent(u) + '&amp;mkt=es-es';
+  const fetchReal = globalThis.fetch;
+  globalThis.fetch = async (u) => {
+    u = String(u);
+    if (u.includes('news.google.com')) return new Response('', { status: 503 });
+    if (u.includes('jardineriaon.com')) return new Response(rss([['Cómo cuidar la monstera en otoño sin que amarilleen sus hojas', 'https://www.jardineriaon.com/monstera-otono.html']]));
+    if (u.includes('bing.com') && u.includes('Mallorca')) return new Response(rss([['Sóller recupera sus huertos de naranjos con riego eficiente', bing('https://ejemplo.es/soller'), 'Mallorca'], ['La horchata, en peligro por una plaga en Valencia', bing('https://ejemplo.es/horchata'), 'plaga en los cultivos']]));
+    if (u.includes('bing.com')) return new Response(rss([['Qué plantas aguantan mejor la sequía en el jardín', bing('https://ejemplo.es/sequia')]]));
+    return new Response('', { status: 503 });
+  };
+  const kv = new Map(); const DATOS = { get: async (k) => (kv.has(k) ? JSON.parse(kv.get(k)) : null), put: async (k, v) => kv.set(k, v) };
+  const out = await vigilar({ DATOS }); globalThis.fetch = fetchReal;
+  ok(out.jardineria.some((n) => n.enlace === 'https://ejemplo.es/sequia') && out.jardineria.some((n) => n.fuente === 'Jardinería On'),
+    'noticias: sin Google entran las de Bing (con el enlace de la noticia) y las de webs de jardinería');
+  ok(out.baleares.length === 1 && out.baleares[0].titulo.startsWith('Sóller') && out.fuentes.baleares.some((f) => f.includes('503')),
+    'noticias de Baleares desde Bing: solo las que nombran las islas, y se apunta qué fuente falla');
 }
 await fin(nav);
