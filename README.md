@@ -21,6 +21,10 @@ web/
   src/datos.js          Teléfonos, correo, idiomas y fotos (IDs de Google Drive)
   src/textos.js         Textos de la web en los cuatro idiomas
   src/guia.js           Guía verde: plantas, calendario, doctor, xerojardinería, planta del mes
+  src/fichas.js         Ficha de cada planta (calendario, riego, plagas, usos) y sus textos
+  src/fotos-plantas.js  Autor y licencia de las fotos de Commons de las fichas (lo genera generar-fotos.mjs)
+  public/plantas/       Fotos de las fichas en WebP, servidas tal cual
+  generar-fotos.mjs     Busca y descarga fotos libres de Wikimedia Commons para las plantas nuevas
   src/legal.js          Aviso legal, privacidad y cookies (datos del titular)
   src/noticias.js       Vigilante de noticias (feeds → KV)
 gestion/
@@ -46,6 +50,8 @@ Lo más habitual al hacer cambios:
 - Cambiar un teléfono, el correo o una foto → `web/src/datos.js`.
 - Cambiar un texto de la web → `web/src/textos.js` (hay que tocar los cuatro idiomas).
 - Cambiar los datos legales → `web/src/legal.js`.
+- Añadir una planta a la guía → su línea en `PLANTAS_G` (`web/src/guia.js`) y en `FICHAS` (`web/src/fichas.js`), y
+  después `node web/generar-fotos.mjs` para su foto (va despacio: Wikimedia limita las descargas).
 - Cambiar los iconos → `node compartido/generar-pngs.mjs` (colores en ese archivo), crear el
   `favicon.ico` de cada app y ejecutar `node compartido/generar-iconos.mjs`.
 - Cambiar las tareas rápidas de los partes → `TAREAS` en `equipo/src/worker.js`.

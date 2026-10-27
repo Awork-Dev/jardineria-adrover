@@ -4,6 +4,7 @@ import fs from 'fs';
 import { lanzar, pagina, ok, fin, IMG } from './comun.mjs';
 import { interesa, vigilar } from '../web/src/noticias.js';
 import { FICHAS } from '../web/src/fichas.js';
+import { FOTOS_COMMONS } from '../web/src/fotos-plantas.js';
 const W = process.env.WEB || 'http://localhost:8790';
 console.log('Web pública');
 const nav = await lanzar();
@@ -16,7 +17,7 @@ const noticia = (titulo) => ({ titulo, enlace: 'https://example.com/' + encodeUR
 await p.route('**/api/noticias', (r) => r.fulfill({ json: { actualizado: Date.now(), jardineria: [noticia('Cómo preparar el jardín para el otoño en cinco pasos')], ciencia: [noticia('Plants talk to each other through roots')], baleares: [noticia('Mallorca recupera variedades antiguas de almendro')] } }));
 
 const FICHAS_R = Object.values(FICHAS).map((f) => '/guia/' + f.ficha);
-const RUTAS = ['/', '/servicios', '/vivero', '/guia', '/herramientas', '/noticias', '/contacto', '/legal', ...FICHAS_R];
+const RUTAS = ['/', '/servicios', '/vivero', '/guia', '/herramientas', '/noticias', '/contacto', '/legal', '/guia/fotos', ...FICHAS_R];
 const malas = [];
 for (const l of ['es', 'ca', 'en', 'de']) for (const r of RUTAS) {
   const ruta = (l === 'es' ? '' : '/' + l) + (r === '/' && l !== 'es' ? '' : r);
@@ -30,7 +31,7 @@ for (const l of ['es', 'ca', 'en', 'de']) for (const r of RUTAS) {
   const fallo = [res.status() !== 200 && 'estado ' + res.status(), v.h1 !== 1 && v.h1 + ' títulos', !v.cabe && 'se sale', v.guion && 'parte palabras', !v.mapa && 'sin dirección al pie'].filter(Boolean);
   if (fallo.length) malas.push((ruta || '/') + ': ' + fallo.join(', '));
 }
-ok(!malas.length, `las ${RUTAS.length * 4} páginas (con las ${FICHAS_R.length} fichas de plantas) cargan, caben en el móvil, no parten palabras y llevan la dirección al pie` + (malas.length ? '\n      ' + malas.join('\n      ') : ''));
+ok(!malas.length, `las ${RUTAS.length * 4} páginas (con las ${FICHAS_R.length} fichas de plantas y los créditos de las fotos) cargan, caben en el móvil, no parten palabras y llevan la dirección al pie` + (malas.length ? '\n      ' + malas.join('\n      ') : ''));
 
 await p.goto(W + '/contacto');
 ok(await p.locator('.datos a[href="tel:+34971563213"]').count() === 1 && await p.locator('.datos a[href*="google.com/maps"]').count() === 1 && (await p.textContent('.datos')).includes('Capdepera'),
@@ -48,6 +49,9 @@ let v = await vis();
 ok(v.length === usoDe('costa') && v.every((x) => x.split(' ').includes('costa')), 'ideas: «Jardines junto al mar» deja solo esas plantas');
 await p.click('.idea[data-uso=costa]');
 ok((await vis()).length === FICHAS_R.length, 'ideas: al pulsar otra vez se ven todas');
+await p.selectOption('#ft', 'palmera');
+v = await p.$$eval('.plantas .pl:not([hidden])', (as) => as.map((a) => a.dataset.tipo));
+ok(v.length === Object.values(FICHAS).filter((f) => f.tipo === 'palmera').length && v.every((x) => x === 'palmera'), 'filtro por tipo de planta');
 await p.goto(W + '/en/guia?uso=interior#plantas'); v = await vis();
 ok(v.length === usoDe('interior') && await p.getAttribute('.idea[data-uso=interior]', 'aria-pressed') === 'true', 'ideas: la ficha enlaza con la guía ya filtrada');
 ok(await p.locator('.mes[data-m="9"] .mesp a.chip').count() > 0, 'cada mes dice qué florece, qué plantar y qué podar, con enlace a la ficha');
@@ -55,6 +59,17 @@ await p.goto(W + '/contacto');
 await p.fill('#fpre [name=nombre]', 'Ana'); await p.selectOption('#fpre [name=para]', { index: 1 });
 const texto = await p.evaluate(() => ptxt());
 ok(await p.locator('#fpre [name=para] option').count() === 4 && texto.includes('¿Para quién es? Una comunidad de vecinos'), 'presupuesto: pregunta para quién es y lo pone en el mensaje');
+// Fotos de Commons: cada ficha con foto la carga desde la propia web y cita autor y licencia; hay página de créditos.
+const conFoto = Object.keys(FOTOS_COMMONS);
+const sinCargar = [];
+for (const k of conFoto) {
+  await p.goto(W + '/guia/' + k);
+  const bien = await p.evaluate(async () => { const i = document.querySelector('.fimg img'); if (!i) return false; if (!i.complete) await new Promise((r) => { i.onload = i.onerror = r; }); return i.naturalWidth > 0 && !!document.querySelector('.fcred a[href*="commons.wikimedia.org"]'); });
+  if (!bien) sinCargar.push(k);
+}
+ok(conFoto.length > 0 && !sinCargar.length, `las ${conFoto.length} fichas con foto la enseñan con su autor y licencia` + (sinCargar.length ? ': fallan ' + sinCargar.join(', ') : ''));
+await p.goto(W + '/guia/fotos');
+ok(await p.locator('.creditos li').count() === conFoto.length, 'la página de créditos cita todas las fotos');
 await p.goto(W + '/ca/guia/romero');
 ok(await p.locator('.calg td.on').count() > 0 && (await p.getAttribute('.fhead a.canal.wa', 'href')).includes(encodeURIComponent('Salvia rosmarinus')),
   'ficha: calendario y botón de WhatsApp con el nombre de la planta');

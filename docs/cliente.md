@@ -21,6 +21,10 @@
    vallas y pérgolas, sombra) y cada mes del calendario dice qué florece, qué plantar y qué podar. El presupuesto
    pregunta para quién es (casa, comunidad, empresa u hotel, otro). Ideas tomadas de otras webs sin prometer
    existencias, precios ni servicios concretos.
+   Las fichas llevan una foto libre de Wikimedia Commons (CC BY, CC BY-SA, CC0 o dominio público) con su autor y
+   licencia debajo, y una página de créditos (`/guia/fotos`). Las fotos se descargan una vez con
+   `node web/generar-fotos.mjs`, reducidas a WebP en `web/public/plantas/`, y las sirve la propia web. En la guía se
+   puede filtrar además por tipo de planta.
 2. **Vigilante de noticias:** cada 3 horas busca noticias de jardinería y plantas y las guarda
    para la sección de noticias. Deja fuera las campañas y contratos de los ayuntamientos, las polémicas
    y las «plantas» solares o industriales (filtro en `web/src/noticias.js`).
@@ -98,5 +102,8 @@ la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con un
 ## Pendiente
 
 - **Horario del vivero:** en cuanto lo tengamos, se pone en la web (contacto, vivero y pie) y en la ficha para Google.
-- **Fotos de las plantas:** mientras no las haya, cada ficha lleva un dibujo según el tipo de planta. Cuando la propietaria
-  las pase, se suben a Google Drive y se apuntan en `FOTOS_PLANTAS` (`web/src/datos.js`).
+- **Fotos propias de las plantas:** mientras no las haya, cada ficha lleva una foto libre de Wikimedia Commons (o un dibujo
+  si no se encontró ninguna). Cuando la propietaria las pase, se suben a Google Drive y se apuntan en `FOTOS_PLANTAS`
+  (`web/src/datos.js`); tienen preferencia sobre las de Commons.
+- **Ampliar el catálogo de plantas:** poco a poco. Para cada planta nueva: su línea en `PLANTAS_G` (`web/src/guia.js`,
+  con textos en los cuatro idiomas) y en `FICHAS` (`web/src/fichas.js`), y después `node web/generar-fotos.mjs`.

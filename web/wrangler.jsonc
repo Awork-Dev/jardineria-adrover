@@ -4,6 +4,8 @@
   "main": "src/worker.js",
   "compatibility_date": "2025-06-01",
   "workers_dev": true,
+  // Fotos de las fichas de plantas (web/public/plantas), servidas tal cual.
+  "assets": { "directory": "./public" },
   "kv_namespaces": [{ "binding": "DATOS", "id": "984960ce65f5450e81f433edb5354799" }],
   "triggers": { "crons": ["0 */3 * * *"] }
 }
