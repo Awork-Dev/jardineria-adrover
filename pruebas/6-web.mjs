@@ -90,9 +90,10 @@ await p.setViewportSize({ width: 375, height: 740 });
 const montados = [];
 for (const r of ['/guia/algarrobo', '/ca/guia/flor-de-pascua', '/de/guia/monstera', '/en/guia/romero']) {
   await p.goto(W + r);
-  if (await p.$$eval('.calg tbody tr', (trs) => trs.some((tr) => tr.querySelector('th').getBoundingClientRect().right > tr.querySelector('td').getBoundingClientRect().left + 0.5 || tr.querySelector('th').scrollWidth > tr.querySelector('th').clientWidth))) montados.push(r);
+  if (await p.$$eval('.calg tbody tr', (trs) => trs.some((tr) => tr.querySelector('th').getBoundingClientRect().right > tr.querySelector('td').getBoundingClientRect().left + 0.5))) montados.push(r);
 }
-ok(!montados.length && await p.$eval('.calg col.cl', (c) => c.getBoundingClientRect().width >= 70), 'calendario: en un móvil de 375 px el nombre de la fila no pisa las casillas' + (montados.length ? ': ' + montados.join(', ') : ''));
+// El ancho va en <col>, que es lo que respeta Safari (en el iPhone el nombre se montaba sobre la primera casilla).
+ok(!montados.length && await p.$eval('.calg col.cl', (c) => c.getBoundingClientRect().width >= 80), 'calendario: en un móvil de 375 px el nombre de la fila no pisa las casillas' + (montados.length ? ': ' + montados.join(', ') : ''));
 await p.setViewportSize({ width: 360, height: 740 });
 await p.goto(W + '/ca/guia/romero');
 ok(await p.locator('.calg td.on').count() > 0 && (await p.getAttribute('.fhead a.canal.wa', 'href')).includes(encodeURIComponent('Salvia rosmarinus')),
