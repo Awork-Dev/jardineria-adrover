@@ -85,6 +85,15 @@ const fondo = () => p.$eval('header nav > a.on', (a) => getComputedStyle(a).back
 const f1 = await fondo(); await p.evaluate(() => { scrollTo(0, 900); dispatchEvent(new Event('scroll')); }); await p.waitForTimeout(400); const f2 = await fondo();
 ok(f1 !== 'rgba(0, 0, 0, 0)' && f2 !== 'rgba(0, 0, 0, 0)' && f1 !== f2, 'menú: la sección actual se ve sobre la foto y con la cabecera clara');
 await p.setViewportSize({ width: 360, height: 740 });
+// Calendario de la ficha en un iPhone pequeño (375 px): el nombre de cada fila no se monta sobre la primera casilla.
+await p.setViewportSize({ width: 375, height: 740 });
+const montados = [];
+for (const r of ['/guia/algarrobo', '/ca/guia/flor-de-pascua', '/de/guia/monstera', '/en/guia/romero']) {
+  await p.goto(W + r);
+  if (await p.$$eval('.calg tbody tr', (trs) => trs.some((tr) => tr.querySelector('th').getBoundingClientRect().right > tr.querySelector('td').getBoundingClientRect().left + 0.5 || tr.querySelector('th').scrollWidth > tr.querySelector('th').clientWidth))) montados.push(r);
+}
+ok(!montados.length && await p.$eval('.calg col.cl', (c) => c.getBoundingClientRect().width >= 70), 'calendario: en un móvil de 375 px el nombre de la fila no pisa las casillas' + (montados.length ? ': ' + montados.join(', ') : ''));
+await p.setViewportSize({ width: 360, height: 740 });
 await p.goto(W + '/ca/guia/romero');
 ok(await p.locator('.calg td.on').count() > 0 && (await p.getAttribute('.fhead a.canal.wa', 'href')).includes(encodeURIComponent('Salvia rosmarinus')),
   'ficha: calendario y botón de WhatsApp con el nombre de la planta');
