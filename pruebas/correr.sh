@@ -10,10 +10,13 @@ export GESTION="http://localhost:$PG" EQUIPO="http://localhost:$PE" WEB="http://
 parar() { pkill -f "wrangler dev --port $PG" 2>/dev/null; pkill -f "wrangler dev --port $PE" 2>/dev/null; pkill -f "wrangler dev --port $PW" 2>/dev/null; pkill -f "workerd.*$BASE" 2>/dev/null; true; }
 trap parar EXIT
 (cd gestion && npx wrangler d1 execute DB --local --persist-to "$BASE" --file schema.sql >/dev/null 2>&1)
-(cd gestion && npx wrangler dev --port "$PG" --inspector-port 9601 --persist-to "$BASE" >"$BASE/gestion.log" 2>&1 &)
-(cd equipo && npx wrangler dev --port "$PE" --inspector-port 9602 --persist-to "$BASE" >"$BASE/equipo.log" 2>&1 &)
+esperar() { for i in $(seq 1 90); do curl -s -o /dev/null "$1" && return; sleep 1; done; }
 (cd web && npx wrangler dev --port "$PW" --inspector-port 9603 --persist-to "$BASE/web" >"$BASE/web.log" 2>&1 &)
-for i in $(seq 1 90); do curl -s -o /dev/null "$GESTION" && curl -s -o /dev/null "$EQUIPO" && curl -s -o /dev/null "$WEB" && break; sleep 1; done
+# La gestión y el equipo comparten base de datos: si arrancan a la vez, una puede encontrarla bloqueada (SQLITE_BUSY).
+(cd gestion && npx wrangler dev --port "$PG" --inspector-port 9601 --persist-to "$BASE" >"$BASE/gestion.log" 2>&1 &)
+esperar "$GESTION"
+(cd equipo && npx wrangler dev --port "$PE" --inspector-port 9602 --persist-to "$BASE" >"$BASE/equipo.log" 2>&1 &)
+esperar "$EQUIPO"; esperar "$WEB"
 fallo=0
 for f in pruebas/[0-9]-*.mjs; do echo; node "$f" || fallo=1; done
 echo; [ $fallo = 0 ] && echo "TODAS LAS PRUEBAS PASAN" || { echo "HAY PRUEBAS QUE FALLAN"; tail -n 20 "$BASE/gestion.log" "$BASE/equipo.log" "$BASE/web.log"; }
