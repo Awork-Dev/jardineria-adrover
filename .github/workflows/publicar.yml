@@ -45,7 +45,8 @@ jobs:
   pruebas:
     needs: cambios
     if: needs.cambios.outputs.web == 'true' || needs.cambios.outputs.gestion == 'true' || needs.cambios.outputs.equipo == 'true'
-    runs-on: ubuntu-latest
+    # Versión fija de Ubuntu: Playwright 1.56 no instala su navegador en la 26.04 (la que da ahora «ubuntu-latest»).
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
