@@ -146,6 +146,21 @@ a.ubic{text-decoration:none;padding:2px}.sin-ubic{font-style:italic}
 .tabla-x td.est{text-align:left;white-space:normal;min-width:150px}
 .tabla-x .vacio{color:var(--muted)}
 .rowr.acciones{flex-shrink:1;min-width:0;max-width:100%}
+/* Estadísticas: barras horizontales (normales en verde, extra en dorado; colores comprobados para daltonismo y modo oscuro) */
+.st-n{--c:#2a8040}.st-x{--c:#bd8a33}
+.st-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:0 0 18px}
+.st-kpis .kpi b{font-size:1.45rem}
+.st-graf{margin:0 0 22px}.st-graf h3{margin:0 0 4px;font-size:1rem}
+.leyenda{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin:0 0 10px}
+.leyenda span{display:inline-flex;align-items:center;gap:6px}.leyenda i{width:12px;height:12px;border-radius:3px;background:var(--c)}
+.barras{display:flex;flex-direction:column;gap:8px}
+.bfila{display:grid;grid-template-columns:minmax(64px,min(150px,34%)) minmax(0,1fr);gap:10px;align-items:center;font-size:.88rem}
+.bnom{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bpista{display:flex;align-items:center;min-width:0}
+.bseg{height:14px;background:var(--c);flex:none}.bseg+.bseg{margin-left:2px}
+.bseg:last-of-type{border-radius:0 4px 4px 0}
+.bval{margin-left:8px;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.bfila:hover .bseg{filter:brightness(1.08)}
 button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .empty{background:var(--panel);border:1px dashed var(--line);border-radius:16px;padding:26px;color:var(--muted)}
 .empty b{display:block;color:var(--ink);margin-bottom:4px}
@@ -837,13 +852,14 @@ function vFotos() {
       : '<div class="empty">No hay fotos en este mes.</div>'}</section>`;
 }
 function vEquipo() {
-  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['extra', 'Horas extra'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
+  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['extra', 'Horas extra'], ['stats', 'Estadísticas'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
     `<button class="chip${equipoTab === k ? ' on' : ''}" data-act="tab-equipo" data-v="${k}">${t}${k === 'gastos' ? ((n => n ? ' (' + n + ')' : '')(Object.values(S.gastos).filter(g => g.estado !== 'pagado').length)) : ''}</button>`).join('');
   const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, jornada, horas extra, gastos y fotos que llegan desde la app</p></div>
     ${equipoTab === 'personas' ? '<button class="btn primary" data-act="new-operario">+ Nuevo</button>' : ''}</header><div class="tabs">${tabs}</div>`;
   if (equipoTab === 'gastos') return cab + vGastos();
   if (equipoTab === 'fotos') return cab + vFotos();
   if (equipoTab === 'extra') return cab + vHorasExtra();
+  if (equipoTab === 'stats') return cab + vEstadisticas();
   return cab + vPersonasJornada();
 }
 function vPersonasJornada() {
@@ -932,6 +948,67 @@ function vHorasExtra() {
     <p class="meta" style="margin:0 0 12px">Son extra las horas que pasan de <b>${hm(num(aj.horasDia) * 3600e3)}</b> en un día laborable y todas las de sábados, domingos y festivos.
       ${fest ? `${fest} ${fest === 1 ? 'festivo marcado' : 'festivos marcados'} en ${anyo}.` : `<b>Aún no hay festivos marcados en ${anyo}:</b> pulsa «Jornada y festivos».`} Horas en formato horas:minutos.</p>
     ${tabla}</section>`;
+}
+/* ---------- Estadísticas del equipo ---------- */
+// Del mismo periodo que «Horas extra»: fichajes (horas, días, extra), partes (horas en clientes, tareas) y gastos.
+function datosEstadisticas(periodo, aj) {
+  const filas = filasExtra(periodo, aj).map(f => {
+    const dias = registro(f.id, periodo).filter(d => d.ms > 0).length;
+    const partes = Object.values(S.partes).filter(p => (p.fecha || '').startsWith(periodo) && (p.operarios || []).includes(f.id));
+    const gastos = Object.values(S.gastos).filter(g => g.operarioId === f.id && (g.fecha || '').startsWith(periodo));
+    return {...f, dias, horasPartes: partes.reduce((a, p) => a + num(p.duracion) * 3600e3, 0), clientes: new Set(partes.map(p => p.clienteId).filter(Boolean)).size,
+      gastos: gastos.reduce((a, g) => a + num(g.importe), 0)};
+  });
+  const tareas = {};
+  for (const p of Object.values(S.partes)) if ((p.fecha || '').startsWith(periodo)) for (const t of p.tareas || []) tareas[t] = (tareas[t] || 0) + 1;
+  const meses = Array(12).fill(0).map((_, i) => ({n: filas.reduce((a, f) => a + f.porMes[i], 0), mes: i}));
+  // Horas trabajadas de cada mes (para el gráfico del año)
+  const trabMes = Array(12).fill(0);
+  if (periodo.length === 4) for (const f of filas) for (const d of registro(f.id, periodo)) trabMes[+d.dia.slice(5, 7) - 1] += d.ms;
+  return {filas, tareas: Object.entries(tareas).sort((a, b) => b[1] - a[1]), extraMes: meses.map(m => m.n), trabMes};
+}
+// Barras horizontales de horas: normales y extra apiladas, con el total al final de la barra.
+function barrasHoras(items) {
+  const max = Math.max(1, ...items.map(i => i.total));
+  return `<div class="barras">${items.map(i => {
+    const n = Math.max(0, i.total - i.extra), w = v => `calc((100% - 4.5em) * ${(v / max).toFixed(4)})`;
+    return `<div class="bfila" title="${esc(i.nombre)}: ${hm(i.total)} (${hm(n)} normales y ${hm(i.extra)} extra)"><span class="bnom">${esc(i.nombre)}</span>
+      <span class="bpista">${n ? `<span class="bseg st-n" style="width:${w(n)}"></span>` : ''}${i.extra ? `<span class="bseg st-x" style="width:${w(i.extra)}"></span>` : ''}<b class="bval">${i.total ? hc(i.total) : '–'}</b></span></div>`;
+  }).join('')}</div>`;
+}
+function vEstadisticas() {
+  const aj = jornadaAj(), periodo = periodoXActual(), anyo = periodo.slice(0, 4), anual = periodo.length === 4;
+  const {filas, tareas, extraMes, trabMes} = datosEstadisticas(periodo, aj);
+  const anyos = [...new Set([anyo, mesActual().slice(0, 4), ...Object.values(S.fichajes).map(f => diaDe(f.ts).slice(0, 4))])].sort().reverse();
+  const suma = k => filas.reduce((a, f) => a + f[k], 0), conFichajes = filas.filter(f => f.dias);
+  const leyenda = '<div class="leyenda"><span class="st-n"><i></i>Horas normales</span><span class="st-x"><i></i>Horas extra</span></div>';
+  const porPersona = [...filas].filter(f => f.trabajadas).sort((a, b) => b.trabajadas - a.trabajadas).map(f => ({nombre: f.nombre, total: f.trabajadas, extra: f.extra}));
+  const porMes = MESES_C.map((m, i) => ({nombre: m, total: trabMes[i], extra: extraMes[i]}));
+  const maxT = Math.max(1, ...tareas.map(t => t[1]));
+  const media = f => f.dias ? hc(f.trabajadas / f.dias) : '–';
+  const celda = (txt, vacio) => `<td class="${vacio ? 'vacio' : ''}">${txt}</td>`;
+  const tabla = `<div class="tabla-x"><table><thead><tr><th>Persona</th><th>Días trabajados</th><th>Horas</th><th>Media al día</th><th>Horas extra</th><th>Horas en partes</th><th>Clientes</th><th>Gastos</th></tr></thead>
+    <tbody>${filas.map(f => `<tr><td>${esc(f.nombre)}</td>${celda(f.dias || '–', !f.dias)}${celda(f.trabajadas ? hc(f.trabajadas) : '–', !f.trabajadas)}${celda(media(f), !f.dias)}${celda(f.extra ? hc(f.extra) : '–', !f.extra)}${celda(f.horasPartes ? hc(f.horasPartes) : '–', !f.horasPartes)}${celda(f.clientes || '–', !f.clientes)}${celda(f.gastos ? eur2(f.gastos) : '–', !f.gastos)}</tr>`).join('')}</tbody>
+    <tfoot><tr><th>Total</th>${celda(suma('dias'))}${celda(hc(suma('trabajadas')))}<td></td>${celda(hc(suma('extra')))}${celda(hc(suma('horasPartes')))}<td></td>${celda(eur2(suma('gastos')))}</tr></tfoot></table></div>`;
+  const cuerpo = !filas.length ? empty('Aún no hay nadie dado de alta.', 'Da de alta a los operarios en «Personas».') : `
+    <div class="st-kpis">
+      <div class="kpi"><span>Horas trabajadas</span><b>${hc(suma('trabajadas'))}</b><small>${conFichajes.length} de ${filas.length} ${filas.length === 1 ? 'persona ha' : 'personas han'} fichado</small></div>
+      <div class="kpi"><span>Horas extra</span><b>${hc(suma('extra'))}</b><small>${suma('trabajadas') ? Math.round(suma('extra') / suma('trabajadas') * 100) + ' % de las horas' : '—'}</small></div>
+      <div class="kpi"><span>Media al día por persona</span><b>${suma('dias') ? hc(suma('trabajadas') / suma('dias')) : '–'}</b><small>${suma('dias')} ${suma('dias') === 1 ? 'día trabajado' : 'días trabajados'} en total</small></div>
+      <div class="kpi"><span>Gastos del equipo</span><b>${eur2(suma('gastos'))}</b><small>Tickets enviados desde la app</small></div>
+    </div>
+    ${porPersona.length ? `<div class="st-graf"><h3>Horas por persona</h3>${leyenda}${barrasHoras(porPersona)}</div>` : '<p class="meta">Nadie ha fichado en este periodo.</p>'}
+    ${anual && porMes.some(m => m.total) ? `<div class="st-graf"><h3>Horas del equipo por mes</h3>${leyenda}${barrasHoras(porMes)}</div>` : ''}
+    ${tareas.length ? `<div class="st-graf"><h3>Trabajos más hechos <span class="meta" style="font-weight:400">(partes con esa tarea)</span></h3><div class="barras">${tareas.map(([t, n]) =>
+      `<div class="bfila" title="${esc(t)}: ${n} ${n === 1 ? 'parte' : 'partes'}"><span class="bnom">${esc(t)}</span><span class="bpista"><span class="bseg st-n" style="width:calc((100% - 4.5em) * ${(n / maxT).toFixed(4)})"></span><b class="bval">${n}</b></span></div>`).join('')}</div></div>` : ''}
+    <h3 style="margin:0 0 8px;font-size:1rem">Por persona</h3>${tabla}`;
+  return `<section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Estadísticas del equipo</h2></div>
+    <div class="grid2 par" style="margin-bottom:14px">
+      <label class="fld"><span>Ver</span><select id="periodo-x"><option value="mes"${!anual ? ' selected' : ''}>Un mes</option><option value="anyo"${anual ? ' selected' : ''}>Un año</option></select></label>
+      ${anual ? `<label class="fld"><span>Año</span><select id="anyo-x">${anyos.map(a => `<option${a === anyo ? ' selected' : ''}>${a}</option>`).join('')}</select></label>`
+        : `<label class="fld"><span>Mes</span><input id="mes-x" type="month" value="${esc(mesX)}"></label>`}</div>
+    <p class="meta" style="margin:0 0 14px">${esc(nombrePeriodo(periodo).replace(/^\w/, c => c.toUpperCase()))} · horas en formato horas:minutos. Las horas salen de los fichajes; las «horas en partes», de los partes de trabajo.</p>
+    ${cuerpo}</section>`;
 }
 function jornadaSheet() {
   const aj = jornadaAj();
