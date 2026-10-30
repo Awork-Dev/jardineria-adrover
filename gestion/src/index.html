@@ -317,6 +317,12 @@ const totalsOf = (lines, iva = 21) => {
   return {sub, iva: sub * iva / 100, total: sub * (1 + iva / 100)};
 };
 const clienteNombre = id => (S.clientes[id] && S.clientes[id].nombre) || '(sin cliente)';
+// Teléfonos de España con el +34 delante (los clientes con móvil extranjero lo necesitan para llamar).
+// Solo cambia los números de 9 cifras sin prefijo; los que ya lo llevan (+34, +49…) se quedan igual.
+const conPrefijo = t => String(t || '').split(/(\s*[·/,;|]\s*|\s+y\s+)/).map(x => {
+  const c = x.replace(/[\s.\-()]/g, '');
+  return /^[6789]\d{8}$/.test(c) ? '+34 ' + c.replace(/(\d{3})(\d{3})(\d{3})/, '$1 $2 $3') : x;
+}).join('');
 const byNombre = (a, b) => (a[1].nombre || '').localeCompare(b[1].nombre || '', 'es');
 const clienteOpts = () => [['', 'Elige un cliente'], ...Object.entries(S.clientes).sort(byNombre).map(([k, c]) => [k, c.nombre])];
 // Numeración por año: P-2026-001 para presupuestos, N-2026-001 para notas.
@@ -615,7 +621,7 @@ function vResumen() {
   </div>
   <section class="panel" style="margin-top:18px">
     <div class="pagehead" style="margin-bottom:8px"><h2>Datos de la empresa</h2><button class="btn small" data-act="edit-empresa">${e ? 'Editar' : 'Añadir datos'}</button></div>
-    ${e ? `<div class="empresa"><b>${esc(e.nombre)}</b><span class="meta">CIF ${esc(e.cif || '—')}</span><span class="line">${esc([e.direccion, e.cp, e.poblacion].filter(Boolean).join(' · '))}</span><span class="line">${esc([e.telefono, e.email].filter(Boolean).join(' · '))}</span></div>`
+    ${e ? `<div class="empresa"><b>${esc(e.nombre)}</b><span class="meta">CIF ${esc(e.cif || '—')}</span><span class="line">${esc([e.direccion, e.cp, e.poblacion].filter(Boolean).join(' · '))}</span><span class="line">${esc([conPrefijo(e.telefono), e.email].filter(Boolean).join(' · '))}</span></div>`
       : '<p class="meta" style="margin:0">Aún no has añadido los datos de la empresa.</p>'}
   </section>
   <section class="panel solo-movil" style="margin-top:18px"><h2>Copias y sesión</h2>
@@ -638,7 +644,7 @@ function listaContactos(kind) {
   return `<div class="cards">${items.map(([id, c]) => `<button class="card" data-act="edit-${kind}" data-id="${esc(id)}">
       <b>${esc(c.nombre)}</b>
       <span class="meta">${esc(c.cif || 'Sin CIF')}${c.poblacion ? ' · ' + esc(c.poblacion) : ''}</span>
-      <span class="line">${esc(c.telefono || 'Sin teléfono')}</span>
+      <span class="line">${esc(conPrefijo(c.telefono) || 'Sin teléfono')}</span>
       <span class="line">${esc(c.email || 'Sin correo')}</span>
       ${c.contacto ? `<span class="line">Contacto: ${esc(c.contacto)}</span>` : ''}
       ${!isC && c.categoria ? `<span class="tag">${esc(c.categoria)}</span>` : ''}
@@ -1139,7 +1145,7 @@ form.addEventListener('click', async e => {
 /* ---------- Almacenamiento en el servidor ---------- */
 const DEFAULT_EMPRESA = {
   nombre: 'Zones Verdes S.L.', cif: 'B07566193', direccion: 'Carretera Son Servera - Capdepera km 11,600',
-  cp: '07580', poblacion: 'Capdepera', telefono: '971 563 213 · 654 788 002 · 626 900 428',
+  cp: '07580', poblacion: 'Capdepera', telefono: '+34 971 563 213 · +34 654 788 002 · +34 626 900 428',
   email: 'jardineriaadrover@gmail.com', condiciones: ''
 };
 let mem = {};
@@ -1348,7 +1354,7 @@ function generarPDF(kind, id) {
   d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE);
   txt(e.nombre || '', x0, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
-  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), e.telefono, e.email]
+  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), conPrefijo(e.telefono), e.email]
     .filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
   d.setFont('helvetica', 'bold'); d.setFontSize(13); d.setTextColor(30, 30, 30);
   txt(K.pdf, R, 20, {align: 'right'});
@@ -1359,7 +1365,7 @@ function generarPDF(kind, id) {
   // Cliente, en un recuadro y con etiquetas
   y = Math.max(y, 40) + 10;
   const datosCli = [['NIF/CIF', c.cif], ['Dirección', c.direccion], ['Localidad', [c.cp, c.poblacion, c.provincia && '(' + c.provincia + ')'].filter(Boolean).join(' ')],
-    ['Teléfono', c.telefono], ['Correo', c.email], ['Contacto', c.contacto]].filter(([, x]) => x);
+    ['Teléfono', conPrefijo(c.telefono)], ['Correo', c.email], ['Contacto', c.contacto]].filter(([, x]) => x);
   const altoCli = 15 + datosCli.length * 5;
   d.setDrawColor(200); d.setFillColor(246, 248, 244); d.roundedRect(L, y, R - L, altoCli, 2, 2, 'FD');
   d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...VERDE); txt('CLIENTE', L + 4, y + 5);
@@ -1406,7 +1412,7 @@ function generarPDF(kind, id) {
   const n = d.getNumberOfPages();
   for (let i = 1; i <= n; i++) {
     d.setPage(i); d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(140, 140, 140);
-    txt([e.nombre, e.telefono, e.email].filter(Boolean).join(' · '), L, ALTO - 10);
+    txt([e.nombre, conPrefijo(e.telefono), e.email].filter(Boolean).join(' · '), L, ALTO - 10);
     if (n > 1) txt('Página ' + i + ' de ' + n, R, ALTO - 10, {align: 'right'});
   }
 
@@ -1461,7 +1467,7 @@ async function pdfPartes(ids) {
   if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 20, 20); x0 = L + 25; } catch (err) {} }
   d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE); txt(e.nombre || '', x0, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
-  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), e.telefono, e.email].filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
+  [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), conPrefijo(e.telefono), e.email].filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
   d.setFont('helvetica', 'bold'); d.setFontSize(13); d.setTextColor(30, 30, 30);
   txt(uno ? 'PARTE DE TRABAJO' : 'PARTES DE TRABAJO', R, 20, {align: 'right'});
   d.setFont('helvetica', 'normal'); d.setFontSize(10);
@@ -1476,7 +1482,7 @@ async function pdfPartes(ids) {
   y = Math.max(y, 40) + 10;
   if (clientes.length === 1) {
     const c = S.clientes[clientes[0]] || {};
-    const filas = [['NIF/CIF', c.cif], ['Dirección', c.direccion], ['Localidad', [c.cp, c.poblacion, c.provincia && '(' + c.provincia + ')'].filter(Boolean).join(' ')], ['Teléfono', c.telefono]].filter(([, v]) => v);
+    const filas = [['NIF/CIF', c.cif], ['Dirección', c.direccion], ['Localidad', [c.cp, c.poblacion, c.provincia && '(' + c.provincia + ')'].filter(Boolean).join(' ')], ['Teléfono', conPrefijo(c.telefono)]].filter(([, v]) => v);
     const alto = 15 + filas.length * 5;
     d.setDrawColor(200); d.setFillColor(246, 248, 244); d.roundedRect(L, y, R - L, alto, 2, 2, 'FD');
     d.setFont('helvetica', 'bold'); d.setFontSize(8); d.setTextColor(...VERDE); txt('CLIENTE', L + 4, y + 5);
@@ -1545,7 +1551,7 @@ async function pdfPartes(ids) {
   const n = d.getNumberOfPages();
   for (let i = 1; i <= n; i++) {
     d.setPage(i); d.setFont('helvetica', 'normal'); d.setFontSize(8); d.setTextColor(140, 140, 140);
-    txt([e.nombre, e.telefono, e.email].filter(Boolean).join(' · '), L, ALTO - 10);
+    txt([e.nombre, conPrefijo(e.telefono), e.email].filter(Boolean).join(' · '), L, ALTO - 10);
     if (n > 1) txt('Página ' + i + ' de ' + n, R, ALTO - 10, {align: 'right'});
   }
 

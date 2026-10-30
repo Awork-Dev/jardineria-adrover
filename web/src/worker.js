@@ -51,7 +51,9 @@ const ICO = {
 const LOGO_SVG = `<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="23" fill="#1f3d2b"/><circle cx="24" cy="24" r="20.6" fill="none" stroke="#a9d39a" stroke-width=".7" opacity=".5"/><path d="M12.8 36.5C12.8 25 17.2 15.2 23.3 9.6c.5 10.4-2.6 20.2-10.5 26.9Z" fill="#a9d39a"/><path d="M35.2 36.5C35.2 25 30.8 15.2 24.7 9.6c-.5 10.4 2.6 20.2 10.5 26.9Z" fill="#7fae6a"/><path d="M14.5 34.5C17 27 20 19 23 12.5M33.5 34.5C31 27 28 19 25 12.5" stroke="#1f3d2b" stroke-width=".7" fill="none" opacity=".45" stroke-linecap="round"/><path d="M16.8 28.6c3.6-3.2 9.4-3.9 14.6-1.4-3.9 3.1-9.8 3.7-14.6 1.4Z" fill="#f6f2ea"/><path d="M14.5 39.6Q24 36.4 33.5 39.6" stroke="#f6f2ea" stroke-width="1.2" fill="none" stroke-linecap="round"/></svg>`;
 // Teléfono fijo del vivero para llamar desde el móvil, y la dirección con su enlace a Google Maps.
 const TEL_LLAMAR = "tel:+34" + TEL_FIJO.replace(/\s/g, "");
-const donde = (t, cls = "donde") => `<div class="${cls}"><a href="${MAPA}" target="_blank" rel="noopener">${ICO.pin}<span>${DIRECCION}<small>${t.visita.llegar} →</small></span></a><a href="${TEL_LLAMAR}">${ICO.tel}<span>${TEL_FIJO}<small>${t.visita.tel}</small></span></a></div>`;
+// Los teléfonos se enseñan con el +34: los clientes con móvil extranjero (alemanes, ingleses…) tienen que marcarlo.
+const TEL_FIJO_VER = "+34 " + TEL_FIJO, TEL_MOVIL_VER = TEL ? "+" + TEL.slice(0, 2) + " " + TEL.slice(2).replace(/(\d{3})(?=\d)/g, "$1 ") : "";
+const donde = (t, cls = "donde") => `<div class="${cls}"><a href="${MAPA}" target="_blank" rel="noopener">${ICO.pin}<span>${DIRECCION}<small>${t.visita.llegar} →</small></span></a><a href="${TEL_LLAMAR}">${ICO.tel}<span>${TEL_FIJO_VER}<small>${t.visita.tel}</small></span></a></div>`;
 
 const RUTAS = ["/", "/servicios", "/vivero", "/guia", "/herramientas", "/noticias", "/contacto"];
 const u = (lang, ruta) => (lang === "es" ? "" : "/" + lang) + (ruta === "/" ? (lang === "es" ? "/" : "") : ruta);
@@ -406,7 +408,7 @@ addEventListener('keydown',e=>{if(e.key==='Escape'&&!bus.hidden)cierraB();else i
 // Pie de todas las páginas: frase, marca, cómo llegar al vivero, contacto, secciones, aviso legal e idiomas.
 const MAPA_SVG = `<svg class="pmapa-dib" viewBox="0 0 320 150" aria-hidden="true"><rect width="320" height="150" fill="#e9e1d1"/><path d="M0 104c60-10 92 14 150 6s92-40 170-30v70H0Z" fill="#cfe0c3"/><path d="M196 0v150M0 62h320" stroke="#fff" stroke-width="12"/><path d="M-10 132C80 120 120 40 210 30s90 10 130 0" stroke="#fff" stroke-width="7" fill="none"/><path d="M196 0v150M0 62h320" stroke="#f3c64d" stroke-width="2" stroke-dasharray="8 8"/><circle cx="252" cy="104" r="16" fill="#a9d39a"/><circle cx="96" cy="30" r="12" fill="#a9d39a"/><g class="pmapa-pin"><circle cx="196" cy="62" r="16" fill="#2f5d3f" opacity=".25" class="pmapa-onda"/><path d="M196 64s-13-12-13-22a13 13 0 0 1 26 0c0 10-13 22-13 22Z" fill="#c8693a" stroke="#fff" stroke-width="2.5"/><circle cx="196" cy="42" r="4.5" fill="#fff"/></g></svg>`;
 function pieHtml(lang, ruta, t) {
-  const v = t.visita, wa = TEL ? TEL.slice(2).replace(/(\d{3})(?=\d)/g, "$1 ") : "";
+  const v = t.visita, wa = TEL_MOVIL_VER;
   const secciones = RUTAS.slice(1).map((r, i) => `<a href="${u(lang, r)}">${t.nav[i + 1]}</a>`).join("");
   return `<footer class="pie2"><svg class="ola" viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true"><path d="M0 34C180 6 360 6 540 26s360 30 540 8 270-24 360-14v42H0Z" fill="currentColor"/></svg>
 <div class="pfondo"><div class="wrap">
@@ -414,7 +416,7 @@ function pieHtml(lang, ruta, t) {
 <div class="pcols">
 <div class="pmarca"><a class="logo" href="${u(lang, "/")}">${LOGO_SVG}<span><i>Jardinería</i><b>ADROVER</b></span></a><p class="ptag">${t.tag}</p><p>${v.desc}</p><a class="btn" href="${u(lang, "/contacto")}#presupuesto">${t.hero[3]}</a></div>
 <div><h4>${v.visitanos}</h4><a class="pmapa" href="${MAPA}" target="_blank" rel="noopener">${MAPA_SVG}<span class="pmapa-txt"><b>${ICO.pin}${v.irVivero}</b><small>${DIRECCION}</small><em>${v.abrirMapa} →</em></span></a></div>
-<div><h4>${v.contacto}</h4><a class="pdato" href="${TEL_LLAMAR}">${ICO.tel}<span>${TEL_FIJO}<small>${v.tel}</small></span></a>${TEL ? `<a class="pdato" href="https://wa.me/${TEL}?text=${encodeURIComponent(t.canal.msg)}" target="_blank" rel="noopener">${ICO.chat}<span>${wa}<small>WhatsApp</small></span></a>` : ""}<a class="pdato" href="mailto:${EMAIL}">${ICO.mail}<span>${EMAIL}</span></a></div>
+<div><h4>${v.contacto}</h4><a class="pdato" href="${TEL_LLAMAR}">${ICO.tel}<span>${TEL_FIJO_VER}<small>${v.tel}</small></span></a>${TEL ? `<a class="pdato" href="https://wa.me/${TEL}?text=${encodeURIComponent(t.canal.msg)}" target="_blank" rel="noopener">${ICO.chat}<span>${wa}<small>WhatsApp</small></span></a>` : ""}<a class="pdato" href="mailto:${EMAIL}">${ICO.mail}<span>${EMAIL}</span></a></div>
 <div><h4>${v.explora}</h4><div class="penl" role="navigation" aria-label="${v.explora}">${secciones}</div></div>
 </div>
 <div class="pbase"><span>© ${new Date().getFullYear()} Jardinería Adrover · Zones Verdes S.L.${LEGAL_LISTO ? ` · <a href="${u(lang, "/legal")}">${LEGAL[lang].pie}</a>` : ""}</span><span class="pidiomas">${IDIOMAS.map((l) => `<a href="${u(l, ruta)}" hreflang="${l}"${l === lang ? ' class="on" aria-current="true"' : ""}>${l.toUpperCase()}</a>`).join("")}</span></div>
@@ -627,7 +629,7 @@ const AV_T = {
   ...(m >= 2 && m <= 9 && !yaPicudo ? [a.picudo, ""] : []),
   ...(m <= 3 ? [a.proce, ""] : []),
   a.planta + " *" + p[5][lang][0] + "*. " + porque[lang], "",
-  a.ayuda + " " + TEL_FIJO + ".",
+  a.ayuda + " " + TEL_FIJO_VER + ".",
   ].join("\n");
   }
   function avisos(url) {

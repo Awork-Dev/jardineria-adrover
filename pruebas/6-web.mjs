@@ -36,6 +36,8 @@ ok(!malas.length, `las ${RUTAS.length * 4} páginas (con las ${FICHAS_R.length} 
 await p.goto(W + '/contacto');
 ok(await p.locator('.datos a[href="tel:+34971563213"]').count() === 1 && await p.locator('.datos a[href*="google.com/maps"]').count() === 1 && (await p.textContent('.datos')).includes('Capdepera'),
   'contacto: teléfono para llamar, dirección y «Cómo llegar»');
+ok((await p.textContent('.datos')).includes('+34 971 563 213') && (await p.textContent('footer.pie2')).includes('+34 971 563 213') && (await p.textContent('footer.pie2')).includes('+34 626 900 428'),
+  'los teléfonos se ven con el +34 (para clientes con móvil extranjero)');
 await p.goto(W + '/de/vivero');
 ok(await p.locator('.btn.llegar').isVisible() && (await p.textContent('.btn.llegar')).includes('Route planen'), 'vivero: botón «Cómo llegar» traducido');
 await p.goto(W + '/guia');

@@ -59,6 +59,11 @@ await p.fill('[name=telefono]', '999 999 999'); await p.click('#sheet-form .btn.
 const c = Object.values((await datos()).clientes).find(x => x.nombre === cli);
 ok(c.telefono === '600 111 222' && (await p.textContent('#toast')).includes('No se ha guardado'), 'dos ediciones a la vez: no se pisa y se avisa');
 
+// Teléfonos con +34 en la lista de clientes (los extranjeros, con su prefijo, se quedan igual)
+await nuevoCliente(p, 'Tel España ' + T, { telefono: '626 900 428' }); await nuevoCliente(p, 'Tel Alemania ' + T, { telefono: '+49 171 1234567' });
+const lineaTel = (n) => p.$eval('#list', (l, n) => [...l.querySelectorAll('.card, .row')].find(c => c.textContent.includes(n))?.textContent || '', n);
+ok((await lineaTel('Tel España ' + T)).includes('+34 626 900 428') && (await lineaTel('Tel Alemania ' + T)).includes('+49 171 1234567') && !(await lineaTel('Tel Alemania ' + T)).includes('+34'),
+  'los teléfonos españoles salen con +34 y los extranjeros con su prefijo');
 // Recargar mantiene la sesión
 await p.reload(); await p.waitForSelector('.kpis', { timeout: 10000 });
 ok(await p.isHidden('#login'), 'al recargar no vuelve a pedir la clave');
