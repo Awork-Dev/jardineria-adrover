@@ -1,5 +1,6 @@
 // App del equipo: PIN, fichar, parte del jefe con foto, gasto con ticket, fotos del trabajo y ayuda.
-import { lanzar, pagina, ok, fin, T, IMG, movil, entrarGestion, nuevoCliente, nuevoOperario, entrarEquipo, datos, elegir, E } from './comun.mjs';
+import fs from 'fs';
+import { lanzar, pagina, ok, fin, T, IMG, movil, entrarGestion, nuevoCliente, nuevoOperario, entrarEquipo, datos, elegir, E, G, CLAVE } from './comun.mjs';
 console.log('App del equipo');
 const nav = await lanzar();
 const g = await pagina(nav, {}, 'gestión'); await entrarGestion(g);
@@ -49,6 +50,31 @@ await g.selectOption('#op-j', { label: op }); await g.waitForTimeout(200);
 ok(await g.$$eval('.rows a.ubic', as => as.length === 3 && as.every(a => a.href.endsWith('query=39.70412,3.43502') && a.target === '_blank')), 'Jornada: cada hora con su enlace al mapa');
 await g.selectOption('#op-j', { label: jefe }); await g.waitForTimeout(200);
 ok((await g.textContent('.rows')).includes('(sin ubicación)'), 'Jornada: se ve cuándo se fichó sin ubicación');
+// Validar las horas del mes: se borra la ubicación y las horas se quedan.
+await g.selectOption('#op-j', { label: op }); await g.waitForTimeout(200);
+await g.click('[data-act=validar-jornada]'); await g.click('[data-act=validar-jornada]'); await g.waitForTimeout(1500);
+const val = Object.entries((await datos()).fichajes).filter(([, f]) => f.operario === op).map(([id, f]) => ({ ...f, id }));
+ok(val.length === 3 && val.every(f => f.validado && f.lat === undefined && f.lon === undefined && f.precision === undefined && f.ts), 'al validar las horas se borra la ubicación y las horas se quedan');
+ok((await g.textContent('.panel')).includes('Horas validadas') && !(await g.$('.rows a.ubic')) && !(await g.$('[data-act=validar-jornada]')), 'la gestión enseña las horas validadas, ya sin mapa');
+// Una ubicación que llega tarde (móvil sin cobertura) no vuelve a aparecer en un fichaje ya validado.
+await o.evaluate((f) => fetch('/api/fichar', { method: 'POST', headers: { 'content-type': 'application/json', authorization: 'Bearer ' + JSON.parse(localStorage.getItem('token')) },
+  body: JSON.stringify({ id: f.id, tipo: f.tipo, ts: f.ts, lat: 39.7, lon: 3.4, precision: 9 }) }), val[0]);
+ok((await datos()).fichajes[val[0].id].lat === undefined, 'una ubicación que llega después de validar no se guarda');
+// Copias de seguridad sin ubicación, y sin validar se borra sola a los tres meses.
+const api = (m, ruta, cuerpo) => fetch(G + ruta, { method: m, headers: { 'X-Clave': CLAVE, 'content-type': 'application/json' }, body: cuerpo && JSON.stringify(cuerpo) });
+const opId = val[0].operarioId, DIA = 86400e3;
+for (const [id, dias] of [['viejo-' + T, 100], ['reciente-' + T, 10]])
+  await api('PUT', '/api/doc/fichajes/' + id, { operarioId: opId, operario: op, tipo: 'entrada', ts: Date.now() - dias * DIA, lat: 39.7, lon: 3.43, precision: 20 });
+const { fecha } = await (await api('POST', '/api/copias')).json();
+const copia = await (await api('GET', '/api/copias/' + fecha)).json();
+ok(Object.keys(copia.fichajes).length >= 6 && Object.values(copia.fichajes).every(f => f.ts && f.lat === undefined && f.sinUbicacion === undefined), 'las copias de seguridad guardan los fichajes sin la ubicación');
+await fetch(G + '/cdn-cgi/local/scheduled'); await g.waitForTimeout(1500);
+const tras = (await datos()).fichajes;
+ok(tras['viejo-' + T].lat === undefined && tras['viejo-' + T].ts && tras['reciente-' + T].lat === 39.7, 'sin validar, la ubicación se borra sola a los tres meses (la reciente se queda)');
+await g.reload(); await g.waitForSelector('.kpis');
+const [bajada] = await Promise.all([g.waitForEvent('download'), g.locator('[data-act=export]').first().click()]);
+const manual = JSON.parse(fs.readFileSync(await bajada.path(), 'utf8'));
+ok(manual.fichajes['reciente-' + T] && Object.values(manual.fichajes).every(f => f.lat === undefined), '«Descargar copia» tampoco lleva la ubicación');
 
 // Gasto con ticket y fotos del trabajo
 await o.click('#nuevo-gasto'); await o.setInputFiles('#hoja-gasto input[type=file]', IMG('ticket-gasolina.jpg'));

@@ -748,8 +748,9 @@ const lugarF = f => !f ? '' : f.lat !== undefined
   ? ` <a class="ubic" href="https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lon}" target="_blank" rel="noopener" title="Ver en el mapa${f.precision ? ' (±' + f.precision + ' m)' : ''}" aria-label="Ver en el mapa dónde fichó">📍</a>`
   : f.sinUbicacion ? ` <span class="sin-ubic" title="${esc(NO_UBIC[f.sinUbicacion] || '')}">(sin ubicación)</span>` : '';
 // Días del mes con sus tramos entrada → salida para un operario.
+const fichajesDe = (opId, mes) => Object.values(S.fichajes).filter(f => f.operarioId === opId && diaDe(f.ts).startsWith(mes));
 function registro(opId, mes) {
-  const fs = Object.values(S.fichajes).filter(f => f.operarioId === opId && diaDe(f.ts).startsWith(mes)).sort((a, b) => a.ts - b.ts);
+  const fs = fichajesDe(opId, mes).sort((a, b) => a.ts - b.ts);
   const dias = {};
   for (const f of fs) (dias[diaDe(f.ts)] ||= []).push(f);
   return Object.entries(dias).sort().map(([dia, lista]) => {
@@ -834,6 +835,10 @@ function vPersonasJornada() {
     : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.');
   const reg = opJ ? registro(opJ, mesJ) : [];
   const total = reg.reduce((a, d) => a + d.ms, 0);
+  const fsMes = opJ ? fichajesDe(opJ, mesJ) : [], porValidar = fsMes.filter(f => !f.validado).length;
+  const validado = Math.max(0, ...fsMes.map(f => f.validado || 0));
+  const estadoVal = !fsMes.length ? '' : !porValidar ? ` · <b>Horas validadas</b> el ${esc(fmtFecha(diaDe(validado)))}`
+    : validado ? ` · <b>${porValidar} ${porValidar === 1 ? 'fichaje nuevo' : 'fichajes nuevos'}</b> sin validar` : '';
   const tabla = !opJ ? '' : reg.length ? `<div class="rows">${reg.map(d => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(d.dia))}</b>
       <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
       <div class="rowr"><b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
@@ -841,12 +846,22 @@ function vPersonasJornada() {
   if (equipoTab === 'personas') return `<section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
       · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>`;
   return `<section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Registro de jornada</h2>
-      ${opJ ? `<button class="btn small" data-act="pdf-jornada">Descargar PDF</button>` : ''}</div>
+      ${opJ ? `<div class="rowr">${porValidar ? `<button class="btn small" data-act="validar-jornada">Validar horas</button>` : ''}<button class="btn small" data-act="pdf-jornada">Descargar PDF</button></div>` : ''}</div>
       ${ops.length ? `<div class="grid2 par" style="margin-bottom:14px">
         <label class="fld"><span>Persona</span><select id="op-j">${ops.map(([id, o]) => `<option value="${esc(id)}"${id === opJ ? ' selected' : ''}>${esc(o.nombre)}</option>`).join('')}</select></label>
         <label class="fld"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label></div>
-        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}</p>${tabla}` : ''}
+        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}${estadoVal}</p>
+        ${porValidar ? '<p class="meta" style="margin:-6px 0 12px">Al validar las horas del mes se borra la ubicación de los fichajes (las horas se quedan). Si no se validan, se borra sola a los tres meses.</p>' : ''}${tabla}` : ''}
     </section>`;
+}
+// Validar las horas del mes (por ejemplo, para pagar las horas extra): se borra la ubicación de esos fichajes.
+async function validarJornada(el) {
+  const ids = fichajesDe(opJ, mesJ).filter(f => !f.validado).map(f => f.id);
+  if (!ids.length) return;
+  if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'Se borrará la ubicación. Pulsa otra vez'; return; }
+  el.disabled = true;
+  try { await api('POST', '/api/validar', {ids}); await sincronizar(); toast('Horas validadas. Se ha borrado la ubicación de esos fichajes.'); }
+  catch (e) { toast(e.message, true); el.disabled = false; delete el.dataset.sure; el.textContent = 'Validar horas'; }
 }
 function pdfJornada() {
   const J = window.jspdf && window.jspdf.jsPDF, o = S.operarios[opJ];
@@ -911,6 +926,7 @@ document.addEventListener('click', e => {
     case 'new-operario': operarioSheet(null); break;
     case 'edit-operario': operarioSheet(id); break;
     case 'pdf-jornada': pdfJornada(); break;
+    case 'validar-jornada': validarJornada(el); break;
     case 'estado-g': estadoG = el.dataset.v; lastView = ''; render(); break;
     case 'tab-equipo': equipoTab = el.dataset.v; lastView = ''; render(); break;
     case 'edit-gasto': gastoSheet(id); break;
@@ -1063,8 +1079,10 @@ db = {
     })
   })
 };
+// Como las copias automáticas, sin la ubicación de los fichajes: así, al validar las horas, se borra del todo.
 function exportarCopia() {
-  const sinVersion = Object.fromEntries(Object.entries(mem).map(([c, docs]) => [c, Object.fromEntries(Object.entries(docs).map(([id, {_v, ...d}]) => [id, d]))]));
+  const limpio = (c, {_v, ...d}) => { if (c === 'fichajes') { const {lat, lon, precision, sinUbicacion, ...f} = d; return f; } return d; };
+  const sinVersion = Object.fromEntries(Object.entries(mem).map(([c, docs]) => [c, Object.fromEntries(Object.entries(docs).map(([id, d]) => [id, limpio(c, d)]))]));
   const blob = new Blob([JSON.stringify(sinVersion, null, 2)], {type: 'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);

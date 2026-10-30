@@ -89,6 +89,8 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
 - **Jornada:** elige persona y mes; sale cada día con entradas, salidas y total. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
 - **📍 junto a cada hora:** dónde estaba al fichar; púlsalo para verlo en el mapa. **«(sin ubicación)»** si su móvil no dio permiso o no tenía señal GPS. La app solo la guarda al fichar, y así se lo dice al trabajador junto al botón.
+- **Validar horas:** cuando hayas comprobado las horas del mes (por ejemplo, para pagar las horas extra), pulsa **Validar horas**. Se borra la ubicación de esos fichajes y las horas se quedan. Si no se validan, la ubicación se borra sola a los tres meses. Las copias de seguridad no guardan la ubicación.
+- Antes de usar la ubicación, cada trabajador tiene que firmar el aviso que lo explica (lo exige el art. 90 de la LOPDGDD). Quien fiche con su propio móvil no está obligado a darla.
 - **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y, si quieres, una **nota de la oficina** (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.
 - **Fotos:** las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.
 

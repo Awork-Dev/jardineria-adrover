@@ -178,7 +178,8 @@ export default {
     }
 
     // Fichar entrada o salida. El id lo pone el móvil, así reenviar el mismo fichaje no lo duplica.
-    // La ubicación del momento de fichar llega a veces después, con el mismo id: se añade al fichaje si aún no la tiene.
+    // La ubicación del momento de fichar llega a veces después, con el mismo id: se añade al fichaje si aún no la tiene
+    // y la oficina no ha validado ya esas horas (al validarlas se borra).
     if (ruta === '/api/fichar' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));
       if (!ID.test(b.id || '') || !['entrada', 'salida'].includes(b.tipo)) return json({error: 'datos'}, 400);
@@ -189,7 +190,7 @@ export default {
         .bind('fichajes', b.id, JSON.stringify({operarioId: yo.id, operario: yo.nombre, tipo: b.tipo, ts: valida ? ts : ahora, recibido: ahora, sinConexion: valida && ahora - ts > 2 * 60e3, ...ubic}), new Date().toISOString()).run();
       if (ubic && !meta.changes) {
         const previo = await doc(env, 'fichajes', b.id);
-        if (previo && previo.operarioId === yo.id && previo.lat === undefined && !previo.sinUbicacion) await guardar(env, 'fichajes', b.id, {...previo, ...ubic});
+        if (previo && previo.operarioId === yo.id && previo.lat === undefined && !previo.sinUbicacion && !previo.validado) await guardar(env, 'fichajes', b.id, {...previo, ...ubic});
       }
       return json({ok: true});
     }

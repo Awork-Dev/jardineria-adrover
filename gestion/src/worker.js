@@ -43,13 +43,31 @@ async function todosLosDatos(env, version = false) {
   return out;
 }
 async function hacerCopia(env) {
-  const fecha = new Date().toISOString().slice(0, 10);
-  await env.COPIAS.put('copia:' + fecha, JSON.stringify(await todosLosDatos(env)), {expirationTtl: DIAS_COPIA * 86400});
+  const fecha = new Date().toISOString().slice(0, 10), datos = await todosLosDatos(env);
+  for (const [id, f] of Object.entries(datos.fichajes || {})) datos.fichajes[id] = limpiarUbicacion(f);
+  await env.COPIAS.put('copia:' + fecha, JSON.stringify(datos), {expirationTtl: DIAS_COPIA * 86400});
   return fecha;
 }
 
+// ---------- Ubicación de los fichajes ----------
+// Se guarda solo hasta que la oficina valida las horas del mes (para pagar las horas extra) y, si nadie
+// las valida, como mucho DIAS_UBICACION días. No va en las copias: al borrarla, desaparece del todo.
+const DIAS_UBICACION = 92;
+const limpiarUbicacion = ({lat, lon, precision, sinUbicacion, ...f}) => f;
+async function quitarUbicacion(env, filas, extra = {}) {
+  const ahora = new Date().toISOString();
+  const cambios = filas.map(r => env.DB.prepare("UPDATE docs SET data = ?, actualizado = ? WHERE coleccion = 'fichajes' AND id = ?")
+    .bind(JSON.stringify({...limpiarUbicacion(JSON.parse(r.data)), ...extra}), ahora, r.id));
+  for (let i = 0; i < cambios.length; i += 50) await env.DB.batch(cambios.slice(i, i + 50));
+}
+async function caducarUbicaciones(env) {
+  const {results} = await env.DB.prepare("SELECT id, data FROM docs WHERE coleccion = 'fichajes' AND json_extract(data, '$.lat') IS NOT NULL AND json_extract(data, '$.ts') < ?")
+    .bind(Date.now() - DIAS_UBICACION * 86400e3).all();
+  await quitarUbicacion(env, results);
+}
+
 export default {
-  async scheduled(event, env, ctx) { ctx.waitUntil(hacerCopia(env)); },
+  async scheduled(event, env, ctx) { ctx.waitUntil(Promise.all([hacerCopia(env), caducarUbicaciones(env)])); },
 
   async fetch(req, env) {
     const url = new URL(req.url);
@@ -97,6 +115,21 @@ export default {
     if (c && req.method === 'GET') {
       const v = await env.COPIAS.get('copia:' + c[1]);
       return v ? new Response(v, {headers: {'content-type': 'application/json;charset=utf-8', 'cache-control': 'no-store'}}) : json({error: 'no existe'}, 404);
+    }
+
+    // Validar las horas: los fichajes quedan marcados y se borra su ubicación (las horas se conservan).
+    if (url.pathname === '/api/validar' && req.method === 'POST') {
+      const b = await req.json().catch(() => null);
+      const ids = [...new Set((b && Array.isArray(b.ids) ? b.ids : []).filter(x => typeof x === 'string' && x && x.length <= 200))];
+      if (!ids.length || ids.length > 2000) return json({error: 'datos'}, 400);
+      const filas = [];
+      for (let i = 0; i < ids.length; i += 50) {
+        const parte = ids.slice(i, i + 50);
+        const {results} = await env.DB.prepare(`SELECT id, data FROM docs WHERE coleccion = 'fichajes' AND id IN (${parte.map(() => '?').join(',')})`).bind(...parte).all();
+        filas.push(...results);
+      }
+      await quitarUbicacion(env, filas, {validado: Date.now()});
+      return json({ok: true, validados: filas.length});
     }
 
     const m = url.pathname.match(/^\/api\/doc\/([^/]+)\/([^/]+)$/);

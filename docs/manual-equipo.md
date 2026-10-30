@@ -13,10 +13,11 @@ Escribe tu **PIN de 4 cifras**. La app lo recuerda hasta que pulses **Salir**. L
 - Si se te olvida fichar, **avisa a la oficina**.
 - En **Mis horas** ves lo que llevas cada día y en el mes.
 
-**Ubicación:** al fichar, la app guarda **dónde estás en ese momento** (solo al pulsar el botón, nunca durante la jornada).
+**Ubicación:** al fichar, la app guarda **dónde estás en ese momento** (solo al pulsar el botón, nunca durante la jornada). Se borra cuando la oficina valida tus horas del mes.
 
 - La primera vez el móvil pregunta si la app puede usar tu ubicación: pulsa **Permitir**.
 - Junto a la hora sale **📍** cuando se ha guardado. Si pone **«sin ubicación»**, el fichaje vale igual.
+- Si fichas con tu propio móvil, no estás obligado a dar la ubicación: si no das permiso, el fichaje vale igual.
 - Si dijiste que no y quieres activarla: en iPhone, **Ajustes → Privacidad y seguridad → Localización → Sitios web de Safari**; en Android, en los permisos del navegador.
 
 ## Sin cobertura
