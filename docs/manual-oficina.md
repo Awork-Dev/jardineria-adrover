@@ -88,6 +88,7 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
 - **Jornada:** elige persona y mes; sale cada día con entradas, salidas y total. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
+- **📍 junto a cada hora:** dónde estaba al fichar; púlsalo para verlo en el mapa. **«(sin ubicación)»** si su móvil no dio permiso o no tenía señal GPS. La app solo la guarda al fichar, y así se lo dice al trabajador junto al botón.
 - **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y, si quieres, una **nota de la oficina** (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.
 - **Fotos:** las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.
 

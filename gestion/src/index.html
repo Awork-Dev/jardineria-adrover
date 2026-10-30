@@ -112,6 +112,7 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .card:hover{border-color:var(--brand)}
 .card b{font-family:"Fraunces",Georgia,serif;font-size:1.05rem;overflow-wrap:anywhere}
 .meta{color:var(--muted);font-size:.85rem}
+a.ubic{text-decoration:none;padding:2px}.sin-ubic{font-style:italic}
 .line{font-size:.92rem;overflow-wrap:anywhere}
 .tag{align-self:flex-start;margin-top:6px;font-size:.78rem;background:var(--soft);color:var(--brand);padding:2px 10px;border-radius:999px;font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
@@ -536,7 +537,7 @@ function hoyEquipo() {
   if (!Object.keys(S.operarios).length) return '';
   return `<section class="panel" style="margin-bottom:18px">
     <div class="pagehead" style="margin-bottom:10px"><h2>Hoy en el equipo</h2>${gastos.length ? `<button class="btn small" data-act="ir-gastos">${gastos.length} ${gastos.length === 1 ? 'gasto' : 'gastos'} por pagar · ${eur(gastos.reduce((a, g) => a + num(g.importe), 0))}</button>` : ''}</div>
-    <p style="margin:0 0 ${avisos.length ? 14 : 0}px">${dentro.length ? '<b>Trabajando ahora:</b> ' + dentro.map(f => esc((S.operarios[f.operarioId] || {}).nombre || f.operario) + ' <span class="meta">desde las ' + horaDe(f.ts) + '</span>').join(' · ') : '<span class="meta">Ahora mismo nadie ha fichado la entrada.</span>'}
+    <p style="margin:0 0 ${avisos.length ? 14 : 0}px">${dentro.length ? '<b>Trabajando ahora:</b> ' + dentro.map(f => esc((S.operarios[f.operarioId] || {}).nombre || f.operario) + ' <span class="meta">desde las ' + horaDe(f.ts) + lugarF(f) + '</span>').join(' · ') : '<span class="meta">Ahora mismo nadie ha fichado la entrada.</span>'}
       <span class="meta"> · ${Object.keys(ultimo).length} de ${Object.values(S.operarios).filter(o => o.activo !== false).length} han fichado hoy</span></p>
     ${avisos.length ? `<h3 style="margin:0 0 8px;font-size:1rem">Avisos del equipo (${avisos.length})</h3><div class="rows">${avisos.slice(0, 6).map(([id, p]) => `<div class="row" style="cursor:default">
       <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))} · ${esc(p.autor || p.operario || '')}</span><span class="line">${esc(p.incidencias)}</span></div>
@@ -741,6 +742,11 @@ const dos = n => String(n).padStart(2, '0');
 const diaDe = ts => { const d = new Date(ts); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()); };
 const horaDe = ts => new Date(ts).toLocaleTimeString('es-ES', {hour: '2-digit', minute: '2-digit'});
 const hm = ms => { const m = Math.round(ms / 60e3); return Math.floor(m / 60) + ' h ' + dos(m % 60) + ' min'; };
+// Dónde se fichó: enlace al mapa con el punto que dio el móvil, o por qué no lo dio.
+const NO_UBIC = {'denegada': 'el móvil no dio permiso', 'sin señal': 'sin señal GPS', 'no disponible': 'el móvil no lo permite'};
+const lugarF = f => !f ? '' : f.lat !== undefined
+  ? ` <a class="ubic" href="https://www.google.com/maps/search/?api=1&query=${f.lat},${f.lon}" target="_blank" rel="noopener" title="Ver en el mapa${f.precision ? ' (±' + f.precision + ' m)' : ''}" aria-label="Ver en el mapa dónde fichó">📍</a>`
+  : f.sinUbicacion ? ` <span class="sin-ubic" title="${esc(NO_UBIC[f.sinUbicacion] || '')}">(sin ubicación)</span>` : '';
 // Días del mes con sus tramos entrada → salida para un operario.
 function registro(opId, mes) {
   const fs = Object.values(S.fichajes).filter(f => f.operarioId === opId && diaDe(f.ts).startsWith(mes)).sort((a, b) => a.ts - b.ts);
@@ -829,7 +835,7 @@ function vPersonasJornada() {
   const reg = opJ ? registro(opJ, mesJ) : [];
   const total = reg.reduce((a, d) => a + d.ms, 0);
   const tabla = !opJ ? '' : reg.length ? `<div class="rows">${reg.map(d => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(d.dia))}</b>
-      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) : '¿?') + ' – ' + (s ? horaDe(s.ts) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
+      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
       <div class="rowr"><b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
     : '<div class="empty">No hay fichajes en este mes.</div>';
   if (equipoTab === 'personas') return `<section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>

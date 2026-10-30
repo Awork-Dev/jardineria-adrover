@@ -37,6 +37,16 @@ async function guardar(env, col, id, data) {
     .bind(col, id, JSON.stringify(data), new Date().toISOString()).run();
 }
 
+// Ubicación al fichar: solo la de ese momento (la app no sigue a nadie durante la jornada), redondeada a unos metros.
+// Si el móvil no la da, se apunta por qué, para que la oficina no la eche en falta sin motivo.
+const SIN_UBICACION = ['denegada', 'sin señal', 'no disponible'];
+function ubicacion(b) {
+  const {lat, lon, precision} = b;
+  if (typeof lat === 'number' && typeof lon === 'number' && Math.abs(lat) <= 90 && Math.abs(lon) <= 180)
+    return {lat: Math.round(lat * 1e5) / 1e5, lon: Math.round(lon * 1e5) / 1e5, precision: typeof precision === 'number' && precision >= 0 ? Math.round(Math.min(precision, 1e5)) : null};
+  return SIN_UBICACION.includes(b.sinUbicacion) ? {sinUbicacion: b.sinUbicacion} : null;
+}
+
 // ---------- Acceso con PIN ----------
 // Tras 10 PIN incorrectos desde la misma conexión, se bloquea 15 minutos (misma tabla que la gestión).
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
@@ -148,7 +158,7 @@ export default {
     if (ruta === '/api/inicio' && req.method === 'GET') {
       const desde = Date.now() - 62 * DIA;
       const fichajes = (await deOperario(env, 'fichajes', yo.id)).filter(f => f.ts >= desde)
-        .map(({id, tipo, ts}) => ({id, tipo, ts})).sort((a, b) => a.ts - b.ts);
+        .map(({id, tipo, ts, lat, sinUbicacion}) => ({id, tipo, ts, ubic: lat !== undefined ? 'si' : sinUbicacion ? 'no' : undefined})).sort((a, b) => a.ts - b.ts);
       const hace62 = new Date(desde).toISOString().slice(0, 10);
       const gastos = (await deOperario(env, 'gastos', yo.id)).filter(g => g.fecha >= hace62)
         .map(({id, fecha, tipo, importe, nota, estado, notaOficina, fotos}) => ({id, fecha, tipo, importe, nota, estado, notaOficina, fotos: (fotos || []).length}));
@@ -168,14 +178,19 @@ export default {
     }
 
     // Fichar entrada o salida. El id lo pone el móvil, así reenviar el mismo fichaje no lo duplica.
+    // La ubicación del momento de fichar llega a veces después, con el mismo id: se añade al fichaje si aún no la tiene.
     if (ruta === '/api/fichar' && req.method === 'POST') {
       const b = await req.json().catch(() => ({}));
       if (!ID.test(b.id || '') || !['entrada', 'salida'].includes(b.tipo)) return json({error: 'datos'}, 400);
-      const ahora = Date.now(), ts = Number(b.ts);
+      const ahora = Date.now(), ts = Number(b.ts), ubic = ubicacion(b);
       // Se acepta la hora del móvil (fichajes hechos sin cobertura) si no es absurda.
       const valida = ts > ahora - 3 * DIA && ts < ahora + 5 * 60e3;
-      await env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO NOTHING')
-        .bind('fichajes', b.id, JSON.stringify({operarioId: yo.id, operario: yo.nombre, tipo: b.tipo, ts: valida ? ts : ahora, recibido: ahora, sinConexion: valida && ahora - ts > 2 * 60e3}), new Date().toISOString()).run();
+      const {meta} = await env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?) ON CONFLICT(coleccion, id) DO NOTHING')
+        .bind('fichajes', b.id, JSON.stringify({operarioId: yo.id, operario: yo.nombre, tipo: b.tipo, ts: valida ? ts : ahora, recibido: ahora, sinConexion: valida && ahora - ts > 2 * 60e3, ...ubic}), new Date().toISOString()).run();
+      if (ubic && !meta.changes) {
+        const previo = await doc(env, 'fichajes', b.id);
+        if (previo && previo.operarioId === yo.id && previo.lat === undefined && !previo.sinUbicacion) await guardar(env, 'fichajes', b.id, {...previo, ...ubic});
+      }
       return json({ok: true});
     }
 

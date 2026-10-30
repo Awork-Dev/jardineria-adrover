@@ -48,6 +48,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .hoy{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .hoy span{background:var(--panel2);border-radius:999px;padding:5px 12px;font-size:.88rem}
 .hoy span.pend{outline:1.5px dashed var(--lima)}
+.aviso-ubic{margin:12px 0 0;font-size:.82rem}
 /* Horas */
 .total{font-size:2.2rem;font-weight:800;color:var(--lima);line-height:1}
 .dias{margin-top:14px;display:flex;flex-direction:column}
@@ -142,6 +143,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="meta" id="estado-sub"></div>
       <button class="btn lima" id="fichar"></button>
       <div class="hoy" id="hoy"></div>
+      <p class="meta aviso-ubic">📍 Al fichar, la app guarda dónde estás en ese momento. Solo al fichar, nunca durante la jornada.</p>
     </section>
 
     <section class="card" id="partes-card" hidden aria-labelledby="t-partes">
@@ -353,7 +355,8 @@ async function enviarCola() {
         guardar('fallidos', [...fallidos(), {...c, motivo: e.message}]);
         toast('No se pudo guardar: ' + e.message, true);
       }
-      cambiarCola((q) => q.filter((x) => x.k !== c.k));
+      // Si cambió mientras se enviaba (por ejemplo, le llegó la ubicación), se queda para enviarlo otra vez.
+      cambiarCola((q) => q.filter((x) => x.k !== c.k || JSON.stringify(x.cuerpo) !== JSON.stringify(c.cuerpo)));
     }
   }).catch(() => {});
   enviando = false;
@@ -412,9 +415,10 @@ function actualizar() {
 
 // ---------- Fichajes: los del servidor más los que aún están en la cola ----------
 function misFichajes() {
-  const pend = cola.filter((c) => c.ruta === '/api/fichar').map((c) => ({...c.cuerpo, pendiente: true}));
-  const vistos = new Set(pend.map((f) => f.id));
-  return [...((D && D.fichajes) || []).filter((f) => !vistos.has(f.id)), ...pend].sort((a, b) => a.ts - b.ts);
+  const pend = new Map();
+  for (const c of cola) if (c.ruta === '/api/fichar') pend.set(c.cuerpo.id, {...pend.get(c.cuerpo.id), ...c.cuerpo, pendiente: true});
+  const ubic = (f) => ({...f, ubic: f.lat !== undefined ? 'si' : f.sinUbicacion ? 'no' : f.ubic});
+  return [...((D && D.fichajes) || []).filter((f) => !pend.has(f.id)), ...pend.values()].map(ubic).sort((a, b) => a.ts - b.ts);
 }
 // Agrupa por día y suma los tramos entrada → salida. Un tramo abierto de hoy cuenta hasta ahora.
 function jornadas() {
@@ -443,7 +447,7 @@ function pintar() {
   $('#estado-sub').textContent = hoy ? 'Hoy llevas ' + horas(hoy.ms) : '';
   $('#fichar').textContent = dentro ? 'Termino la jornada' : fsHoy.length ? 'Vuelvo al trabajo' : 'Empiezo la jornada';
   $('#fichar').dataset.tipo = dentro ? 'salida' : 'entrada';
-  $('#hoy').innerHTML = fsHoy.map((f) => `<span class="${f.pendiente ? 'pend' : ''}">${f.tipo === 'entrada' ? 'Entrada' : 'Salida'} ${horaDe(f.ts)}</span>`).join('');
+  $('#hoy').innerHTML = fsHoy.map((f) => `<span class="${f.pendiente ? 'pend' : ''}">${f.tipo === 'entrada' ? 'Entrada' : 'Salida'} ${horaDe(f.ts)}${f.ubic === 'si' ? ' 📍' : f.ubic === 'no' ? ' · sin ubicación' : ''}</span>`).join('');
 
   const mes = hoyISO().slice(0, 7), delMes = js.filter((j) => j.dia.startsWith(mes));
   $('#total-mes').textContent = horas(delMes.reduce((a, j) => a + j.ms, 0));
@@ -479,11 +483,30 @@ function pintar() {
 // ---------- Fichar ----------
 $('#fichar').onclick = () => {
   const tipo = $('#fichar').dataset.tipo;
-  const ts = ahora();
-  if (!encolar('/api/fichar', {id: uid(), tipo, ts})) return;
+  const f = {id: uid(), tipo, ts: ahora()};
+  if (!encolar('/api/fichar', f)) return;
   pintar();
-  toast((tipo === 'entrada' ? 'Entrada fichada a las ' : 'Salida fichada a las ') + horaDe(ts));
+  toast((tipo === 'entrada' ? 'Entrada fichada a las ' : 'Salida fichada a las ') + horaDe(f.ts));
+  ubicar(f);
 };
+// La ubicación se pide solo al fichar y puede tardar unos segundos (o no llegar, si no hay permiso o señal GPS):
+// el fichaje ya está guardado con su hora y la ubicación se le añade cuando llega, aunque no haya cobertura.
+function ubicar(f) {
+  const poner = (u) => {
+    try {
+      cambiarCola((q) => q.some((c) => c.ruta === '/api/fichar' && c.cuerpo.id === f.id)
+        ? q.map((c) => c.ruta === '/api/fichar' && c.cuerpo.id === f.id ? {...c, cuerpo: {...c.cuerpo, ...u}} : c)
+        : [...q, {k: uid(), ruta: '/api/fichar', cuerpo: {...f, ...u}}]);
+    } catch (e) { return; }
+    pintar(); enviarCola();
+    if (u.sinUbicacion === 'denegada') toast('Fichaje guardado sin ubicación: el móvil no da permiso de ubicación a la app.', true);
+  };
+  if (!navigator.geolocation) return poner({sinUbicacion: 'no disponible'});
+  navigator.geolocation.getCurrentPosition(
+    (p) => poner({lat: p.coords.latitude, lon: p.coords.longitude, precision: p.coords.accuracy}),
+    (e) => poner({sinUbicacion: e.code === 1 ? 'denegada' : 'sin señal'}),
+    {enableHighAccuracy: true, timeout: 30000, maximumAge: 60000});
+}
 
 // ---------- Parte de trabajo ----------
 const hoja = $('#hoja');

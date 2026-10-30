@@ -8,8 +8,9 @@ await nuevoCliente(g, cli, { direccion: 'Camí de sa Mola 3', poblacion: 'Capdep
 const jefe = 'Jefe ' + T, op = 'Operario ' + T;
 const pinJ = await nuevoOperario(g, jefe, 'jefe'), pinO = await nuevoOperario(g, op);
 
-// PIN
-const o = await pagina(nav, movil, 'operario');
+// PIN (el móvil del operario da permiso de ubicación y está en una finca de Capdepera)
+const POS = { latitude: 39.704123, longitude: 3.435017, accuracy: 15 };
+const o = await pagina(nav, { ...movil, permissions: ['geolocation'], geolocation: POS }, 'operario');
 await o.goto(E); await o.waitForSelector('#acceso:not([hidden])');
 await o.click('#acceso .ay-btn'); ok(await o.isVisible('#ayuda'), 'la ayuda se abre antes de entrar'); await o.click('#ayuda .btn.lima');
 for (const d of '0000') await o.click(`[data-n="${d}"]`);
@@ -24,6 +25,30 @@ ok((await o.textContent('#estado span')).startsWith('Trabajando'), 'fichar la en
 await o.click('#fichar'); await o.waitForTimeout(800);
 const fich = Object.values((await datos()).fichajes).filter(f => f.operario === op);
 ok(fich.length === 2 && fich.some(f => f.tipo === 'salida'), 'entrada y salida llegan a la oficina');
+ok(fich.every(f => f.lat === 39.70412 && f.lon === 3.43502 && f.precision === 15), 'cada fichaje lleva la ubicación del momento');
+ok((await o.textContent('#hoy')).split('📍').length === 3 && (await o.textContent('.aviso-ubic')).includes('Solo al fichar'), 'la app enseña 📍 junto a cada hora y avisa de que guarda la ubicación');
+// Sin cobertura: la ubicación se junta al fichaje pendiente (un solo dato) y llega con él.
+await o.context().setOffline(true); await o.click('#fichar'); await o.waitForTimeout(600);
+ok((await o.textContent('#cola')).includes('1 dato.'), 'sin cobertura, fichaje y ubicación esperan juntos');
+await o.context().setOffline(false); await o.evaluate(() => dispatchEvent(new Event('online'))); await o.waitForTimeout(1500);
+const fich3 = Object.values((await datos()).fichajes).filter(f => f.operario === op);
+ok(fich3.length === 3 && fich3.every(f => f.lat === 39.70412), 'al volver la cobertura llega con su ubicación');
+// Si el móvil no da permiso, se ficha igual y la oficina ve por qué no hay ubicación.
+const d = await pagina(nav, movil, 'sin permiso');
+await d.addInitScript(() => { navigator.geolocation.getCurrentPosition = (bien, mal) => setTimeout(() => mal({ code: 1, message: 'denegada' }), 50); });
+await entrarEquipo(d, pinJ); await d.click('#fichar'); await d.waitForTimeout(1200);
+const fj = Object.values((await datos()).fichajes).filter(f => f.operario === jefe);
+ok(fj.length === 1 && fj[0].sinUbicacion === 'denegada' && fj[0].lat === undefined, 'sin permiso de ubicación se ficha igual y se apunta el motivo');
+ok((await d.textContent('#hoy')).includes('sin ubicación'), 'el trabajador ve que ese fichaje va sin ubicación');
+await d.context().close();
+// En la gestión: 📍 con enlace al mapa en el registro de jornada y en «Trabajando ahora».
+await g.reload(); await g.waitForSelector('.kpis');
+ok(await g.$$eval('.panel a.ubic', (as, n) => as.some(a => a.href.includes('39.70412,3.43502') && a.closest('p').textContent.includes(n)), op), 'Resumen: «Trabajando ahora» con enlace al mapa');
+await g.click('[data-view=equipo]'); await g.click('[data-act=tab-equipo][data-v=jornada]');
+await g.selectOption('#op-j', { label: op }); await g.waitForTimeout(200);
+ok(await g.$$eval('.rows a.ubic', as => as.length === 3 && as.every(a => a.href.endsWith('query=39.70412,3.43502') && a.target === '_blank')), 'Jornada: cada hora con su enlace al mapa');
+await g.selectOption('#op-j', { label: jefe }); await g.waitForTimeout(200);
+ok((await g.textContent('.rows')).includes('(sin ubicación)'), 'Jornada: se ve cuándo se fichó sin ubicación');
 
 // Gasto con ticket y fotos del trabajo
 await o.click('#nuevo-gasto'); await o.setInputFiles('#hoja-gasto input[type=file]', IMG('ticket-gasolina.jpg'));
