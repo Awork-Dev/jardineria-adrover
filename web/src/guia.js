@@ -173,6 +173,96 @@ export const PLANTAS_G = [
     ca: ["Espatifil", "Flors blanques a l'interior amb poca llum. T'avisa quan té set abaixant les fulles. Agraeix la humitat ambiental."],
     en: ["Peace lily", "White flowers indoors in low light. It droops its leaves to tell you it's thirsty. Enjoys humid air."],
     de: ["Einblatt", "Weiße Blüten drinnen bei wenig Licht. Lässt die Blätter hängen, wenn sie Durst hat. Mag hohe Luftfeuchtigkeit."] }],
+    ["Olea europaea", "sol", "bajo", "si", false, {
+    es: ["Olivo", "El árbol de Mallorca por excelencia. Vive siglos con muy poca agua y una poda de aclareo a final de invierno lo mantiene sano."],
+    ca: ["Olivera", "L'arbre de Mallorca per excel·lència. Viu segles amb molt poca aigua i una poda d'aclarida a final d'hivern el manté sa."],
+    en: ["Olive tree", "Majorca's tree par excellence. Lives for centuries on very little water; thinning it out in late winter keeps it healthy."],
+    de: ["Olivenbaum", "Der Baum Mallorcas schlechthin. Wird mit sehr wenig Wasser jahrhundertealt; ein Auslichtungsschnitt im Spätwinter hält ihn gesund."] }],
+    ["Ficus carica", "sol", "bajo", "no", false, {
+    es: ["Higuera", "Aguanta la sequía y los suelos pobres y da higos a final de verano. Su savia irrita la piel: usa guantes al podarla."],
+    ca: ["Figuera", "Aguanta la sequera i els sòls pobres i fa figues a final d'estiu. La saba irrita la pell: posa't guants per podar-la."],
+    en: ["Fig tree", "Copes with drought and poor soil and fruits in late summer. Its sap irritates the skin, so wear gloves when pruning."],
+    de: ["Feigenbaum", "Verträgt Trockenheit und karge Böden und trägt im Spätsommer Feigen. Der Milchsaft reizt die Haut: beim Schneiden Handschuhe tragen."] }],
+    ["Jasminum officinale", "sol semi", "medio", "si", false, {
+    es: ["Jazmín", "Flores blancas muy perfumadas en verano. Necesita un apoyo para trepar y una poda ligera al acabar la floración."],
+    ca: ["Gessamí", "Flors blanques molt perfumades a l'estiu. Necessita un suport per enfilar-se i una poda lleugera en acabar la floració."],
+    en: ["Common jasmine", "Highly scented white flowers in summer. Needs support to climb and a light trim once flowering is over."],
+    de: ["Echter Jasmin", "Stark duftende weiße Blüten im Sommer. Braucht eine Rankhilfe und einen leichten Schnitt nach der Blüte."] }],
+    ["Wisteria sinensis", "sol", "medio", "no", false, {
+    es: ["Glicinia", "Racimos lilas y perfumados en primavera. Crece mucho: necesita una pérgola fuerte y dos podas al año, en verano y en invierno."],
+    ca: ["Glicina", "Raïms lila i perfumats a la primavera. Creix molt: necessita una pèrgola forta i dues podes l'any, a l'estiu i a l'hivern."],
+    en: ["Chinese wisteria", "Fragrant lilac clusters in spring. A vigorous grower: it needs a sturdy pergola and pruning twice a year, in summer and winter."],
+    de: ["Chinesischer Blauregen", "Duftende lila Trauben im Frühling. Wächst stark: braucht eine stabile Pergola und zwei Schnitte im Jahr, im Sommer und im Winter."] }],
+    ["Pittosporum tobira", "sol semi", "bajo", "?", false, {
+    es: ["Pitósporo", "Seto muy resistente al viento y al salitre. En primavera da flores blancas con olor a azahar."],
+    ca: ["Pitòspor", "Tanca molt resistent al vent i a la salinitat. A la primavera fa flors blanques amb olor de tarongina."],
+    en: ["Japanese mock orange", "A hedge that stands up well to wind and salt spray. White, orange-blossom-scented flowers in spring."],
+    de: ["Chinesischer Klebsame", "Sehr wind- und salzfeste Hecke. Im Frühling weiße Blüten, die nach Orangenblüten duften."] }],
+    ["Westringia fruticosa", "sol", "bajo", "?", false, {
+    es: ["Romero australiano", "Parecido al romero pero más compacto. Aguanta la primera línea de mar y se recorta muy bien para setos bajos."],
+    ca: ["Romaní australià", "Semblant al romaní però més compacte. Aguanta la primera línia de mar i es retalla molt bé per fer tanques baixes."],
+    en: ["Coastal rosemary", "Like rosemary but more compact. Copes with seafront sites and clips well into low hedges."],
+    de: ["Australischer Rosmarin", "Ähnlich wie Rosmarin, aber kompakter. Verträgt die erste Meereslinie und lässt sich gut zu niedrigen Hecken schneiden."] }],
+    ["Teucrium fruticans", "sol", "bajo", "?", false, {
+    es: ["Olivilla", "Hojas plateadas y flores azul claro casi todo el año. Muy resistente a la sequía, ideal para setos de aire mediterráneo."],
+    ca: ["Olivereta", "Fulles platejades i flors blau clar gairebé tot l'any. Molt resistent a la sequera, ideal per a tanques d'aire mediterrani."],
+    en: ["Shrubby germander", "Silvery leaves and pale blue flowers for much of the year. Very drought tolerant, ideal for Mediterranean-style hedges."],
+    de: ["Strauch-Gamander", "Silbrige Blätter und hellblaue Blüten fast das ganze Jahr. Sehr trockenheitsfest, ideal für mediterrane Hecken."] }],
+    ["Viburnum tinus", "sol semi sombra", "medio", "?", true, {
+    es: ["Durillo", "Arbusto autóctono que florece en pleno invierno. Aguanta la semisombra y sirve para setos libres."],
+    ca: ["Marfull", "Arbust autòcton que floreix en ple hivern. Aguanta la mitja ombra i serveix per a tanques lliures."],
+    en: ["Laurustinus", "A native shrub that flowers in the depths of winter. Tolerates part shade and suits informal hedges."],
+    de: ["Mittelmeer-Schneeball", "Heimischer Strauch, der mitten im Winter blüht. Verträgt Halbschatten und eignet sich für frei wachsende Hecken."] }],
+    ["Polygala myrtifolia", "sol", "bajo", "?", false, {
+    es: ["Polígala", "Flores violetas casi todo el año y mucha resistencia al calor. Vigila la Xylella: si se secan ramas sin motivo, consúltanos."],
+    ca: ["Polígala", "Flors violetes gairebé tot l'any i molta resistència a la calor. Vigila la Xylella: si s'assequen branques sense motiu, consulta'ns."],
+    en: ["Sweet pea shrub", "Violet flowers almost all year and very heat tolerant. Watch out for Xylella: if branches dry out for no reason, ask us."],
+    de: ["Myrtenblättrige Kreuzblume", "Violette Blüten fast das ganze Jahr, sehr hitzefest. Auf Xylella achten: wenn Zweige grundlos vertrocknen, fragen Sie uns."] }],
+    ["Callistemon citrinus", "sol", "medio", "si", false, {
+    es: ["Limpiatubos", "Sus flores rojas en forma de cepillo atraen a abejas y pájaros. Aguanta bien el viento y el suelo calizo."],
+    ca: ["Escurapipes", "Les seves flors vermelles en forma de raspall atreuen abelles i ocells. Aguanta bé el vent i el sòl calcari."],
+    en: ["Bottlebrush", "Its red brush-shaped flowers draw bees and birds. Handles wind and limy soil well."],
+    de: ["Zylinderputzer", "Die roten, bürstenförmigen Blüten locken Bienen und Vögel an. Verträgt Wind und kalkhaltigen Boden gut."] }],
+    ["Santolina chamaecyparissus", "sol", "bajo", "?", false, {
+    es: ["Santolina", "Mata gris y aromática con botones amarillos en verano. Pide sol, suelo suelto y casi nada de agua."],
+    ca: ["Espernallac", "Mata grisa i aromàtica amb botons grocs a l'estiu. Vol sol, sòl solt i gairebé gens d'aigua."],
+    en: ["Cotton lavender", "A grey, aromatic mound with yellow button flowers in summer. Wants sun, loose soil and hardly any water."],
+    de: ["Heiligenkraut", "Grauer, duftender Busch mit gelben Blütenköpfchen im Sommer. Braucht Sonne, lockeren Boden und kaum Wasser."] }],
+    ["Salvia officinalis", "sol", "bajo", "si", false, {
+    es: ["Salvia", "Aromática de cocina con flores lilas que encantan a las abejas. Una poda tras la floración evita que se vuelva leñosa."],
+    ca: ["Sàlvia", "Aromàtica de cuina amb flors lila que encanten a les abelles. Una poda després de la floració evita que es torni llenyosa."],
+    en: ["Common sage", "A kitchen herb with lilac flowers that bees love. Pruning after flowering stops it getting woody."],
+    de: ["Echter Salbei", "Küchenkraut mit lila Blüten, die Bienen lieben. Ein Schnitt nach der Blüte verhindert, dass er verholzt."] }],
+    ["Agapanthus africanus", "sol semi", "medio", "no", false, {
+    es: ["Agapanto", "Bolas de flores azules o blancas en verano. Florece mejor si está algo apretado en la maceta."],
+    ca: ["Agapant", "Boles de flors blaves o blanques a l'estiu. Floreix millor si està una mica atapeït al test."],
+    en: ["African lily", "Balls of blue or white flowers in summer. Flowers best when slightly pot-bound."],
+    de: ["Schmucklilie", "Kugeln aus blauen oder weißen Blüten im Sommer. Blüht besser, wenn der Topf etwas eng ist."] }],
+    ["Phoenix canariensis", "sol", "bajo", "?", false, {
+    es: ["Palmera canaria", "Palmera de gran porte, muy vulnerable al picudo rojo: pódala solo en invierno y hazle tratamientos preventivos."],
+    ca: ["Palmera canària", "Palmera de gran port, molt vulnerable al morrut: poda-la només a l'hivern i fes-li tractaments preventius."],
+    en: ["Canary Island date palm", "A large palm that is very vulnerable to the red palm weevil: prune it only in winter and treat it preventively."],
+    de: ["Kanarische Dattelpalme", "Große Palme, sehr anfällig für den Palmrüssler: nur im Winter schneiden und vorbeugend behandeln."] }],
+    ["Cycas revoluta", "sol semi", "bajo", "no", false, {
+    es: ["Cica", "Parece una palmera pero es mucho más antigua. Crece muy despacio y es muy tóxica para perros y gatos."],
+    ca: ["Cica", "Sembla una palmera però és molt més antiga. Creix molt a poc a poc i és molt tòxica per a cans i moixos."],
+    en: ["Sago palm", "Looks like a palm but is far more ancient. Grows very slowly and is highly toxic to dogs and cats."],
+    de: ["Japanischer Palmfarn", "Sieht aus wie eine Palme, ist aber viel älter. Wächst sehr langsam und ist für Hunde und Katzen sehr giftig."] }],
+    ["Howea forsteriana", "semi sombra", "medio", "si", false, {
+    es: ["Kentia", "La palmera de interior más agradecida: aguanta poca luz y ambientes secos. Riega cuando la tierra esté seca por arriba."],
+    ca: ["Kèntia", "La palmera d'interior més agraïda: aguanta poca llum i ambients secs. Rega quan la terra estigui seca per damunt."],
+    en: ["Kentia palm", "The most forgiving indoor palm: copes with low light and dry air. Water when the top of the soil is dry."],
+    de: ["Kentiapalme", "Die dankbarste Zimmerpalme: verträgt wenig Licht und trockene Luft. Gießen, wenn die Erde oben trocken ist."] }],
+    ["Crassula ovata", "sol semi", "bajo", "no", false, {
+    es: ["Árbol de jade", "Suculenta de hojas carnosas que vive décadas en maceta. Deja secar la tierra entre riegos: el exceso de agua la pudre."],
+    ca: ["Arbre de jade", "Suculenta de fulles carnoses que viu dècades en test. Deixa assecar la terra entre regs: l'excés d'aigua la podreix."],
+    en: ["Jade plant", "A fleshy-leaved succulent that lives for decades in a pot. Let the soil dry between waterings: too much water rots it."],
+    de: ["Geldbaum", "Sukkulente mit fleischigen Blättern, die im Topf Jahrzehnte lebt. Erde zwischen dem Gießen trocknen lassen: zu viel Wasser lässt sie faulen."] }],
+    ["Juniperus phoenicea", "sol", "bajo", "?", true, {
+    es: ["Sabina", "Conífera autóctona de dunas y acantilados. Crece despacio, aguanta el salitre y casi no necesita agua."],
+    ca: ["Savina", "Conífera autòctona de dunes i penya-segats. Creix a poc a poc, aguanta la salinitat i gairebé no necessita aigua."],
+    en: ["Phoenician juniper", "A native conifer of dunes and cliffs. Slow-growing, salt-tolerant and needs almost no water."],
+    de: ["Phönizischer Wacholder", "Heimischer Nadelbaum der Dünen und Klippen. Wächst langsam, verträgt Salz und braucht kaum Wasser."] }],
     ];
 // Calendario (clima de Mallorca): 12 meses × tareas
 export const CAL_G = {

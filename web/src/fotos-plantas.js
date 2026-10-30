@@ -273,5 +273,149 @@ export const FOTOS_COMMONS = {
   "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
   "ancho": 720,
   "alto": 1155
+ },
+ "olivo": {
+  "archivo": "Olive tree olea europaea mallorca.jpg",
+  "autor": "David Brühlmeier",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 540
+ },
+ "higuera": {
+  "archivo": "Figuier FR Mai 2013.jpg",
+  "autor": "JLPC",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 515
+ },
+ "jazmin": {
+  "archivo": "Jasminum officionale flowers, 74 Sunbury St Geebung IMGP2384.jpg",
+  "autor": "John Robert McPherson",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 479
+ },
+ "glicinia": {
+  "archivo": "Chinesischer Blauregen Detail Blütentraube.JPG",
+  "autor": "3268zauber",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "pitosporo": {
+  "archivo": "Pittosporum Tobira JPG0.jpg",
+  "autor": "Jean-Pol GRANDMONT",
+  "licencia": "CC BY 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
+  "ancho": 720,
+  "alto": 479
+ },
+ "westringia": {
+  "archivo": "Westringia fruticosa 04.jpg",
+  "autor": "[User:Eug]]",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 540
+ },
+ "olivilla": {
+  "archivo": "(MHNT) Teucrium fruticans - Flowers.jpg",
+  "autor": "Didier Descouens",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 837
+ },
+ "durillo": {
+  "archivo": "Viburnum tinus at Kedumim 1.jpg",
+  "autor": "Daniel Ventura",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 575
+ },
+ "poligala": {
+  "archivo": "Polygala myrtifolia02.jpg",
+  "autor": "Paul venter",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "limpiatubos": {
+  "archivo": "Callistemon citrinus-0878.jpg",
+  "autor": "DirkHoffmann",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "santolina": {
+  "archivo": "Santolina chamaecyparissus flowers.jpg",
+  "autor": "User:Stan Shebs",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 578
+ },
+ "salvia": {
+  "archivo": "Salvia officinalis0.jpg",
+  "autor": "Kurt Stüber [1]",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 640,
+  "alto": 480
+ },
+ "agapanto": {
+  "archivo": "Agapanthus africanus in habitat photo Nick Helme CC by SA.jpg",
+  "autor": "Nick Helme",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "palmera-canaria": {
+  "archivo": "Phoenix canariensis (Puntallana) 01.jpg",
+  "autor": "Frank Vincentz",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 540
+ },
+ "cica": {
+  "archivo": "Cycas revoluta plant 03.JPG",
+  "autor": "Vinayaraj",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 512
+ },
+ "kentia": {
+  "archivo": "Howea forsteriana kz02.jpg",
+  "autor": "Krzysztof Ziarnek, Kenraiz",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "arbol-de-jade": {
+  "archivo": "Crassula ovata 700.jpg",
+  "autor": "author is sannse .",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 700,
+  "alto": 986
+ },
+ "sabina": {
+  "archivo": "Juniperus phoenicea1.jpg",
+  "autor": "Autor desconocido",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 960
  }
 };

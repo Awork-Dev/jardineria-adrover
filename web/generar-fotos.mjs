@@ -22,6 +22,12 @@ const ELEGIDAS = {
   calathea: 'File:Houseplant Calathea orbifolia.jpg',
   cinta: "File:Chlorophytum comosum 'Variegatum' kz01.jpg",
   pita: 'File:Agave americana Toulouse.jpg',
+  olivo: 'File:Olive tree olea europaea mallorca.jpg',
+  higuera: 'File:Figuier FR Mai 2013.jpg',
+  jazmin: 'File:Jasminum officionale flowers, 74 Sunbury St Geebung IMGP2384.jpg',
+  durillo: 'File:Viburnum tinus at Kedumim 1.jpg',
+  cica: 'File:Cycas revoluta plant 03.JPG',
+  kentia: 'File:Howea forsteriana kz02.jpg',
 };
 // Wikipedia no siempre tiene artículo con el nombre en latín de la guía.
 const ARTICULO = {

@@ -14,7 +14,7 @@
    guía verde (plantas, calendario, doctor de plantas, xerojardinería), herramientas, noticias, contacto
    con presupuesto, aviso legal y mapa del sitio. Cambia de colores y avisos según la temporada.
    La dirección, el teléfono fijo y «Cómo llegar» (Google Maps) salen en contacto, en vivero y al pie de todas las páginas.
-   Cada una de las 34 plantas de la guía tiene su ficha (`/guia/romero`, `/ca/guia/romero`…): tipo, tamaño, riego en
+   Cada una de las 52 plantas de la guía tiene su ficha (`/guia/romero`, `/ca/guia/romero`…): tipo, tamaño, riego en
    verano e invierno, calendario de plantar, flor, poda y abono, qué plagas vigilar, para qué va bien, plantas parecidas
    y botón de WhatsApp «¿La tenéis en el vivero?» con el nombre de la planta. Datos en `web/src/fichas.js`.
    En la guía, «Ideas para…» filtra las plantas por uso (maceta, setos, junto al mar, bajo consumo, abejas, interior,
