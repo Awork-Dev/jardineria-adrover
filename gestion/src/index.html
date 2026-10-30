@@ -134,6 +134,19 @@ a.ubic{text-decoration:none;padding:2px}.sin-ubic{font-style:italic}
 .pill.rechazado,.pill.anulada{background:var(--rej-bg);color:var(--rej-ink)}
 .pill.pendiente{background:var(--pend-bg);color:var(--pend-ink)}
 .pill.cobrada{background:var(--brand);color:var(--brand-ink)}
+.pill.extra{background:var(--pend-bg);color:var(--pend-ink)}
+/* Horas extra: tabla que se desplaza de lado en el móvil, con el nombre siempre a la vista */
+.tabla-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
+.tabla-x table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+.tabla-x th,.tabla-x td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tabla-x th:first-child,.tabla-x td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);white-space:normal;min-width:110px}
+.tabla-x thead th{font-size:.78rem;color:var(--muted);font-weight:600;white-space:normal;vertical-align:bottom}
+.tabla-x tfoot th,.tabla-x tfoot td{font-weight:700;border-bottom:0}
+.tabla-x td.x{font-weight:700}
+.tabla-x td.est{text-align:left;white-space:normal;min-width:150px}
+.tabla-x .vacio{color:var(--muted)}
+.rowr.acciones{flex-shrink:1;min-width:0;max-width:100%}
+button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-decoration:underline;text-underline-offset:2px}
 .empty{background:var(--panel);border:1px dashed var(--line);border-radius:16px;padding:26px;color:var(--muted)}
 .empty b{display:block;color:var(--ink);margin-bottom:4px}
 .empty p{margin:0}
@@ -818,12 +831,13 @@ function vFotos() {
       : '<div class="empty">No hay fotos en este mes.</div>'}</section>`;
 }
 function vEquipo() {
-  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
+  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['extra', 'Horas extra'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
     `<button class="chip${equipoTab === k ? ' on' : ''}" data-act="tab-equipo" data-v="${k}">${t}${k === 'gastos' ? ((n => n ? ' (' + n + ')' : '')(Object.values(S.gastos).filter(g => g.estado !== 'pagado').length)) : ''}</button>`).join('');
-  const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, jornada, gastos y fotos que llegan desde la app</p></div>
+  const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, jornada, horas extra, gastos y fotos que llegan desde la app</p></div>
     ${equipoTab === 'personas' ? '<button class="btn primary" data-act="new-operario">+ Nuevo</button>' : ''}</header><div class="tabs">${tabs}</div>`;
   if (equipoTab === 'gastos') return cab + vGastos();
   if (equipoTab === 'fotos') return cab + vFotos();
+  if (equipoTab === 'extra') return cab + vHorasExtra();
   return cab + vPersonasJornada();
 }
 function vPersonasJornada() {
@@ -833,15 +847,15 @@ function vPersonasJornada() {
       <b>${esc(o.nombre)}</b><span class="meta">${o.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario'}${o.activo === false ? ' · De baja' : ''}</span>
       <span class="line">PIN: <b style="font-family:inherit;letter-spacing:.2em">${esc(o.pin)}</b></span></button>`).join('')}</div>`
     : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.');
-  const reg = opJ ? registro(opJ, mesJ) : [];
-  const total = reg.reduce((a, d) => a + d.ms, 0);
+  const reg = opJ ? registro(opJ, mesJ) : [], aj = jornadaAj();
+  const total = reg.reduce((a, d) => a + d.ms, 0), extraMes = reg.reduce((a, d) => a + extraDia(d, aj), 0);
   const fsMes = opJ ? fichajesDe(opJ, mesJ) : [], porValidar = fsMes.filter(f => !f.validado).length;
   const validado = Math.max(0, ...fsMes.map(f => f.validado || 0));
   const estadoVal = !fsMes.length ? '' : !porValidar ? ` · <b>Horas validadas</b> el ${esc(fmtFecha(diaDe(validado)))}`
     : validado ? ` · <b>${porValidar} ${porValidar === 1 ? 'fichaje nuevo' : 'fichajes nuevos'}</b> sin validar` : '';
   const tabla = !opJ ? '' : reg.length ? `<div class="rows">${reg.map(d => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(d.dia))}</b>
-      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}</span></div>
-      <div class="rowr"><b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
+      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}${libreDia(d.dia, aj) ? ' · ' + libreDia(d.dia, aj) : ''}</span></div>
+      <div class="rowr">${extraDia(d, aj) ? `<span class="pill extra">+${hm(extraDia(d, aj))} extra</span>` : ''}<b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
     : '<div class="empty">No hay fichajes en este mes.</div>';
   if (equipoTab === 'personas') return `<section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
       · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>`;
@@ -850,7 +864,7 @@ function vPersonasJornada() {
       ${ops.length ? `<div class="grid2 par" style="margin-bottom:14px">
         <label class="fld"><span>Persona</span><select id="op-j">${ops.map(([id, o]) => `<option value="${esc(id)}"${id === opJ ? ' selected' : ''}>${esc(o.nombre)}</option>`).join('')}</select></label>
         <label class="fld"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label></div>
-        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}${estadoVal}</p>
+        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}${extraMes ? ` · Horas extra: <b>${hm(extraMes)}</b>` : ''}${estadoVal}</p>
         ${porValidar ? '<p class="meta" style="margin:-6px 0 12px">Al validar las horas del mes se borra la ubicación de los fichajes (las horas se quedan). Si no se validan, se borra sola a los tres meses.</p>' : ''}${tabla}` : ''}
     </section>`;
 }
@@ -863,6 +877,119 @@ async function validarJornada(el) {
   try { await api('POST', '/api/validar', {ids}); await sincronizar(); toast('Horas validadas. Se ha borrado la ubicación de esos fichajes.'); }
   catch (e) { toast(e.message, true); el.disabled = false; delete el.dataset.sure; el.textContent = 'Validar horas'; }
 }
+/* ---------- Horas extra ---------- */
+// En un día laborable es extra lo que pasa de la jornada diaria; en sábado, domingo o festivo, todo lo trabajado.
+// La jornada y los festivos son los mismos para toda la plantilla (Ajustes → «Jornada y festivos»).
+const jornadaAj = () => ({horasDia: 8, festivos: [], ...(S.ajustes.jornada || {})});
+const MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+let periodoX = 'mes', mesX = mesActual(), anyoX = mesActual().slice(0, 4);
+const libreDia = (dia, aj) => { const s = new Date(dia + 'T12:00:00').getDay(); return s === 0 ? 'domingo' : s === 6 ? 'sábado' : aj.festivos.includes(dia) ? 'festivo' : ''; };
+const extraDia = (d, aj) => libreDia(d.dia, aj) ? d.ms : Math.max(0, d.ms - num(aj.horasDia) * 3600e3);
+const hc = ms => { const m = Math.round(ms / 60e3); return Math.floor(m / 60) + ':' + dos(m % 60); };
+// Una fila por persona (las de baja solo si ficharon en ese periodo): mes «2026-10» o año «2026».
+function filasExtra(periodo, aj) {
+  return Object.entries(S.operarios).sort(byNombre).filter(([id, o]) => o.activo !== false || fichajesDe(id, periodo).length).map(([id, o]) => {
+    const r = {id, nombre: o.nombre, trabajadas: 0, lab: 0, libre: 0, incompletos: 0, porMes: Array(12).fill(0)};
+    for (const d of registro(id, periodo)) {
+      const x = extraDia(d, aj);
+      r.trabajadas += d.ms; r[libreDia(d.dia, aj) ? 'libre' : 'lab'] += x; r.porMes[+d.dia.slice(5, 7) - 1] += x;
+      if (d.raro) r.incompletos++;
+    }
+    const fs = fichajesDe(id, periodo);
+    return {...r, extra: r.lab + r.libre, fichajes: fs.length, sinValidar: fs.filter(f => !f.validado).length};
+  });
+}
+const periodoXActual = () => periodoX === 'anyo' ? anyoX : mesX;
+const nombrePeriodo = p => p.length === 4 ? 'Año ' + p : new Date(p + '-15').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'});
+function vHorasExtra() {
+  const aj = jornadaAj(), periodo = periodoXActual(), anyo = periodo.slice(0, 4), filas = filasExtra(periodo, aj);
+  const anyos = [...new Set([anyo, mesActual().slice(0, 4), ...Object.values(S.fichajes).map(f => diaDe(f.ts).slice(0, 4))])].sort().reverse();
+  const fest = aj.festivos.filter(f => f.startsWith(anyo)).length;
+  const tot = k => filas.reduce((a, f) => a + f[k], 0);
+  const celda = (ms, cls = '') => `<td class="${cls}${ms ? '' : ' vacio'}">${ms ? hc(ms) : '–'}</td>`;
+  const estado = f => !f.fichajes ? '<span class="meta">Sin fichajes</span>' : (f.sinValidar ? '<span class="pill pendiente">Sin validar</span>' : '<span class="pill cobrada">Validadas</span>')
+    + (f.incompletos ? `<div class="meta">${f.incompletos} ${f.incompletos === 1 ? 'día' : 'días'} con un fichaje de menos</div>` : '');
+  const tabla = !filas.length ? empty('Aún no hay nadie dado de alta.', 'Da de alta a los operarios en «Personas».')
+    : periodoX === 'anyo' ? `<div class="tabla-x"><table><thead><tr><th>Persona</th>${MESES_C.map(m => `<th>${m}</th>`).join('')}<th>Total extra</th></tr></thead>
+        <tbody>${filas.map(f => `<tr><td>${esc(f.nombre)}</td>${f.porMes.map(ms => celda(ms)).join('')}${celda(f.extra, 'x')}</tr>`).join('')}</tbody>
+        <tfoot><tr><th>Total</th>${MESES_C.map((_, i) => celda(filas.reduce((a, f) => a + f.porMes[i], 0))).join('')}${celda(tot('extra'), 'x')}</tr></tfoot></table></div>`
+    : `<div class="tabla-x"><table><thead><tr><th>Persona</th><th>Trabajadas</th><th>Extra en laborables</th><th>Extra en sáb., dom. y festivos</th><th>Total extra</th><th>Estado</th></tr></thead>
+        <tbody>${filas.map(f => `<tr><td><button class="enlace" data-act="ver-jornada" data-id="${esc(f.id)}">${esc(f.nombre)}</button></td>${celda(f.trabajadas)}${celda(f.lab)}${celda(f.libre)}${celda(f.extra, 'x')}<td class="est">${estado(f)}</td></tr>`).join('')}</tbody>
+        <tfoot><tr><th>Total</th>${celda(tot('trabajadas'))}${celda(tot('lab'))}${celda(tot('libre'))}${celda(tot('extra'), 'x')}<td></td></tr></tfoot></table></div>`;
+  return `<section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Horas extra</h2><div class="rowr acciones">
+      <button class="btn small ghost" data-act="jornada-ajustes">Jornada y festivos</button>
+      ${filas.length ? '<button class="btn small" data-act="csv-extra">Descargar Excel</button><button class="btn small" data-act="pdf-extra">Descargar PDF</button>' : ''}</div></div>
+    <div class="grid2 par" style="margin-bottom:14px">
+      <label class="fld"><span>Ver</span><select id="periodo-x"><option value="mes"${periodoX === 'mes' ? ' selected' : ''}>Un mes</option><option value="anyo"${periodoX === 'anyo' ? ' selected' : ''}>Un año</option></select></label>
+      ${periodoX === 'anyo' ? `<label class="fld"><span>Año</span><select id="anyo-x">${anyos.map(a => `<option${a === anyo ? ' selected' : ''}>${a}</option>`).join('')}</select></label>`
+        : `<label class="fld"><span>Mes</span><input id="mes-x" type="month" value="${esc(mesX)}"></label>`}</div>
+    <p class="meta" style="margin:0 0 12px">Son extra las horas que pasan de <b>${hm(num(aj.horasDia) * 3600e3)}</b> en un día laborable y todas las de sábados, domingos y festivos.
+      ${fest ? `${fest} ${fest === 1 ? 'festivo marcado' : 'festivos marcados'} en ${anyo}.` : `<b>Aún no hay festivos marcados en ${anyo}:</b> pulsa «Jornada y festivos».`} Horas en formato horas:minutos.</p>
+    ${tabla}</section>`;
+}
+function jornadaSheet() {
+  const aj = jornadaAj();
+  openSheet('Jornada y festivos', `<div class="grid2">
+      ${fld('horasDia', 'Horas de la jornada diaria (lo que pase en un día laborable es extra)', {type: 'number', step: '0.25', value: aj.horasDia, wide: 1})}
+      <label class="fld wide"><span>Festivos, una fecha por línea (por ejemplo 25/12/2026). Todo lo trabajado esos días es extra, igual que en sábado y domingo.</span>
+        <textarea name="festivos" rows="8">${esc(aj.festivos.map(f => f.split('-').reverse().join('/')).join('\n'))}</textarea></label>
+    </div>`, async fd => {
+    const horas = num(fd.get('horasDia'));
+    if (!(horas > 0 && horas <= 24)) throw new Error('Pon las horas de la jornada diaria (por ejemplo, 8).');
+    const festivos = new Set(), malas = [];
+    for (const t of String(fd.get('festivos') || '').split(/[\n,;]+/).map(x => x.trim()).filter(Boolean)) {
+      const m = t.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/), iso = m ? m[3] + '-' + dos(m[2]) + '-' + dos(m[1]) : /^\d{4}-\d{2}-\d{2}$/.test(t) ? t : '';
+      if (iso && diaDe(Date.parse(iso + 'T12:00:00')) === iso) festivos.add(iso); else malas.push(t);
+    }
+    if (malas.length) throw new Error('Revisa ' + (malas.length === 1 ? 'esta fecha: ' : 'estas fechas: ') + malas.join(', ') + '. Escríbelas así: 25/12/2026.');
+    const {id: _, ...antes} = S.ajustes.jornada || {};
+    await put('ajustes', 'jornada', {...antes, horasDia: horas, festivos: [...festivos].sort()});
+  }, null);
+}
+function bajarArchivo(blob, nombre) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+// Para la gestoría: se abre en Excel (separado por «;» y con coma decimal), horas en decimal.
+function csvExtra() {
+  const periodo = periodoXActual(), anual = periodo.length === 4, filas = filasExtra(periodo, jornadaAj());
+  const h = ms => (Math.round(ms / 36e3) / 100).toFixed(2).replace('.', ',');
+  const q = v => /[;"\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
+  const cab = anual ? ['Persona', ...MESES_C, 'Total extra'] : ['Persona', 'Horas trabajadas', 'Extra en laborables', 'Extra en sábados, domingos y festivos', 'Total extra', 'Días con un fichaje de menos', 'Validadas'];
+  const lineas = filas.map(f => anual ? [f.nombre, ...f.porMes.map(h), h(f.extra)]
+    : [f.nombre, h(f.trabajadas), h(f.lab), h(f.libre), h(f.extra), f.incompletos, f.fichajes ? (f.sinValidar ? 'No' : 'Sí') : '']);
+  bajarArchivo(new Blob(['\ufeff' + [cab, ...lineas].map(l => l.map(q).join(';')).join('\r\n')], {type: 'text/csv;charset=utf-8'}), 'horas-extra-' + periodo + '.csv');
+  toast('Descargado: se abre con Excel');
+}
+function pdfExtra() {
+  const J = window.jspdf && window.jspdf.jsPDF;
+  if (!J) return toast('No se pudo generar el PDF.', true);
+  const aj = jornadaAj(), periodo = periodoXActual(), anual = periodo.length === 4, filas = filasExtra(periodo, aj);
+  const e = S.ajustes.empresa || DEFAULT_EMPRESA, d = new J({unit: 'mm', format: 'a4', orientation: anual ? 'landscape' : 'portrait'});
+  const L = 14, R = anual ? 283 : 196, bajo = anual ? 190 : 275; let y = 18;
+  d.setFont('helvetica', 'bold'); d.setFontSize(14); d.text('Horas extra · ' + nombrePeriodo(periodo), L, y);
+  d.setFont('helvetica', 'normal'); d.setFontSize(10);
+  y += 7; d.text('Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), L, y);
+  y += 5; d.setFontSize(8.5); d.text('Extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo. Horas en formato horas:minutos.', L, y);
+  d.setFontSize(9.5);
+  const cols = anual ? [...MESES_C.map((m, i) => [m, 82 + i * 16.5]), ['Total', R]]
+    : [['Trabajadas', 104], ['Extra lab.', 132], ['Extra sáb./dom./fest.', 166], ['Total extra', R]];
+  const fila = (nombre, vals, negrita) => {
+    if (y > bajo) { d.addPage(); y = 18; }
+    y += 6.5; d.setFont('helvetica', negrita ? 'bold' : 'normal');
+    d.text(d.splitTextToSize(nombre, anual ? 60 : 70)[0], L, y);
+    vals.forEach((v, i) => d.text(v ? hc(v) : '–', cols[i][1], y, {align: 'right'}));
+  };
+  y += 10; d.setFont('helvetica', 'bold'); d.text('Persona', L, y); cols.forEach(([t, x]) => d.text(t, x, y, {align: 'right'}));
+  d.setDrawColor(180); d.line(L, y + 2, R, y + 2);
+  for (const f of filas) fila(f.nombre, anual ? [...f.porMes, f.extra] : [f.trabajadas, f.lab, f.libre, f.extra]);
+  d.line(L, y + 2.5, R, y + 2.5);
+  const suma = k => filas.reduce((a, f) => a + f[k], 0);
+  fila('Total', anual ? [...MESES_C.map((_, i) => filas.reduce((a, f) => a + f.porMes[i], 0)), suma('extra')] : [suma('trabajadas'), suma('lab'), suma('libre'), suma('extra')], true);
+  d.save('horas-extra-' + periodo + '.pdf');
+}
 function pdfJornada() {
   const J = window.jspdf && window.jspdf.jsPDF, o = S.operarios[opJ];
   if (!J || !o) return toast('No se pudo generar el PDF.', true);
@@ -874,16 +1001,21 @@ function pdfJornada() {
   y += 7; d.text('Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), L, y);
   y += 5; d.text('Trabajador: ' + o.nombre, L, y);
   y += 5; d.text('Mes: ' + nombreMes, L, y);
-  y += 10; d.setFont('helvetica', 'bold'); d.text('Día', L, y); d.text('Entrada – salida', 60, y); d.text('Horas', R, y, {align: 'right'});
+  const aj = jornadaAj(), H = 164;
+  y += 10; d.setFont('helvetica', 'bold'); d.text('Día', L, y); d.text('Entrada – salida', 60, y); d.text('Horas', H, y, {align: 'right'}); d.text('Extra', R, y, {align: 'right'});
   d.setDrawColor(180); d.line(L, y + 2, R, y + 2); d.setFont('helvetica', 'normal');
   for (const r of reg) {
     const t = r.tramos.map(([a, b]) => (a ? horaDe(a.ts) : '¿?') + ' – ' + (b ? horaDe(b.ts) : '¿?')).join('   ');
-    const partes = d.splitTextToSize(t + (r.raro ? '  (falta un fichaje)' : ''), 100);
+    const partes = d.splitTextToSize(t + (r.raro ? '  (falta un fichaje)' : '') + (libreDia(r.dia, aj) ? '  (' + libreDia(r.dia, aj) + ')' : ''), 78);
     if (y + partes.length * 5 + 6 > 270) { d.addPage(); y = 20; }
-    y += 6; d.text(fmtFecha(r.dia), L, y); d.text(partes, 60, y); d.text(hm(r.ms), R, y, {align: 'right'});
+    const x = extraDia(r, aj);
+    y += 6; d.text(fmtFecha(r.dia), L, y); d.text(partes, 60, y); d.text(hm(r.ms), H, y, {align: 'right'}); d.text(x ? hm(x) : '–', R, y, {align: 'right'});
     y += (partes.length - 1) * 5;
   }
-  y += 8; d.setFont('helvetica', 'bold'); d.text('Total del mes', 60, y); d.text(hm(reg.reduce((a, r) => a + r.ms, 0)), R, y, {align: 'right'});
+  y += 8; d.setFont('helvetica', 'bold'); d.text('Total del mes', 60, y); d.text(hm(reg.reduce((a, r) => a + r.ms, 0)), H, y, {align: 'right'});
+  d.text(hm(reg.reduce((a, r) => a + extraDia(r, aj), 0)), R, y, {align: 'right'});
+  y += 6; d.setFont('helvetica', 'normal'); d.setFontSize(8.5);
+  d.text('Horas extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo.', L, y); d.setFontSize(10);
   if (y > 240) { d.addPage(); y = 20; }
   y += 24; d.setFont('helvetica', 'normal'); d.text('Firma de la empresa', L, y); d.text('Firma del trabajador', 120, y);
   d.save('jornada-' + o.nombre.replace(/\s+/g, '-').toLowerCase() + '-' + mesJ + '.pdf');
@@ -927,6 +1059,10 @@ document.addEventListener('click', e => {
     case 'edit-operario': operarioSheet(id); break;
     case 'pdf-jornada': pdfJornada(); break;
     case 'validar-jornada': validarJornada(el); break;
+    case 'jornada-ajustes': jornadaSheet(); break;
+    case 'csv-extra': csvExtra(); break;
+    case 'pdf-extra': pdfExtra(); break;
+    case 'ver-jornada': opJ = id; mesJ = mesX; equipoTab = 'jornada'; lastView = ''; render(); break;
     case 'estado-g': estadoG = el.dataset.v; lastView = ''; render(); break;
     case 'tab-equipo': equipoTab = el.dataset.v; lastView = ''; render(); break;
     case 'edit-gasto': gastoSheet(id); break;
@@ -1109,6 +1245,9 @@ document.addEventListener('change', e => {
   if (e.target.id === 'pf-cli') { partesCli = e.target.value; lastView = ''; render(); return; }
   if (e.target.id === 'pf-mes') { partesMes = e.target.value; lastView = ''; render(); return; }
   if (e.target.id === 'mes-j') { mesJ = e.target.value || mesActual(); lastView = ''; render(); return; }
+  if (e.target.id === 'periodo-x') { periodoX = e.target.value; lastView = ''; render(); return; }
+  if (e.target.id === 'mes-x') { mesX = e.target.value || mesActual(); anyoX = mesX.slice(0, 4); lastView = ''; render(); return; }
+  if (e.target.id === 'anyo-x') { anyoX = e.target.value; lastView = ''; render(); return; }
   if (e.target.matches('.imp') && e.target.files[0]) importarCopia(e.target.files[0]);
 });
 

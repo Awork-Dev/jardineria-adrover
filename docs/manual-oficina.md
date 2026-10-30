@@ -87,7 +87,9 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 3. Apunta el **PIN** que sale y pulsa **Guardar**. Dale el PIN y el enlace de la app del equipo.
 
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
-- **Jornada:** elige persona y mes; sale cada día con entradas, salidas y total. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
+- **Jornada:** elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
+- **Horas extra:** elige un mes o un año entero y sale cada persona con sus horas trabajadas y sus horas extra. Son extra las que pasan de la jornada diaria en un día laborable y todas las de sábados, domingos y festivos. **Descargar Excel** (para la gestoría) o **Descargar PDF**. Pulsa un nombre para ver sus días.
+- **Jornada y festivos** (en Horas extra): las horas de la jornada diaria y los festivos. **Apunta los festivos de cada año** (nacionales, de Baleares y locales de Capdepera): si falta uno, lo trabajado ese día no sale como extra.
 - **📍 junto a cada hora:** dónde estaba al fichar; púlsalo para verlo en el mapa. **«(sin ubicación)»** si su móvil no dio permiso o no tenía señal GPS. La app solo la guarda al fichar, y así se lo dice al trabajador junto al botón.
 - **Validar horas:** cuando hayas comprobado las horas del mes (por ejemplo, para pagar las horas extra), pulsa **Validar horas**. Se borra la ubicación de esos fichajes y las horas se quedan. Si no se validan, la ubicación se borra sola a los tres meses. Las copias de seguridad no guardan la ubicación.
 - Antes de usar la ubicación, cada trabajador tiene que firmar el aviso que lo explica (lo exige el art. 90 de la LOPDGDD). Quien fiche con su propio móvil no está obligado a darla.
