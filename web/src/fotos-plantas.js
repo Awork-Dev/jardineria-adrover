@@ -417,5 +417,141 @@ export const FOTOS_COMMONS = {
   "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
   "ancho": 720,
   "alto": 960
+ },
+ "naranjo": {
+  "archivo": "OrangeBloss wb.jpg",
+  "autor": "Ellen Levy Finch ( Elf )",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 578,
+  "alto": 509
+ },
+ "laurel": {
+  "archivo": "Starr-071024-0195-Laurus nobilis-leaves-Enchanting Floral Gardens of Kula-Maui (24867859296).jpg",
+  "autor": "Forest and Kim Starr",
+  "licencia": "CC BY 3.0 us",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/us/deed.en",
+  "ancho": 720,
+  "alto": 960
+ },
+ "cipres": {
+  "archivo": "Viaggiando fra cipressi e olivi.jpg",
+  "autor": "PROPOLI87",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "aladierno": {
+  "archivo": "Rhamnus alaternus (8692911406).jpg",
+  "autor": "Kevin Thiele from Perth, Australia",
+  "licencia": "CC BY 2.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/2.0",
+  "ancho": 720,
+  "alto": 685
+ },
+ "parra": {
+  "archivo": "Cabernet Sauvignon Gaillac.jpg",
+  "autor": "Autor desconocido",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 586
+ },
+ "jacaranda": {
+  "archivo": "Jacarandá-mimoso (do tupi îakarandá) - 54942878507 02.jpg",
+  "autor": "O Tupinólogo",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "arbol-de-jupiter": {
+  "archivo": "Extremosa (Lagerstroemia indica) em um fim de tarde em Bagé-RS - 55013179934.jpg",
+  "autor": "Gabriel Collares",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "hiedra": {
+  "archivo": "Hedera helix Dover.jpg",
+  "autor": "kallerna",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "madreselva": {
+  "archivo": "Loniceraimplexa.jpg",
+  "autor": "Stickpen",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 749
+ },
+ "margarita-africana": {
+  "archivo": "Dimorphoteca ecklonis, Botanical garden of Barcelona.jpg",
+  "autor": "Consultaplantas",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 667,
+  "alto": 500
+ },
+ "eonio": {
+  "archivo": "Madeira, Palheiro Gardens - Aeonium arboreum (Marokko) IMG 2310.JPG",
+  "autor": "Hedwig Storch",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 678
+ },
+ "abelia": {
+  "archivo": "Abelia flowers.jpg",
+  "autor": "Mariko GODA",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 540
+ },
+ "fotinia": {
+  "archivo": "Photinia fraseri B.JPG",
+  "autor": "Wouter Hagens",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 479
+ },
+ "areca": {
+  "archivo": "散尾葵Dypsis lutescens 20210511145013 05.jpg",
+  "autor": "Ping an Chang",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "orquidea": {
+  "archivo": "Phalaenopsis (aka).jpg",
+  "autor": "André Karwath aka Aka",
+  "licencia": "CC BY-SA 2.5",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+  "ancho": 720,
+  "alto": 643
+ },
+ "ficus-de-goma": {
+  "archivo": "Ficus elastica leaves 02.JPG",
+  "autor": "B.navez",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "tulbalgia": {
+  "archivo": "Tulbaghia (Society Garlic).jpg",
+  "autor": "No machine-readable author provided. CatherineMunro assumed (based on copyright ",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 640,
+  "alto": 480
  }
 };

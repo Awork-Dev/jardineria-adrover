@@ -5,6 +5,9 @@ import { lanzar, pagina, ok, fin, IMG } from './comun.mjs';
 import { interesa, vigilar, ANTERIOR } from '../web/src/noticias.js';
 import { FICHAS } from '../web/src/fichas.js';
 import { FOTOS_COMMONS } from '../web/src/fotos-plantas.js';
+import { contarVisita, apuntarBusqueda, diaMadrid, MAX_VISITAS_DIA, MAX_BUSQUEDAS } from '../web/src/visitas.js';
+import { DatabaseSync } from 'node:sqlite';
+const RAIZ = new URL('..', import.meta.url);
 const W = process.env.WEB || 'http://localhost:8790';
 console.log('Web pública');
 const nav = await lanzar();
@@ -81,6 +84,41 @@ ok((await busca('halepensis'))[0] === '/guia/pino-carrasco' && (await busca('jaz
 ok((await busca('olivo centenario')).length === 0 && await p.locator('#bres a.canal.wa').count() === 1, 'buscador: si no está en la guía, ofrece preguntar por WhatsApp');
 await p.keyboard.press('Escape');
 ok(await p.evaluate(() => document.getElementById('buscador').hidden), 'buscador: se cierra con Escape');
+// Lo que se busca y no está se avisa al servidor tras una pausa al escribir; lo que sí está, no.
+await p.goto(W + '/'); await p.click('#lupa');
+let avisos = 0; p.on('request', (r) => { if (r.url().endsWith('/api/busqueda')) avisos++; });
+await busca('olivo'); await p.waitForTimeout(1900);
+const sinAviso = avisos === 0;
+const [aviso] = await Promise.all([p.waitForResponse((r) => r.url().endsWith('/api/busqueda')), busca('peonia azul')]);
+ok(sinAviso && aviso.status() === 204 && JSON.parse(aviso.request().postData()).q === 'peonia azul', 'buscador: avisa de la planta que se busca y no está, y no de las que sí están');
+await p.keyboard.press('Escape');
+
+// Una dirección que no existe responde «no encontrada» (404) en su idioma y Google no la guarda.
+const r404 = await fetch(W + '/no-existe'), h404 = await r404.text(), d404 = await fetch(W + '/de/guia/no-existe');
+ok(r404.status === 404 && h404.includes('Esta página no existe') && h404.includes('name="robots" content="noindex"') && !h404.includes('rel="canonical"')
+  && d404.status === 404 && (await d404.text()).includes('Diese Seite gibt es nicht'), 'una dirección que no existe da «no encontrada» (404), en su idioma y sin entrar en Google');
+const robot = await fetch(W + '/wp-login.php'), es = await fetch(W + '/es/guia', { redirect: 'manual' });
+ok(robot.status === 404 && (await robot.text()).length < 100 && es.status === 301 && es.headers.get('location').endsWith('/guia'), 'lo que prueban los robots (/wp-login.php) se despacha con una línea, y /es/guia lleva a /guia');
+await p.goto(W + '/ca/no-existe');
+const cabe404 = await p.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
+await p.click('.noesta button'); await p.waitForSelector('#bq', { state: 'visible' });
+ok(cabe404 && await p.getAttribute('.noesta a.btn', 'href') === '/ca' && await p.$$eval('.pidiomas a', (as) => as.map((a) => new URL(a.href).pathname).join()) === '/,/ca,/en,/de',
+  'la página «no encontrada» cabe en el móvil y ofrece el inicio, el buscador y los idiomas');
+await p.keyboard.press('Escape');
+
+// Al compartir una ficha por WhatsApp sale la foto de esa planta; y lleva el camino Inicio › Guía › Planta para Google.
+const olivo = await (await fetch(W + '/guia/olivo')).text(), og = olivo.match(/property="og:image" content="([^"]+)"/)[1];
+const fotoOg = await fetch(W + new URL(og).pathname);
+const migas = JSON.parse(olivo.match(/<script type="application\/ld\+json">(\{"@context":"https:\/\/schema\.org","@type":"BreadcrumbList".*?)<\/script>/)[1]).itemListElement;
+ok(og === 'https://jardineriaadrover.es/plantas/olivo.jpg' && fotoOg.status === 200 && fotoOg.headers.get('content-type') === 'image/jpeg', 'al compartir una ficha sale la foto de la planta, en JPEG');
+ok(conFoto.every((f) => fs.existsSync(new URL(`web/public/plantas/${f}.jpg`, RAIZ))), 'todas las fotos de plantas tienen su copia para compartir');
+ok(migas.length === 3 && migas[1].item === 'https://jardineriaadrover.es/guia' && migas[2].name === 'Olivo' && !(await (await fetch(W + '/guia')).text()).includes('BreadcrumbList'),
+  'las fichas llevan el camino Inicio › Guía › Planta para Google');
+
+// Con el dedo, los enlaces pequeños (volver, créditos, pie, idiomas) tienen altura para acertar a la primera.
+await p.goto(W + '/guia/olivo');
+const bajos = await p.$$eval('.volver, .flink, .fcred a, footer .pdato, footer .penl a, footer .pidiomas a, footer .pbase a', (es) => es.filter((e) => e.getBoundingClientRect().height < 40).map((e) => e.textContent.trim().slice(0, 18)));
+ok(!bajos.length, 'móvil: los enlaces pequeños se pueden pulsar bien con el dedo' + (bajos.length ? ' (bajos: ' + bajos.join(', ') + ')' : ''));
 // La sección del menú en la que se está se distingue con fondo propio, arriba sobre la foto y con la cabecera clara.
 await p.setViewportSize({ width: 1280, height: 800 }); await p.goto(W + '/vivero');
 const fondo = () => p.$eval('header nav > a.on', (a) => getComputedStyle(a).backgroundColor);
@@ -144,5 +182,36 @@ ok(interesa(n('Sant Lluís será el primer municipio de Menorca en restringir el
     'noticias: sin Google entran las de Bing (con el enlace de la noticia) y las de webs de jardinería');
   ok(out.baleares.length === 1 && out.baleares[0].titulo.startsWith('Sóller') && out.fuentes.baleares.some((f) => f.includes('503')),
     'noticias de Baleares desde Bing: solo las que nombran las islas, y se apunta qué fuente falla');
+}
+// Visitas y búsquedas: con una base en memoria se comprueba qué se apunta, qué no y que los topes se respetan.
+{
+  const sq = new DatabaseSync(':memory:'); sq.exec(fs.readFileSync(new URL('web/schema.sql', RAIZ), 'utf8'));
+  const env = { VISITAS: { prepare: (sql) => ({ sql, v: [], bind(...v) { return { sql, v }; } }), batch: async (ss) => ss.map((x) => sq.prepare(x.sql).run(...x.v)) } };
+  const todo = (sql) => sq.prepare(sql).all().map((f) => ({ ...f }));
+  const NAVEGADOR = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
+  const pide = (cab, pais = 'DE', cuerpo) => Object.assign(new Request('https://jardineriaadrover.es/x', { method: cuerpo ? 'POST' : 'GET', body: cuerpo && JSON.stringify(cuerpo), headers: cab }), { cf: { country: pais } });
+  const persona = { 'user-agent': NAVEGADOR, 'sec-fetch-dest': 'document', 'sec-fetch-mode': 'navigate' };
+  await contarVisita(env, pide(persona), 'de', '/guia/olivo'); await contarVisita(env, pide(persona), 'de', '/guia/olivo'); await contarVisita(env, pide(persona, 'ES'), 'es', '/');
+  await contarVisita(env, pide({ ...persona, 'user-agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)' }), 'es', '/');
+  await contarVisita(env, pide({ ...persona, 'user-agent': 'WhatsApp/2.23.20.0' }), 'es', '/');
+  await contarVisita(env, pide({ 'user-agent': NAVEGADOR }), 'es', '/'); // un programa que solo imita el navegador
+  const dia = diaMadrid(), vis = todo('SELECT * FROM visitas ORDER BY ruta');
+  ok(vis.length === 2 && vis[0].ruta === '/' && vis[0].n === 1 && vis[0].pais === 'ES' && vis[1].n === 2 && vis[1].idioma === 'de' && vis[1].dia === dia && Object.keys(vis[0]).sort().join() === 'dia,idioma,n,pais,ruta',
+    'visitas: cuentan las personas (día, página, idioma y país, nada más) y no los robots ni las vistas previas');
+  sq.prepare('UPDATE topes SET n = ? WHERE clave = ?').run(MAX_VISITAS_DIA - 1, dia + ' visitas');
+  await contarVisita(env, pide(persona, 'ES'), 'es', '/'); await contarVisita(env, pide(persona, 'ES'), 'es', '/'); await contarVisita(env, pide(persona, 'ES'), 'es', '/vivero');
+  ok(todo("SELECT n FROM visitas WHERE ruta = '/'")[0].n === 2 && !todo("SELECT n FROM visitas WHERE ruta = '/vivero'").length && todo('SELECT n FROM topes')[0].n === MAX_VISITAS_DIA,
+    'visitas: al llegar al tope del día se deja de apuntar');
+
+  const web = { 'user-agent': NAVEGADOR, 'sec-fetch-site': 'same-origin', 'content-type': 'application/json' }, hay = (q) => q === 'olivo';
+  const busca = (q, cab = web, l = 'de') => apuntarBusqueda(env, pide(cab, 'DE', { q, l }), ['es', 'ca', 'en', 'de'], hay);
+  await busca('Peonía  Azul'); await busca('peonía azul', web, 'es'); await busca('olivo'); await busca('https://spam.example/x'); await busca('ab');
+  await busca('hortensia', { ...web, 'sec-fetch-site': 'cross-site' }); await busca('hortensia', web, 'fr');
+  const bus = todo('SELECT * FROM busquedas');
+  ok(bus.length === 1 && bus[0].q === 'peonía azul' && bus[0].n === 2 && bus[0].idioma === 'es' && bus[0].ultima === dia,
+    'búsquedas: se apunta la planta que no está (una vez por nombre), no las que están, ni enlaces, ni lo que llega de otra web');
+  sq.exec(`WITH RECURSIVE c(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM c WHERE i < ${MAX_BUSQUEDAS - 1}) INSERT INTO busquedas SELECT 'planta ' || i, 'es', 1, '${dia}' FROM c`);
+  await busca('hortensia'); await busca('peonía azul');
+  ok(todo('SELECT count(*) AS n FROM busquedas')[0].n === MAX_BUSQUEDAS && todo("SELECT n FROM busquedas WHERE q = 'peonía azul'")[0].n === 3, 'búsquedas: con la lista llena no entran nombres nuevos, pero los apuntados siguen sumando');
 }
 await fin(nav);

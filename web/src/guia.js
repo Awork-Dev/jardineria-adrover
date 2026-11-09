@@ -263,6 +263,91 @@ export const PLANTAS_G = [
     ca: ["Savina", "Conífera autòctona de dunes i penya-segats. Creix a poc a poc, aguanta la salinitat i gairebé no necessita aigua."],
     en: ["Phoenician juniper", "A native conifer of dunes and cliffs. Slow-growing, salt-tolerant and needs almost no water."],
     de: ["Phönizischer Wacholder", "Heimischer Nadelbaum der Dünen und Klippen. Wächst langsam, verträgt Salz und braucht kaum Wasser."] }],
+    ["Citrus × sinensis", "sol", "medio", "no", false, {
+    es: ["Naranjo", "Azahar perfumado en primavera y naranjas en invierno. Necesita riego regular en verano y abono para cítricos de febrero a septiembre."],
+    ca: ["Taronger", "Tarongina perfumada a la primavera i taronges a l'hivern. Necessita reg regular a l'estiu i adob per a cítrics de febrer a setembre."],
+    en: ["Orange tree", "Scented blossom in spring and oranges in winter. Needs regular watering in summer and citrus feed from February to September."],
+    de: ["Orangenbaum", "Duftende Blüten im Frühling und Orangen im Winter. Braucht im Sommer regelmäßig Wasser und von Februar bis September Zitrusdünger."] }],
+    ["Laurus nobilis", "sol semi", "bajo", "no", false, {
+    es: ["Laurel", "Hojas para la cocina todo el año. Se recorta muy bien como seto o en maceta y aguanta la sequía cuando está arraigado."],
+    ca: ["Llorer", "Fulles per a la cuina tot l'any. Es retalla molt bé com a tanca o en test i aguanta la sequera quan està arrelat."],
+    en: ["Bay laurel", "Leaves for the kitchen all year round. Clips well as a hedge or in a pot and tolerates drought once established."],
+    de: ["Echter Lorbeer", "Das ganze Jahr Blätter für die Küche. Lässt sich gut als Hecke oder im Topf schneiden und verträgt eingewurzelt Trockenheit."] }],
+    ["Cupressus sempervirens", "sol", "bajo", "?", false, {
+    es: ["Ciprés", "Columna verde que no necesita poda y apenas agua. Planta los setos con espacio y evita el encharcamiento, que le provoca hongos."],
+    ca: ["Xiprer", "Columna verda que no necessita poda i gairebé gens d'aigua. Planta les tanques amb espai i evita l'entollament, que li provoca fongs."],
+    en: ["Mediterranean cypress", "A green column that needs no pruning and hardly any water. Space hedge plants well and avoid waterlogging, which brings fungal disease."],
+    de: ["Mittelmeer-Zypresse", "Grüne Säule, die keinen Schnitt und kaum Wasser braucht. Hecken mit Abstand pflanzen und Staunässe vermeiden, sie fördert Pilze."] }],
+    ["Rhamnus alaternus", "sol semi", "bajo", "?", true, {
+    es: ["Aladierno", "Arbusto autóctono de hoja perenne y brillante. Crece rápido, aguanta la sequía y el viento y da bayas que gustan a los pájaros."],
+    ca: ["Llampúdol", "Arbust autòcton de fulla perenne i lluent. Creix aviat, aguanta la sequera i el vent i fa baies que agraden als ocells."],
+    en: ["Mediterranean buckthorn", "A native evergreen shrub with glossy leaves. Fast-growing, drought and wind tolerant, with berries that birds love."],
+    de: ["Immergrüner Kreuzdorn", "Heimischer immergrüner Strauch mit glänzenden Blättern. Wächst schnell, verträgt Trockenheit und Wind; die Beeren mögen Vögel."] }],
+    ["Vitis vinifera", "sol", "bajo", "no", false, {
+    es: ["Parra", "La sombra clásica de las pérgolas mallorquinas, con uva a final de verano. Se poda en invierno, cuando no tiene hojas."],
+    ca: ["Parra", "L'ombra clàssica de les pèrgoles mallorquines, amb raïm a final d'estiu. Es poda a l'hivern, quan no té fulles."],
+    en: ["Grapevine", "The classic shade for Majorcan pergolas, with grapes in late summer. Prune in winter, when it is leafless."],
+    de: ["Weinrebe", "Der klassische Schatten mallorquinischer Pergolen, mit Trauben im Spätsommer. Schnitt im Winter, wenn sie kein Laub trägt."] }],
+    ["Jacaranda mimosifolia", "sol", "medio", "?", false, {
+    es: ["Jacaranda", "Se cubre de flores lilas a final de primavera. Necesita un sitio resguardado del viento y riego los primeros veranos."],
+    ca: ["Xicranda", "Es cobreix de flors lila a final de primavera. Necessita un lloc arrecerat del vent i reg els primers estius."],
+    en: ["Jacaranda", "Smothered in lilac flowers in late spring. Needs a spot sheltered from wind and watering during its first summers."],
+    de: ["Jacaranda", "Im Spätfrühling voller lila Blüten. Braucht einen windgeschützten Platz und in den ersten Sommern Wasser."] }],
+    ["Lagerstroemia indica", "sol", "medio", "si", false, {
+    es: ["Árbol de Júpiter", "Florece en pleno verano, cuando casi nada lo hace. Árbol pequeño, ideal para jardines y patios; se poda a final de invierno."],
+    ca: ["Arbre de Júpiter", "Floreix en ple estiu, quan gairebé res ho fa. Arbre petit, ideal per a jardins i patis; es poda a final d'hivern."],
+    en: ["Crape myrtle", "Flowers in high summer, when little else does. A small tree, ideal for gardens and patios; prune in late winter."],
+    de: ["Kreppmyrte", "Blüht im Hochsommer, wenn sonst kaum etwas blüht. Kleiner Baum, ideal für Gärten und Innenhöfe; Schnitt im Spätwinter."] }],
+    ["Hedera helix", "semi sombra", "medio", "no", true, {
+    es: ["Hiedra", "Cubre muros y suelos en sombra, donde casi nada crece. Recórtala una o dos veces al año para que no invada. Tóxica para mascotas."],
+    ca: ["Heura", "Cobreix murs i sòls a l'ombra, on gairebé res creix. Retalla-la una o dues vegades l'any perquè no envaeixi. Tòxica per a mascotes."],
+    en: ["Common ivy", "Covers walls and ground in shade, where little else grows. Trim once or twice a year to keep it in check. Toxic to pets."],
+    de: ["Efeu", "Bedeckt Mauern und Boden im Schatten, wo sonst kaum etwas wächst. Ein- bis zweimal im Jahr schneiden, damit er nicht wuchert. Giftig für Haustiere."] }],
+    ["Lonicera implexa", "sol semi", "bajo", "?", true, {
+    es: ["Madreselva mediterránea", "La madreselva autóctona de Mallorca: flores perfumadas en primavera y poca agua. Ideal para cubrir vallas."],
+    ca: ["Xuclamel (rotaboc)", "El xuclamel autòcton de Mallorca: flors perfumades a la primavera i poca aigua. Ideal per cobrir tanques."],
+    en: ["Mediterranean honeysuckle", "Majorca's native honeysuckle: scented flowers in spring and little water needed. Ideal for covering fences."],
+    de: ["Macchien-Geißblatt", "Das heimische Geißblatt Mallorcas: duftende Blüten im Frühling bei wenig Wasser. Ideal zum Begrünen von Zäunen."] }],
+    ["Osteospermum ecklonis", "sol", "medio", "?", false, {
+    es: ["Margarita africana", "Alfombra de margaritas en primavera y otoño. Quita las flores secas y recórtala en verano para que vuelva a florecer."],
+    ca: ["Margarida africana", "Catifa de margarides a la primavera i a la tardor. Lleva les flors seques i retalla-la a l'estiu perquè torni a florir."],
+    en: ["African daisy", "A carpet of daisies in spring and autumn. Deadhead it and trim in summer for a second flush."],
+    de: ["Kapmargerite", "Ein Margeritenteppich im Frühling und Herbst. Verblühtes entfernen und im Sommer zurückschneiden, dann blüht sie erneut."] }],
+    ["Aeonium arboreum", "sol semi", "bajo", "?", false, {
+    es: ["Eonio", "Rosetas de hojas carnosas sobre tallos desnudos. Crece en invierno y descansa en verano: riégalo poco cuando hace calor."],
+    ca: ["Eoni", "Rosetes de fulles carnoses sobre tiges nues. Creix a l'hivern i descansa a l'estiu: rega'l poc quan fa calor."],
+    en: ["Tree aeonium", "Rosettes of fleshy leaves on bare stems. It grows in winter and rests in summer: water sparingly in the heat."],
+    de: ["Baum-Aeonium", "Rosetten aus fleischigen Blättern auf kahlen Trieben. Wächst im Winter und ruht im Sommer: bei Hitze nur wenig gießen."] }],
+    ["Abelia × grandiflora", "sol semi", "medio", "?", false, {
+    es: ["Abelia", "Florece de junio a octubre con campanillas blancas que atraen mariposas. Sirve para setos libres y pide poca poda."],
+    ca: ["Abèlia", "Floreix de juny a octubre amb campanetes blanques que atreuen papallones. Serveix per a tanques lliures i demana poca poda."],
+    en: ["Glossy abelia", "Flowers from June to October with white bells that attract butterflies. Good for informal hedges and needs little pruning."],
+    de: ["Großblütige Abelie", "Blüht von Juni bis Oktober mit weißen Glöckchen, die Schmetterlinge anlocken. Für frei wachsende Hecken, braucht wenig Schnitt."] }],
+    ["Photinia × fraseri", "sol semi", "medio", "?", false, {
+    es: ["Fotinia", "Seto de brotes rojos muy vistosos. Cada recorte saca hojas nuevas rojas; riégala en verano hasta que arraigue."],
+    ca: ["Fotínia", "Tanca de brots vermells molt vistosos. Cada retall treu fulles noves vermelles; rega-la a l'estiu fins que arreli."],
+    en: ["Red robin photinia", "A hedge with striking red shoots. Every trim brings a new flush of red leaves; water in summer until established."],
+    de: ["Glanzmispel", "Hecke mit auffälligen roten Trieben. Jeder Schnitt bringt neue rote Blätter; im Sommer gießen, bis sie eingewurzelt ist."] }],
+    ["Dypsis lutescens", "semi sombra", "medio", "si", false, {
+    es: ["Areca", "Palmera de interior de hojas finas y arqueadas. Quiere mucha luz sin sol directo y la tierra siempre algo húmeda."],
+    ca: ["Areca", "Palmera d'interior de fulles fines i arquejades. Vol molta llum sense sol directe i la terra sempre un poc humida."],
+    en: ["Areca palm", "An indoor palm with fine, arching fronds. Wants bright light without direct sun and soil kept slightly moist."],
+    de: ["Goldfruchtpalme", "Zimmerpalme mit feinen, überhängenden Wedeln. Braucht viel Licht ohne direkte Sonne und stets leicht feuchte Erde."] }],
+    ["Phalaenopsis spp.", "semi sombra", "medio", "si", false, {
+    es: ["Orquídea mariposa", "La orquídea más fácil. Riégala por inmersión una vez a la semana y deja que escurra bien; luz clara sin sol directo."],
+    ca: ["Orquídia papallona", "L'orquídia més fàcil. Rega-la per immersió una vegada per setmana i deixa que escorri bé; llum clara sense sol directe."],
+    en: ["Moth orchid", "The easiest orchid. Water by soaking once a week and let it drain well; bright light, no direct sun."],
+    de: ["Schmetterlingsorchidee", "Die einfachste Orchidee. Einmal pro Woche tauchen und gut abtropfen lassen; helles Licht ohne direkte Sonne."] }],
+    ["Ficus elastica", "semi sombra", "medio", "no", false, {
+    es: ["Ficus de goma", "Hojas grandes y brillantes para interiores luminosos. Limpia el polvo de las hojas y riega cuando la tierra se seque por arriba."],
+    ca: ["Ficus de goma", "Fulles grans i lluents per a interiors lluminosos. Lleva la pols de les fulles i rega quan la terra s'assequi per damunt."],
+    en: ["Rubber plant", "Large glossy leaves for bright rooms. Wipe dust off the leaves and water when the top of the soil dries out."],
+    de: ["Gummibaum", "Große, glänzende Blätter für helle Räume. Staub von den Blättern wischen und gießen, wenn die Erde oben trocken ist."] }],
+    ["Tulbaghia violacea", "sol", "bajo", "?", false, {
+    es: ["Tulbalgia", "Matas de flores lilas de primavera a otoño que casi no piden agua. Muy usada en borduras; las hojas huelen a ajo al tocarlas."],
+    ca: ["Tulbàgia", "Mates de flors lila de primavera a tardor que gairebé no demanen aigua. Molt usada en vorades; les fulles fan olor d'all en tocar-les."],
+    en: ["Society garlic", "Clumps of lilac flowers from spring to autumn on very little water. Widely used for edging; the leaves smell of garlic when touched."],
+    de: ["Zimmerknoblauch (Tulbaghie)", "Horste mit lila Blüten von Frühling bis Herbst bei sehr wenig Wasser. Beliebt als Einfassung; die Blätter riechen bei Berührung nach Knoblauch."] }],
     ];
 // Calendario (clima de Mallorca): 12 meses × tareas
 export const CAL_G = {

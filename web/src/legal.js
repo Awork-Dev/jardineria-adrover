@@ -28,7 +28,7 @@ export const LEGAL = {
         "<b>Menores.</b> Este sitio web no está dirigido a menores de 14 años, que no deberán facilitarnos datos personales.",
       ]],
       ["3. Política de cookies", [
-        "Este sitio web no utiliza cookies propias ni de terceros con fines analíticos, publicitarios o de seguimiento, ni herramientas de medición de audiencia. Las tipografías y las imágenes se sirven desde el propio dominio, sin conexiones a servicios de terceros. Únicamente podrían emplearse elementos técnicos estrictamente necesarios para la seguridad y el funcionamiento del sitio, exentos de consentimiento conforme al artículo 22.2 de la LSSI-CE.",
+        "Este sitio web no utiliza cookies propias ni de terceros con fines analíticos, publicitarios o de seguimiento. Para saber qué páginas interesan más, contamos las visitas de forma agregada y anónima (día, página, idioma y país), sin cookies y sin guardar la dirección IP ni ningún identificador del visitante; del buscador de plantas solo se anotan, también de forma anónima, los nombres buscados que no están en la guía. Las tipografías y las imágenes se sirven desde el propio dominio, sin conexiones a servicios de terceros. Únicamente podrían emplearse elementos técnicos estrictamente necesarios para la seguridad y el funcionamiento del sitio, exentos de consentimiento conforme al artículo 22.2 de la LSSI-CE.",
         "Los botones de WhatsApp, SMS y correo electrónico solo abren la aplicación correspondiente del dispositivo del usuario cuando este los pulsa. A partir de ese momento se aplican las condiciones y la política de privacidad del proveedor elegido por el usuario.",
       ]],
       ["4. Legislación aplicable", [
@@ -59,7 +59,7 @@ export const LEGAL = {
         "<b>Menors.</b> Aquest lloc web no està adreçat a menors de 14 anys, que no ens han de facilitar dades personals.",
       ]],
       ["3. Política de galetes", [
-        "Aquest lloc web no utilitza galetes pròpies ni de tercers amb finalitats analítiques, publicitàries o de seguiment, ni eines de mesura d'audiència. Les tipografies i les imatges se serveixen des del mateix domini, sense connexions a serveis de tercers. Únicament es podrien emprar elements tècnics estrictament necessaris per a la seguretat i el funcionament del lloc, exempts de consentiment d'acord amb l'article 22.2 de la LSSI-CE.",
+        "Aquest lloc web no utilitza galetes pròpies ni de tercers amb finalitats analítiques, publicitàries o de seguiment. Per saber quines pàgines interessen més, comptam les visites de manera agregada i anònima (dia, pàgina, idioma i país), sense galetes i sense desar l'adreça IP ni cap identificador del visitant; del cercador de plantes només s'anoten, també de manera anònima, els noms cercats que no són a la guia. Les tipografies i les imatges se serveixen des del mateix domini, sense connexions a serveis de tercers. Únicament es podrien emprar elements tècnics estrictament necessaris per a la seguretat i el funcionament del lloc, exempts de consentiment d'acord amb l'article 22.2 de la LSSI-CE.",
         "Els botons de WhatsApp, SMS i correu electrònic només obren l'aplicació corresponent del dispositiu de l'usuari quan aquest els prem. A partir d'aquest moment s'apliquen les condicions i la política de privacitat del proveïdor triat per l'usuari.",
       ]],
       ["4. Legislació aplicable", [
@@ -90,7 +90,7 @@ export const LEGAL = {
         "<b>Minors.</b> This website is not intended for children under 14, who should not provide us with personal data.",
       ]],
       ["3. Cookie policy", [
-        "This website does not use first-party or third-party cookies for analytics, advertising or tracking, nor any audience measurement tools. Fonts and images are served from our own domain, with no connections to third-party services. Only technical elements strictly necessary for the security and operation of the site may be used, which are exempt from consent under Article 22.2 LSSI-CE.",
+        "This website does not use first-party or third-party cookies for analytics, advertising or tracking. To learn which pages are most useful, we count visits in aggregate, anonymous form (day, page, language and country), without cookies and without storing the IP address or any visitor identifier; from the plant search we only record, also anonymously, the names searched for that are not in the guide. Fonts and images are served from our own domain, with no connections to third-party services. Only technical elements strictly necessary for the security and operation of the site may be used, which are exempt from consent under Article 22.2 LSSI-CE.",
         "The WhatsApp, SMS and email buttons only open the corresponding app on the user's device when pressed. From that point on, the terms and privacy policy of the provider chosen by the user apply.",
       ]],
       ["4. Governing law", [
@@ -121,7 +121,7 @@ export const LEGAL = {
         "<b>Minderjährige.</b> Diese Website richtet sich nicht an Kinder unter 14 Jahren; diese sollten uns keine personenbezogenen Daten übermitteln.",
       ]],
       ["3. Cookie-Richtlinie", [
-        "Diese Website verwendet weder eigene noch Cookies von Drittanbietern zu Analyse-, Werbe- oder Trackingzwecken und setzt keine Reichweitenmessung ein. Schriftarten und Bilder werden von der eigenen Domain ausgeliefert, ohne Verbindungen zu Diensten Dritter. Es können lediglich technisch unbedingt erforderliche Elemente für die Sicherheit und den Betrieb der Website eingesetzt werden, die gemäß Art. 22.2 LSSI-CE keiner Einwilligung bedürfen.",
+        "Diese Website verwendet weder eigene noch Cookies von Drittanbietern zu Analyse-, Werbe- oder Trackingzwecken. Um zu erfahren, welche Seiten am meisten interessieren, zählen wir die Besuche zusammengefasst und anonym (Tag, Seite, Sprache und Land), ohne Cookies und ohne die IP-Adresse oder eine Kennung des Besuchers zu speichern; bei der Pflanzensuche werden – ebenfalls anonym – nur die gesuchten Namen notiert, die nicht im Ratgeber stehen. Schriftarten und Bilder werden von der eigenen Domain ausgeliefert, ohne Verbindungen zu Diensten Dritter. Es können lediglich technisch unbedingt erforderliche Elemente für die Sicherheit und den Betrieb der Website eingesetzt werden, die gemäß Art. 22.2 LSSI-CE keiner Einwilligung bedürfen.",
         "Die Schaltflächen für WhatsApp, SMS und E-Mail öffnen lediglich die entsprechende App auf dem Gerät des Nutzers, wenn dieser sie antippt. Ab diesem Zeitpunkt gelten die Bedingungen und Datenschutzbestimmungen des vom Nutzer gewählten Anbieters.",
       ]],
       ["4. Anwendbares Recht", [
@@ -131,4 +131,4 @@ export const LEGAL = {
     aviso: "Mit dem Absenden erklären Sie sich einverstanden, dass wir Ihre Daten zur Beantwortung verarbeiten. Mehr dazu in der <a href=\"{L}\">Datenschutzerklärung</a>.",
   },
 };
-export const ACTUALIZADO = "2026-10-22";
+export const ACTUALIZADO = "2026-11-09";

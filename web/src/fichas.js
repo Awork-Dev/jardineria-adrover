@@ -61,6 +61,23 @@ export const FICHAS = {
   "Howea forsteriana": F("kentia", "interior", [1.5, 3], false, true, [5, 10], [3, 4, 5], [], [], DE(4, 9), ["cochinilla", "arana"], ["interior", "maceta"]),
   "Crassula ovata": F("arbol-de-jade", "suculenta", [0.5, 1.5], true, true, [15, 30], [3, 4, 5], [11, 12, 1, 2], [4, 5], [5, 7], ["cochinilla", "podredumbre"], ["maceta", "interior", "rocalla"]),
   "Juniperus phoenicea": F("sabina", "arbusto", [2, 6], true, true, [21, 0], [10, 11, 12, 2], [], [], [], ["arana"], ["costa", "seco", "aislada", "seto"]),
+  "Citrus × sinensis": F("naranjo", "frutal", [3, 6], false, true, [4, 15], [3, 4, 5], [3, 4, 5], [2, 3], [2, 3, 5, 6, 9], ["pulgon", "cochinilla", "minador", "mosca"], ["frutal", "maceta", "aislada", "aroma"]),
+  "Laurus nobilis": F("laurel", "arbusto", [2, 8], false, true, [10, 0], [10, 11, 2, 3], [3, 4], [3, 9], [3], ["cochinilla"], ["seto", "cocina", "maceta", "aroma"]),
+  "Cupressus sempervirens": F("cipres", "arbol", [8, 20], false, false, [21, 0], [10, 11, 12, 2, 3], [], [], [], ["arana"], ["seto", "aislada", "seco"]),
+  "Rhamnus alaternus": F("aladierno", "arbusto", [1.5, 4], true, true, [15, 0], [10, 11, 12, 2, 3], [2, 3, 4], [5, 9], [], [], ["seto", "seco", "costa", "abejas"]),
+  "Vitis vinifera": F("parra", "trepadora", [3, 10], false, true, [10, 0], [12, 1, 2, 3], [5, 6], [12, 1, 2], [3], ["oidio"], ["pergola", "sombra", "frutal"]),
+  "Jacaranda mimosifolia": F("jacaranda", "arbol", [6, 12], false, false, [10, 0], [3, 4, 5], [5, 6], [2, 3], [3], ["pulgon"], ["sombra", "aislada"]),
+  "Lagerstroemia indica": F("arbol-de-jupiter", "arbol", [2, 6], false, true, [7, 0], [11, 12, 1, 2, 3], [7, 8, 9], [1, 2], [3, 5], ["oidio", "pulgon"], ["aislada", "maceta"]),
+  "Hedera helix": F("hiedra", "trepadora", [3, 15], false, true, [7, 0], [10, 11, 3, 4], [9, 10], [3, 8], [], ["arana", "cochinilla"], ["tapizante", "pergola", "abejas", "maceta"]),
+  "Lonicera implexa": F("madreselva", "trepadora", [2, 4], true, true, [10, 0], [10, 11, 2, 3], [4, 5, 6], [7], [], ["pulgon", "oidio"], ["pergola", "aroma", "abejas", "seco"]),
+  "Osteospermum ecklonis": F("margarita-africana", "flor", [0.3, 0.6], true, true, [5, 15], [3, 4, 10], [2, 3, 4, 5, 10, 11], [6], [3, 4, 5], ["pulgon", "podredumbre"], ["maceta", "tapizante", "costa", "rocalla"]),
+  "Aeonium arboreum": F("eonio", "suculenta", [0.5, 1], true, true, [15, 20], [10, 11, 3], [1, 2, 3], [], [], ["cochinilla", "podredumbre"], ["maceta", "rocalla", "seco", "costa"]),
+  "Abelia × grandiflora": F("abelia", "arbusto", [1, 2], false, true, [7, 0], [10, 11, 3, 4], DE(6, 10), [2, 3], [3], [], ["seto", "maceta", "abejas", "aroma"]),
+  "Photinia × fraseri": F("fotinia", "arbusto", [2, 4], false, true, [7, 0], [10, 11, 2, 3], [4, 5], [5, 9], [3], ["oidio", "pulgon"], ["seto", "aislada"]),
+  "Dypsis lutescens": F("areca", "interior", [1, 2], false, true, [4, 8], [3, 4, 5], [], [], DE(4, 9), ["arana", "cochinilla"], ["interior", "maceta"]),
+  "Phalaenopsis spp.": F("orquidea", "interior", [0.3, 0.6], false, true, [7, 10], [4, 5], [11, 12, 1, 2, 3, 4], [], DE(3, 10), ["cochinilla", "podredumbre"], ["interior"]),
+  "Ficus elastica": F("ficus-de-goma", "interior", [1, 3], false, true, [7, 15], [3, 4, 5], [], [3, 4], DE(4, 9), ["cochinilla", "arana"], ["interior", "maceta"]),
+  "Tulbaghia violacea": F("tulbalgia", "flor", [0.3, 0.5], true, true, [7, 0], [3, 4, 10], DE(4, 10), [], [3], [], ["tapizante", "maceta", "seco", "costa", "rocalla"]),
 };
 
 // Textos de las fichas. {p} = nombre de la planta, {l} = nombre en latín, {a} y {b} = metros, {n} = días.

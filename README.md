@@ -52,6 +52,8 @@ Lo más habitual al hacer cambios:
 - Cambiar los datos legales → `web/src/legal.js`.
 - Añadir una planta a la guía → su línea en `PLANTAS_G` (`web/src/guia.js`) y en `FICHAS` (`web/src/fichas.js`), y
   después `node web/generar-fotos.mjs` para su foto (va despacio: Wikimedia limita las descargas).
+- Estadísticas de la web (visitas y búsquedas sin resultado, anónimas): las apunta `web/src/visitas.js` en la base D1
+  `jardineria-adrover-web` (tablas en `web/schema.sql`) y se ven en la gestión, Resumen → «La web».
 - Cambiar los iconos → `node compartido/generar-pngs.mjs` (colores en ese archivo), crear el
   `favicon.ico` de cada app y ejecutar `node compartido/generar-iconos.mjs`.
 - Cambiar las tareas rápidas de los partes → `TAREAS` en `equipo/src/worker.js`.

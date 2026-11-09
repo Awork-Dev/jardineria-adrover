@@ -7,5 +7,7 @@
   // Fotos de las fichas de plantas (web/public/plantas), servidas tal cual.
   "assets": { "directory": "./public" },
   "kv_namespaces": [{ "binding": "DATOS", "id": "984960ce65f5450e81f433edb5354799" }],
+  // Estadísticas anónimas de la web (visitas y búsquedas sin resultado): web/schema.sql. Las lee la gestión.
+  "d1_databases": [{ "binding": "VISITAS", "database_name": "jardineria-adrover-web", "database_id": "30442937-b17e-4f53-85e8-8ff8df276e13" }],
   "triggers": { "crons": ["0 */3 * * *"] }
 }

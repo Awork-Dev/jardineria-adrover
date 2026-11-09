@@ -1,5 +1,7 @@
 // Busca en Wikimedia Commons una foto libre para cada planta de la guía, la descarga reducida a
 // web/public/plantas/<ficha>.webp y guarda su autor y licencia en web/src/fotos-plantas.js.
+// De cada una hace además una copia en JPEG (<ficha>.jpg) para la vista previa al compartir la ficha por
+// WhatsApp o redes, que no siempre enseñan las imágenes WebP.
 // Uso: node web/generar-fotos.mjs  (después de añadir plantas a la guía; necesita Python con Pillow).
 // Toma la foto principal del artículo de Wikipedia de la planta (la que eligen sus editores) y solo acepta
 // licencias que permiten usarla en una web comercial citando al autor: CC0, dominio público, CC BY y CC BY-SA.
@@ -28,6 +30,8 @@ const ELEGIDAS = {
   durillo: 'File:Viburnum tinus at Kedumim 1.jpg',
   cica: 'File:Cycas revoluta plant 03.JPG',
   kentia: 'File:Howea forsteriana kz02.jpg',
+  cipres: 'File:Viaggiando fra cipressi e olivi.jpg',
+  orquidea: 'File:Phalaenopsis (aka).jpg',
 };
 // Wikipedia no siempre tiene artículo con el nombre en latín de la guía.
 const ARTICULO = {
@@ -87,6 +91,18 @@ print(im.size[0], im.size[1])`, tmp.pathname, new URL(ficha + '.webp', CARPETA).
   return { ancho, alto };
 }
 
+// Copia en JPEG de 640 px para compartir, hecha a partir de la WebP ya guardada.
+function paraCompartir(ficha) {
+  const jpg = new URL(ficha + '.jpg', CARPETA);
+  if (fs.existsSync(jpg)) return;
+  execFileSync('python3', ['-I', '-c', `
+import sys
+from PIL import Image
+im = Image.open(sys.argv[1]).convert('RGB')
+im.thumbnail((640, 640))
+im.save(sys.argv[2], 'JPEG', quality=76, optimize=True, progressive=True)`, new URL(ficha + '.webp', CARPETA).pathname, jpg.pathname]);
+}
+
 fs.mkdirSync(CARPETA, { recursive: true });
 let previas = {};
 try { previas = (await import(SALIDA.href + '?' + Date.now())).FOTOS_COMMONS; } catch { /* primera vez */ }
@@ -100,6 +116,7 @@ for (const p of PLANTAS_G) {
   if (f.rechazada) { console.log('✗', ficha, archivo || '', '·', f.rechazada); continue; }
   await espera(12000);
   const { descarga, ...datos } = f;
+  fs.rmSync(new URL(ficha + '.jpg', CARPETA), { force: true });
   fotos[ficha] = { ...datos, ...guardar(await pedir(descarga, 'bytes'), ficha) };
   console.log('✓', ficha, '·', f.archivo, '·', f.licencia);
   // Se guarda cada vez: si Wikimedia corta a medias, lo hecho no se pierde.
@@ -109,6 +126,7 @@ for (const p of PLANTAS_G) {
 export const FOTOS_COMMONS = ${JSON.stringify({ ...previas, ...fotos }, null, 1)};
 `);
 }
+for (const ficha of Object.keys(fotos)) paraCompartir(ficha);
 // Al final queda solo lo de las plantas que siguen en la guía.
 fs.writeFileSync(SALIDA, `// Fotos de las fichas de plantas tomadas de Wikimedia Commons, con su autor y licencia (se citan en cada ficha).
 // Las imágenes están en web/public/plantas/. Generado con: node web/generar-fotos.mjs.

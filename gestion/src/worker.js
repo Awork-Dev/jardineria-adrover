@@ -132,6 +132,30 @@ export default {
       return json({ok: true, validados: filas.length});
     }
 
+    // La web: visitas de los últimos 30 días y plantas que se buscan y no están en la guía. Las cuenta la propia
+    // web sin cookies ni datos de quien entra (web/src/visitas.js); la gestión solo las lee y puede quitar búsquedas.
+    if (url.pathname === '/api/web' && req.method === 'GET') {
+      if (!env.WEB) return json({dias: null, busquedas: []});
+      const desde = new Date(Date.now() - 29 * 86400e3).toLocaleDateString('sv-SE', {timeZone: 'Europe/Madrid'});
+      const q = sql => env.WEB.prepare(sql).bind(desde);
+      try {
+        const [dias, paginas, paises, idiomas, busquedas] = await env.WEB.batch([
+          q('SELECT dia, SUM(n) AS n FROM visitas WHERE dia >= ? GROUP BY dia ORDER BY dia'),
+          q('SELECT ruta, SUM(n) AS n FROM visitas WHERE dia >= ? GROUP BY ruta ORDER BY n DESC, ruta LIMIT 10'),
+          q('SELECT pais, SUM(n) AS n FROM visitas WHERE dia >= ? GROUP BY pais ORDER BY n DESC, pais LIMIT 8'),
+          q('SELECT idioma, SUM(n) AS n FROM visitas WHERE dia >= ? GROUP BY idioma ORDER BY n DESC, idioma'),
+          env.WEB.prepare('SELECT q, idioma, n, ultima FROM busquedas ORDER BY n DESC, ultima DESC, q LIMIT 200'),
+        ]);
+        return json({desde, dias: dias.results, paginas: paginas.results, paises: paises.results, idiomas: idiomas.results, busquedas: busquedas.results});
+      } catch { return json({dias: null, busquedas: []}); }
+    }
+    if (url.pathname === '/api/web/busquedas' && req.method === 'DELETE') {
+      const b = await req.json().catch(() => null);
+      if (!env.WEB || !b || typeof b.q !== 'string' || !b.q) return json({error: 'datos'}, 400);
+      await env.WEB.prepare('DELETE FROM busquedas WHERE q = ?').bind(b.q).run();
+      return json({ok: true});
+    }
+
     const m = url.pathname.match(/^\/api\/doc\/([^/]+)\/([^/]+)$/);
     if (m) {
       const col = decodeURIComponent(m[1]), id = decodeURIComponent(m[2]);
