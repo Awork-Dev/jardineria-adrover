@@ -7,6 +7,7 @@ import { contarVisita, apuntarBusqueda, limpiarVisitas } from './visitas.js';
 import { T, G, CULT_G, HT } from './textos.js';
 import { PLANTAS_G, CAL_G, DOC_G, XERO_G, PLANTA_MES, PM_T } from './guia.js';
 import { FICHAS, FT, DIBUJOS, IDEAS } from './fichas.js';
+import { GUIAS, GT } from './guias.js';
 import { FOTOS_COMMONS } from './fotos-plantas.js';
 import { TITULAR, LEGAL_LISTO, LEGAL, ACTUALIZADO } from './legal.js';
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
@@ -131,10 +132,11 @@ CUERPOS["/guia"] = (t, lang) => {
   const g = G[lang];
   const op = (vals, txts) => vals.map((v, i) => `<option value="${v}">${txts[i]}</option>`).join("");
   return `${phead(FOTOS.flor, g.ph)}
-<div class="subnav"><div class="wrap">${["calendario", "plantas", "doctor", "xero"].map((id, i) => `<a href="#${id}">${g.sub[i]}</a>`).join("")}<a href="${u(lang, "/herramientas")}">${HT[lang].nav} →</a></div></div>
+<div class="subnav"><div class="wrap">${[["calendario", g.sub[0]], ["guias", GT[lang].sub], ["plantas", g.sub[1]], ["doctor", g.sub[2]], ["xero", g.sub[3]]].map(([id, n]) => `<a href="#${id}">${n}</a>`).join("")}<a href="${u(lang, "/herramientas")}">${HT[lang].nav} →</a></div></div>
 <section id="calendario"><div class="wrap">${cab(g.cal)}
 <div class="tabs" id="meses">${g.meses.map((m, i) => `<button class="tab" data-m="${i}">${m}</button>`).join("")}</div>
 <div class="mesbox">${CAL_G[lang].map((ts, i) => `<div class="mes" data-m="${i}"${i ? " hidden" : ""}><h3>${g.mesesL[i]}</h3><ul>${ts.map((x) => `<li>${x}</li>`).join("")}</ul>${plantasDelMes(lang, i + 1)}</div>`).join("")}</div></div></section>
+${guiasHtml(lang)}
 <section id="plantas" class="suave"><div class="wrap">${cab(g.pl)}
 <div class="ideas" id="ideas"><span>${FT[lang].ideas}:</span>${IDEAS.map((k) => `<button type="button" class="idea" data-uso="${k}" aria-pressed="false">${FT[lang].usosT[k]}</button>`).join("")}</div>
 <div class="filtros"><input type="search" id="fq" placeholder="${g.f.buscar}" aria-label="${g.f.buscar}">
@@ -183,7 +185,7 @@ function fichaHtml(t, lang, p) {
     : `<svg viewBox="0 0 240 240" role="img" aria-label="${nom}">${DIBUJOS[f.tipo]}</svg>`;
   const chips = [...p[1].split(" ").map((k) => [g.et[k]]), [g.et[p[2]]], [g.et[p[3]], p[3] === "no" ? "mal" : p[3] === "si" ? "bien" : ""], ...(p[4] ? [[g.et.auto, "auto"]] : []), ...(f.costa ? [[x.costa]] : [])]
     .map(([s, c]) => `<span class="chip${c ? " " + c : ""}">${s}</span>`).join("");
-  const msg = x.msg.replace("{p}", nom).replace("{l}", p[0]);
+  const msg = x.msg.replace("{p}", nom).replace("{l}", p[0]), enGuias = GUIAS.filter((o) => o.plantas.includes(p[0]));
   const filas = [["plantar", dentro ? x.trasplantar : x.filas[0], "p"], ["flor", x.filas[1], "f"], ["poda", x.filas[2], "d"], ["abono", x.filas[3], "a"]];
   const hoyC = (i) => (i + 1 === hoy ? " hoy" : "");
   // Rejilla y no tabla: así la columna de nombres tiene su ancho en todos los navegadores (en el iPhone se montaba).
@@ -208,7 +210,7 @@ ${filas.map(([k, et, c]) => `<div class="cfila" role="row"><span class="crot" ro
 <article class="fbox fcal"><h2>${x.cal}</h2>${cal}${notas ? `<ul class="fnotas">${notas}</ul>` : ""}</article>
 <article class="fbox fcuid"><h2>${x.cuidados}</h2><dl class="fdl">${datos.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join("")}</dl></article>
 <article class="fbox"><h2>${x.plagas}</h2>${f.plagas.length ? lista(f.plagas, x.plagasT) + `<a class="flink" href="${u(lang, "/guia")}#doctor">${x.doctor} →</a>` : `<p class="fnota">${x.sinPlagas}</p>`}</article>
-<article class="fbox"><h2>${x.usos}</h2>${lista(f.usos, x.usosT, true)}</article>
+<article class="fbox"><h2>${x.usos}</h2>${lista(f.usos, x.usosT, true)}${enGuias.length ? `<div class="fguias"><b>${GT[lang].enFicha}</b>${enGuias.map((o) => `<a class="flink" href="${u(lang, rutaGuia(o))}">${o[lang].t} →</a>`).join("")}</div>` : ""}</article>
 </div></section>
 <section class="suave fpar"><div class="wrap"><h2 class="grupo" style="margin-top:0">${x.parecidas}</h2><div class="plantas">${pareci.map((q) => tarjetaPlanta(q, lang)).join("")}</div></div></section>`;
 }
@@ -228,6 +230,36 @@ for (const l of IDIOMAS) T[l].meta["/guia/fotos"] = FT[l].creditosMeta;
 for (const [r, p] of Object.entries(FICHA)) {
   CUERPOS[r] = (t, lang) => fichaHtml(t, lang, p);
   for (const l of IDIOMAS) T[l].meta[r] = FT[l].meta.map((x) => x.replace("{p}", p[5][l][0]).replace("{l}", p[0]));
+}
+
+// ===== Guías prácticas: una página por guía (/guias/riego-en-verano…), con índice en /guia#guias =====
+const rutaGuia = (g) => "/guias/" + g.slug;
+const GUIA = Object.fromEntries(GUIAS.map((g) => [rutaGuia(g), g]));
+// Mejor época: los meses seguidos se juntan («Mar – Oct»; «Oct – Dic · Feb – Mar»).
+const mesesGuia = (g, lang) => g.meses.reduce((t, m) => { const u = t[t.length - 1]; if (u && u[1] === m - 1) u[1] = m; else t.push([m, m]); return t; }, [])
+  .map(([a, b]) => G[lang].meses[a - 1] + (b > a ? " – " + G[lang].meses[b - 1] : "")).join(" · ");
+const tarjetaGuia = (g, lang) => `<a class="guia" href="${u(lang, rutaGuia(g))}"><span class="eyebrow">${mesesGuia(g, lang)}</span><h3>${g[lang].t}</h3><p>${g[lang].d}</p><b>${GT[lang].leer} →</b></a>`;
+const guiasHtml = (lang) => `<section id="guias"><div class="wrap">${cab(GT[lang].seccion)}<div class="guias">${GUIAS.map((g) => tarjetaGuia(g, lang)).join("")}</div></div></section>`;
+function guiaHtml(t, lang, gu) {
+  const x = GT[lang], d = gu[lang];
+  const plantas = gu.plantas.map((l) => PLANTAS_G.find((p) => p[0] === l)).filter(Boolean);
+  const minutos = Math.max(1, Math.round([d.intro, ...d.resumen, ...d.pasos.flat(), ...d.errores, d.nota || ""].join(" ").split(/\s+/).length / 200));
+  // Las tres siguientes de la lista, para que desde cada guía se llegue a todas.
+  const i = GUIAS.indexOf(gu), otras = [1, 2, 3].map((k) => GUIAS[(i + k) % GUIAS.length]);
+  return `<section class="fhead"><div class="wrap"><a class="volver" href="${u(lang, "/guia")}#guias">← ${x.volver}</a>
+<div class="eyebrow">${x.guia}</div><h1 class="gtit">${d.t}</h1><p class="intro">${d.intro}</p>
+<div class="fchips" style="margin-bottom:0"><span class="chip">${x.cuando}: ${mesesGuia(gu, lang)}</span><span class="chip">${x.min.replace("{n}", minutos)}</span></div></div></section>
+<section class="fcuerpo"><div class="wrap gcols"><div class="gprin">
+<article class="fbox gres"><h2>${x.resumen}</h2><ul>${d.resumen.map((r) => `<li>${r}</li>`).join("")}</ul></article>
+<article class="fbox"><h2>${x.pasos}</h2><ol class="gpasos">${d.pasos.map(([a, b]) => `<li><h3>${a}</h3><p>${b}</p></li>`).join("")}</ol></article>
+<article class="fbox"><h2>${x.errores}</h2><ul class="gerr">${d.errores.map((e) => `<li>${e}</li>`).join("")}</ul>${d.nota ? `<p class="gnota"><b>${x.nota}:</b> ${d.nota}</p>` : ""}</article>
+</div><aside class="glado"><article class="fbox gayuda"><h2>${x.ayuda[0]}</h2><p>${x.ayuda[1]}</p><a class="btn" href="${u(lang, "/contacto")}#presupuesto">${x.ayuda[2]}</a>${TEL ? `<a class="canal wa" href="https://wa.me/${TEL}?text=${encodeURIComponent(x.msg.replace("{t}", d.t))}" target="_blank" rel="noopener">${ICO.chat}<span>${x.ayuda[3]}</span></a>` : ""}</article></aside></div></section>
+${plantas.length ? `<section class="suave fpar"><div class="wrap"><h2 class="grupo" style="margin-top:0">${x.plantas}</h2><div class="plantas">${plantas.map((q) => tarjetaPlanta(q, lang)).join("")}</div></div></section>` : ""}
+<section class="fpar"><div class="wrap"><h2 class="grupo" style="margin-top:0">${x.otras}</h2><div class="guias">${otras.map((o) => tarjetaGuia(o, lang)).join("")}</div></div></section>`;
+}
+for (const [r, g] of Object.entries(GUIA)) {
+  CUERPOS[r] = (t, lang) => guiaHtml(t, lang, g);
+  for (const l of IDIOMAS) T[l].meta[r] = [g[l].t + " · Jardinería Adrover", g[l].d];
 }
 
 function guiaJs() {
@@ -376,16 +408,19 @@ const NEGOCIO = JSON.stringify({
   areaServed: "Mallorca", hasMap: MAPA,
 }).replace(/</g, "\\u003c");
 function compartir(lang, ruta, titulo, desc) {
-  const url = DOMINIO + u(lang, ruta), p = FICHA[ruta], ficha = p && FICHAS[p[0]].ficha;
+  const url = DOMINIO + u(lang, ruta), p = FICHA[ruta], ficha = p && FICHAS[p[0]].ficha, gu = GUIA[ruta];
   // Al compartir una ficha sale la foto de esa planta (la copia en JPEG, que es la que enseñan WhatsApp y las redes).
   const foto = p && FOTOS_PLANTAS[ficha] ? img(FOTOS_PLANTAS[ficha], 1200) : p && fotoCommons(ficha) ? `/plantas/${ficha}.jpg` : img(FOTOS.hero, 1600);
   // Camino Inicio › Guía › Planta, que Google puede enseñar en sus resultados en lugar de la dirección.
-  const migas = p && JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList",
-    itemListElement: [[T[lang].nav[0], "/"], [T[lang].nav[3], "/guia"], [p[5][lang][0], ruta]].map(([name, r], i) => ({ "@type": "ListItem", position: i + 1, name, item: DOMINIO + u(lang, r) })) }).replace(/</g, "\\u003c");
-  return `<meta property="og:type" content="website"><meta property="og:site_name" content="Jardinería Adrover"><meta property="og:locale" content="${OG_LOCALE[lang]}">
+  const migas = (p || gu) && JSON.stringify({ "@context": "https://schema.org", "@type": "BreadcrumbList",
+    itemListElement: [[T[lang].nav[0], "/"], [T[lang].nav[3], "/guia"], [p ? p[5][lang][0] : gu[lang].t, ruta]].map(([name, r], i) => ({ "@type": "ListItem", position: i + 1, name, item: DOMINIO + u(lang, r) })) }).replace(/</g, "\\u003c");
+  // Las guías se presentan a Google como artículos de la empresa.
+  const articulo = gu && JSON.stringify({ "@context": "https://schema.org", "@type": "Article", headline: gu[lang].t, description: gu[lang].d, inLanguage: lang, mainEntityOfPage: url,
+    image: DOMINIO + img(FOTOS.hero, 1600), author: { "@type": "Organization", name: "Jardinería Adrover", url: DOMINIO + "/" }, publisher: { "@id": DOMINIO + "/#empresa" } }).replace(/</g, "\\u003c");
+  return `<meta property="og:type" content="${gu ? "article" : "website"}"><meta property="og:site_name" content="Jardinería Adrover"><meta property="og:locale" content="${OG_LOCALE[lang]}">
 <meta property="og:title" content="${titulo}"><meta property="og:description" content="${desc}"><meta property="og:url" content="${url}">
 <meta property="og:image" content="${DOMINIO}${foto}"><meta name="twitter:card" content="summary_large_image">
-${ruta === "/" ? `<script type="application/ld+json">${NEGOCIO}</script>` : ""}${migas ? `<script type="application/ld+json">${migas}</script>` : ""}`;
+${ruta === "/" ? `<script type="application/ld+json">${NEGOCIO}</script>` : ""}${migas ? `<script type="application/ld+json">${migas}</script>` : ""}${articulo ? `<script type="application/ld+json">${articulo}</script>` : ""}`;
 }
 
 // Buscador de plantas: por nombre común (en cualquiera de los cuatro idiomas) o científico, sin importar tildes.
@@ -564,7 +599,25 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 .pre p{color:var(--gris)}
 .pre .canales button{font:inherit;font-weight:600;border:0;cursor:pointer}
 .pre .canal.mail{border:1.5px solid var(--arena)}
-#calendario,#plantas,#doctor,#xero{scroll-margin-top:140px}
+#calendario,#guias,#plantas,#doctor,#xero{scroll-margin-top:140px}
+/* Guías prácticas */
+#guias{background:#fff}#guias .guia{background:var(--crema)}
+.guias{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.guia{display:flex;flex-direction:column;gap:10px;background:#fff;border-radius:22px;padding:28px;text-decoration:none;color:inherit;border:1.5px solid transparent;transition:.2s}
+.guia:hover{border-color:var(--hoja);transform:translateY(-3px)}
+.guia .eyebrow{font-size:.72rem}.guia h3{font-size:1.4rem;line-height:1.2}.guia p{margin:0;color:var(--gris);font-size:.95rem;flex:1}.guia b{color:var(--verde2);font-weight:600;font-size:.95rem}
+.gtit{font-size:clamp(2rem,4.6vw,3.3rem)!important;max-width:22ch}
+.gcols{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start}.gprin{display:grid;gap:20px}.glado{position:sticky;top:108px}
+.fbox.gres{background:var(--verde);color:#fff}.gres ul,.gerr{margin:0;padding-left:20px;display:grid;gap:10px}
+.gpasos{list-style:none;margin:0;padding:0;counter-reset:paso;display:grid;gap:24px}
+.gpasos li{counter-increment:paso;position:relative;padding-left:60px}
+.gpasos li::before{content:counter(paso);position:absolute;left:0;top:0;width:42px;height:42px;border-radius:50%;background:var(--arena);color:var(--verde);font-family:Fraunces,serif;font-weight:600;font-size:1.25rem;display:grid;place-items:center}
+.gpasos h3{font-family:Inter,sans-serif;font-size:1.08rem;font-weight:700;line-height:1.3;margin:8px 0 6px}.gpasos p{margin:0}
+.gnota{margin:18px 0 0;padding:14px 16px;border-radius:14px;background:var(--crema);font-size:.95rem}
+.gayuda p{margin:0 0 16px;color:var(--gris)}.gayuda .btn{display:block;text-align:center;margin:0}.gayuda .canal{display:flex;justify-content:center;margin:10px 0 0;border:1.5px solid var(--arena)}
+.fguias{margin-top:20px;padding-top:16px;border-top:1px solid var(--arena);display:grid;gap:2px}.fguias b{font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--verde2)}.fguias .flink{margin-top:8px}
+@media(max-width:980px){.guias{grid-template-columns:1fr 1fr}.gcols{grid-template-columns:1fr}.glado{position:static}}
+@media(max-width:600px){.guias{grid-template-columns:1fr}.guia{padding:22px}.gpasos li{padding-left:50px}.gpasos li::before{width:36px;height:36px;font-size:1.1rem}}
 @media(min-width:981px) and (max-width:1280px){nav a{margin-left:15px;font-size:.88rem}.langs{margin-left:12px}}
 @media(max-width:980px){.plantas,.xero{grid-template-columns:repeat(2,1fr)}.mes ul{grid-template-columns:1fr}.tools,.pre{grid-template-columns:1fr}}
 @media(max-width:600px){.plantas,.xero,.campos{grid-template-columns:1fr}.subnav{top:72px}.pre{padding:30px 22px}.tool{padding:22px}.mes{padding:24px 20px}}
@@ -572,7 +625,7 @@ footer{padding:40px 0;color:var(--gris);font-size:.9rem}footer .wrap{display:fle
 .noesta{min-height:62vh}.noesta .botones{margin-top:26px}.btn.claro{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.55);padding:12.5px 24.5px;font:inherit;font-weight:600}.btn.claro svg{width:18px;height:18px}.btn.claro:hover{background:rgba(255,255,255,.12)}
 /* Con el dedo: los enlaces pequeños ganan altura para acertar a la primera */
 @media(pointer:coarse){.volver,.flink{display:inline-flex;align-items:center;min-height:44px}.fcred a{display:inline-block;padding:12px 0}.pdato{min-height:44px;align-items:center;margin-bottom:8px}.penl{gap:0}.penl a{display:flex;align-items:center;min-height:44px}.pidiomas a{display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px}.pbase>span:first-child a{display:inline-block;padding:12px 0}}.volver:hover{text-decoration:underline}.fhead .eyebrow{color:#a9d39a;margin-top:22px}.fhead h1{font-size:clamp(2.6rem,6vw,4.4rem);margin:10px 0 4px}.lat{font-family:Fraunces,Georgia,serif;font-style:italic;color:#c5d3c8;margin:0 0 18px;font-size:1.15rem}.intro{font-size:1.12rem;max-width:56ch;margin:0 0 22px;color:#e6eee7}.fchips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:26px}.fchips .chip{background:rgba(255,255,255,.14);color:#fff;padding:6px 14px;font-size:.85rem}.fchips .chip.bien{background:#dcefd3;color:#24572c}.fchips .chip.mal{background:#f6dcd5;color:#8a2f1d}.fchips .chip.auto{background:#a9d39a;color:var(--verde)}.fimg{margin:0;border-radius:28px;overflow:hidden;background:radial-gradient(circle at 50% 38%,#fbf8f2,#e9e1d1);aspect-ratio:1}.fimg svg,.fimg img{width:100%;height:100%;object-fit:cover;display:block}.fcuerpo{padding:60px 0}.fcols{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}.fbox{background:#fff;border-radius:22px;padding:28px}.fbox h2{font-size:1.55rem;margin:0 0 18px}.fcal{grid-column:1/-1}.fcuid{grid-row:span 2}.calg{font-size:.8rem}.cfila{display:grid;grid-template-columns:96px repeat(12,minmax(0,1fr));gap:4px;align-items:center;margin-bottom:4px}.cmes{text-align:center;color:var(--gris);font-weight:600;padding-bottom:2px}.cmes.hoy{color:var(--verde2)}.crot{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px;min-width:0}.cc{height:26px;border-radius:7px;background:#f1ece2}.cc.on.p{background:#7fae6a}.cc.on.f{background:#d97a95}.cc.on.d{background:#a77b52}.cc.on.a{background:#6f9fc4}.cc.hoy{box-shadow:inset 0 0 0 2px var(--verde)}.calg .mc{display:none}.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}.fnotas{margin:16px 0 0;padding:0 0 0 18px;color:var(--gris);font-size:.92rem}.fnota{margin:0;color:var(--gris)}.fdl{margin:0}.fdl div{display:grid;grid-template-columns:110px 1fr;gap:14px;padding:14px 0;border-bottom:1px solid var(--arena)}.fdl div:last-child{border:0}.fdl dt{font-weight:600}.fdl dd{margin:0;color:var(--tinta)}.fdl small{display:block;color:var(--gris);font-size:.85rem;margin-top:6px}.fchips2{display:flex;flex-wrap:wrap;gap:8px}.fchips2 .chip{padding:6px 14px;font-size:.88rem}.flink{display:inline-block;margin-top:16px;color:var(--verde2);font-weight:600;text-decoration:none}.flink:hover{text-decoration:underline}.fpar{padding:60px 0}@media(max-width:980px){.fgrid,.fcols{grid-template-columns:1fr}.fcuid{grid-row:auto}.fimg{max-width:360px}}@media(max-width:600px){.fhead{padding:108px 0 44px}.fimg{max-width:100%}.fbox{padding:22px 16px}.calg{font-size:.7rem}.cfila{grid-template-columns:84px repeat(12,minmax(0,1fr));gap:2px;margin-bottom:2px}.cc{height:20px;border-radius:5px}.calg .ml{display:none}.calg .mc{display:inline}.fdl div{grid-template-columns:1fr;gap:4px}}/* Ideas para… y plantas del mes */.ideas{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px}.ideas span{font-weight:600;margin-right:4px}.idea{border:1.5px solid var(--arena);background:#fff;border-radius:999px;padding:8px 14px;font:inherit;font-size:.9rem;font-weight:600;cursor:pointer;color:var(--verde)}.idea:hover{border-color:var(--hoja)}.idea.on{background:var(--verde2);border-color:var(--verde2);color:#fff}.mesp{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:24px;padding-top:22px;border-top:1px solid var(--arena)}.mesp h4{font-family:Inter,sans-serif;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--verde2);margin:0 0 10px}a.chip{text-decoration:none;transition:.2s}a.chip:hover{background:var(--hoja);color:#fff}@media(max-width:980px){.mesp{grid-template-columns:1fr}}/* Fotos de las plantas */.plf{width:calc(100% + 44px);max-width:none;margin:-22px -22px 6px;aspect-ratio:4/3;object-fit:cover;border-radius:18px 18px 0 0;background:var(--arena);height:auto}.fimgw{margin:0}.fimg img{object-fit:cover}.fcred{margin-top:10px;font-size:.78rem;color:#c5d3c8;line-height:1.4}.fcred a{color:#e6eee7}.creditos{list-style:none;padding:0;margin:0}.creditos li{padding:12px 0;border-bottom:1px solid var(--arena);color:var(--gris);font-size:.92rem}.creditos li>a:first-child{font-weight:600;color:var(--verde2)}/* Pie de página */footer.pie2{padding:0;margin-top:-46px;color:#dfe8e1;font-size:.95rem;position:relative;z-index:1}footer.pie2 .wrap{display:block}.pie2 .ola{display:block;width:100%;height:46px;color:var(--verde);margin-bottom:-1px}.pfondo{background:var(--verde);padding:34px 0 30px;position:relative;overflow:hidden}.pcita{text-align:center;max-width:660px;margin:0 auto 40px}.pcita svg{width:38px;height:38px;display:block;margin:0 auto 12px;color:var(--temp,#a9d39a)}.pie2 .cita{color:#f6f2ea;margin:0;font-size:1.35rem}.pie2 .cita cite{color:#a9d39a}.pcols{display:grid;grid-template-columns:1.25fr 1.35fr 1fr .8fr;gap:40px;padding:38px 0;border-top:1px solid rgba(255,255,255,.12);border-bottom:1px solid rgba(255,255,255,.12)}.pie2 h4{font-family:Inter,sans-serif;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;color:#a9d39a;margin:0 0 16px;font-weight:600}.pmarca .logo{color:#fff}.pmarca .logo svg{width:52px;height:52px}.pmarca .logo b{font-size:1.5rem}.pmarca .logo i{font-size:1.08rem}.pmarca p{margin:12px 0 0;color:#c5d3c8;max-width:34ch;line-height:1.55}.pmarca .ptag{color:#a9d39a;font-weight:600;font-size:.82rem;letter-spacing:.06em}.pmarca .btn{margin-top:20px;background:var(--hoja);color:#10220f}.pmarca .btn:hover{background:#a9d39a}.pmapa{display:block;border-radius:18px;overflow:hidden;background:#fff;color:var(--tinta);text-decoration:none;box-shadow:0 12px 30px -16px rgba(0,0,0,.6);transition:transform .25s,box-shadow .25s}.pmapa:hover{transform:translateY(-3px);box-shadow:0 18px 36px -16px rgba(0,0,0,.7)}.pmapa:focus-visible{outline:3px solid #a9d39a;outline-offset:3px}.pmapa-dib{display:block;width:100%;height:auto;aspect-ratio:320/150}.pmapa-txt{display:block;padding:14px 16px 16px}.pmapa-txt b{display:flex;align-items:center;gap:8px;font-size:1.02rem;color:var(--verde)}.pmapa-txt b svg{width:20px;height:20px;color:#c8693a;flex:none}.pmapa-txt small{display:block;color:var(--gris);font-size:.84rem;margin:6px 0 8px;line-height:1.4}.pmapa-txt em{font-style:normal;font-weight:600;font-size:.86rem;color:var(--verde2)}.pmapa-onda{transform-origin:196px 62px;animation:onda 2.2s ease-out infinite}@keyframes onda{0%{transform:scale(.6);opacity:.45}100%{transform:scale(2.4);opacity:0}}.pmapa-pin path,.pmapa-pin circle:last-child{transform-origin:196px 64px;animation:bota 2.2s ease-in-out infinite}@keyframes bota{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}.pdato{display:flex;gap:12px;align-items:flex-start;color:#f6f2ea;text-decoration:none;margin:0 0 16px;line-height:1.35}.pdato svg{width:20px;height:20px;flex:none;color:#a9d39a;margin-top:1px}.pdato small{display:block;color:#a9d39a;font-size:.8rem;margin-top:3px}.pdato:hover span{text-decoration:underline}.penl{display:flex;flex-direction:column;gap:10px}.penl a{color:#f6f2ea;text-decoration:none}.penl a:hover{color:#a9d39a}.pbase{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:22px 76px 0 0;font-size:.85rem;color:#c5d3c8}.pbase a{color:#f6f2ea}.pidiomas{display:inline-flex;gap:4px}.pidiomas a{padding:5px 10px;border-radius:999px;text-decoration:none;font-weight:600;font-size:.78rem;color:#c5d3c8}.pidiomas a.on{background:rgba(255,255,255,.14);color:#fff}@media(prefers-reduced-motion:reduce){.pmapa-onda,.pmapa-pin path,.pmapa-pin circle:last-child{animation:none}}@media(max-width:980px){.pcols{grid-template-columns:1fr 1fr}}@media(max-width:600px){.pcols{grid-template-columns:1fr;gap:34px}.pie2 .cita{font-size:1.12rem}.pbase{flex-direction:column;align-items:flex-start;padding:22px 0 76px}}/* Menú: la sección actual se ve sobre la foto y sobre el fondo claro */header.nav nav>a.on:not(.btn){color:#fff;background:rgba(255,255,255,.22);box-shadow:inset 0 0 0 1px rgba(255,255,255,.45);padding:7px 14px;margin-left:12px;border-radius:999px;font-weight:600;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}header.nav.solid nav>a.on:not(.btn){background:var(--verde);box-shadow:none;color:#fff}@media(max-width:980px){header.nav nav>a.on:not(.btn),header.nav.solid nav>a.on:not(.btn){background:none;box-shadow:none;margin:0;padding:13px 0 13px 12px;border-radius:0;color:var(--verde);font-weight:700;border-left:4px solid var(--verde2);-webkit-backdrop-filter:none;backdrop-filter:none}}/* Buscador de plantas */header .wrap>nav{order:1;margin-left:auto}.lupa{order:2;margin-left:12px;background:none;border:0;color:inherit;cursor:pointer;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;flex:none}.lupa svg{width:22px;height:22px}.lupa:hover{background:rgba(255,255,255,.18)}header.nav.solid .lupa:hover{background:var(--arena)}.lupa:focus-visible{outline:2px solid currentColor;outline-offset:2px}.menu{order:3}@media(max-width:980px){.lupa{margin-left:auto;margin-right:4px}}.buscador{position:fixed;inset:0;z-index:80;background:rgba(15,30,20,.55);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:11vh 16px 16px}.bcaja{width:min(620px,100%);background:var(--crema);border-radius:22px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);padding:14px;max-height:78vh;display:flex;flex-direction:column}.bfila{display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:4px 6px 4px 14px;border:2px solid var(--hoja)}.bfila svg{width:22px;height:22px;color:var(--verde2);flex:none}#bq{flex:1;border:0;font:inherit;font-size:1.1rem;padding:12px 4px;background:none;outline:none;min-width:0;color:var(--tinta)}#bq::-webkit-search-cancel-button{-webkit-appearance:none;display:none}#bcierra{border:0;background:none;font-size:1.7rem;line-height:1;color:var(--gris);cursor:pointer;width:42px;height:42px;border-radius:50%;flex:none}#bcierra:hover{background:var(--arena)}.bres{overflow:auto;margin-top:8px}.bitem{display:flex;gap:14px;align-items:center;padding:10px;border-radius:14px;text-decoration:none;color:var(--tinta)}.bitem:hover,.bitem:focus-visible{background:#fff}.bitem img,.bsin{width:58px;height:58px;border-radius:12px;object-fit:cover;flex:none;background:var(--arena)}.bitem b{display:block;font-family:Fraunces,serif;font-size:1.12rem}.bitem i{display:block;color:var(--gris);font-size:.86rem}.bitem small{display:block;color:var(--verde2);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;margin-top:3px}.bpista,.bnada{color:var(--gris);margin:14px 10px}.bres .canal{margin:0 10px 10px}.btodas{display:block;margin:10px 10px 4px;color:var(--verde2);font-weight:600;text-decoration:none}.btodas:hover{text-decoration:underline}.sinscroll{overflow:hidden}@media(max-width:600px){.buscador{padding:10px}.bcaja{max-height:none;height:calc(100dvh - 20px)}}</style><noscript><style>.rv{opacity:1;transform:none}</style></noscript></head><body>
-<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}">${LOGO_SVG}<span><i>Jardinería</i><b>ADROVER</b></span></a><button class="lupa" id="lupa" type="button" aria-label="${FT[lang].busca.titulo}" title="${FT[lang].busca.titulo}">${ICO.lupa}</button><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, FICHA[ruta] || ruta === "/guia/fotos" ? "/guia" : ruta, t)}</nav></div></header>
+<header class="nav" id="nav"><div class="wrap"><a class="logo" href="${u(lang, "/")}">${LOGO_SVG}<span><i>Jardinería</i><b>ADROVER</b></span></a><button class="lupa" id="lupa" type="button" aria-label="${FT[lang].busca.titulo}" title="${FT[lang].busca.titulo}">${ICO.lupa}</button><button class="menu" id="menu" aria-label="${t.menu}" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button><nav>${menu(lang, FICHA[ruta] || GUIA[ruta] || ruta === "/guia/fotos" ? "/guia" : ruta, t)}</nav></div></header>
 
 ${CUERPOS[ruta](t, lang)}
 
@@ -725,7 +778,7 @@ export default {
     if (url.pathname === "/robots.txt") return new Response(`User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${url.origin}/sitemap.xml\n`, { headers: { "content-type": "text/plain; charset=utf-8" } });
     if (url.pathname === "/sitemap.xml") {
       const hoy = new Date().toISOString().slice(0, 10);
-      const urls = [...RUTAS, ...(LEGAL_LISTO ? ["/legal"] : []), ...Object.keys(FICHA)].flatMap((r) => IDIOMAS.map((l) => `<url><loc>${url.origin}${u(l, r)}</loc><lastmod>${hoy}</lastmod>${IDIOMAS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${url.origin}${u(x, r)}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="${url.origin}${u("es", r)}"/></url>`)).join("");
+      const urls = [...RUTAS, ...(LEGAL_LISTO ? ["/legal"] : []), ...Object.keys(GUIA), ...Object.keys(FICHA)].flatMap((r) => IDIOMAS.map((l) => `<url><loc>${url.origin}${u(l, r)}</loc><lastmod>${hoy}</lastmod>${IDIOMAS.map((x) => `<xhtml:link rel="alternate" hreflang="${x}" href="${url.origin}${u(x, r)}"/>`).join("")}<xhtml:link rel="alternate" hreflang="x-default" href="${url.origin}${u("es", r)}"/></url>`)).join("");
       return new Response(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${urls}</urlset>`, { headers: { "content-type": "application/xml; charset=utf-8" } });
     }
     const m = url.pathname.match(/^\/img\/([\w-]+)$/);
@@ -735,8 +788,10 @@ export default {
     const lm = p.match(/^\/(ca|en|de)(\/.*)?$/);
     if (lm) { lang = lm[1]; p = lm[2] || "/"; }
     if (url.pathname.startsWith("/fonts/")) return fuentes(url.pathname, env);
-    const existe = RUTAS.includes(p) || (p === "/legal" && LEGAL_LISTO) || !!FICHA[p] || p === "/guia/fotos";
+    const existe = RUTAS.includes(p) || (p === "/legal" && LEGAL_LISTO) || !!FICHA[p] || !!GUIA[p] || p === "/guia/fotos";
     if (!existe) {
+      // El índice de las guías está dentro de la Guía verde.
+      if (p === "/guias") return Response.redirect(url.origin + u(lang, "/guia") + "#guias", 301);
       // El castellano no lleva prefijo: /es/guia es /guia.
       const es = p.match(/^\/es(\/.*)?$/);
       if (es) return Response.redirect(url.origin + (es[1] || "/"), 301);

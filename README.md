@@ -50,6 +50,7 @@ Lo más habitual al hacer cambios:
 - Cambiar un teléfono, el correo o una foto → `web/src/datos.js`.
 - Cambiar un texto de la web → `web/src/textos.js` (hay que tocar los cuatro idiomas).
 - Cambiar los datos legales → `web/src/legal.js`.
+- Añadir o cambiar una guía práctica → `web/src/guias.js` (los cuatro idiomas; las plantas que nombra, por su nombre en latín).
 - Añadir una planta a la guía → su línea en `PLANTAS_G` (`web/src/guia.js`) y en `FICHAS` (`web/src/fichas.js`), y
   después `node web/generar-fotos.mjs` para su foto (va despacio: Wikimedia limita las descargas).
 - Estadísticas de la web (visitas y búsquedas sin resultado, anónimas): las apunta `web/src/visitas.js` en la base D1

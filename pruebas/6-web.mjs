@@ -4,6 +4,7 @@ import fs from 'fs';
 import { lanzar, pagina, ok, fin, IMG } from './comun.mjs';
 import { interesa, vigilar, ANTERIOR } from '../web/src/noticias.js';
 import { FICHAS } from '../web/src/fichas.js';
+import { GUIAS } from '../web/src/guias.js';
 import { FOTOS_COMMONS } from '../web/src/fotos-plantas.js';
 import { contarVisita, apuntarBusqueda, diaMadrid, MAX_VISITAS_DIA, MAX_BUSQUEDAS } from '../web/src/visitas.js';
 import { DatabaseSync } from 'node:sqlite';
@@ -20,7 +21,8 @@ const noticia = (titulo) => ({ titulo, enlace: 'https://example.com/' + encodeUR
 await p.route('**/api/noticias', (r) => r.fulfill({ json: { actualizado: Date.now(), jardineria: [noticia('Cómo preparar el jardín para el otoño en cinco pasos')], ciencia: [noticia('Plants talk to each other through roots')], baleares: [noticia('Mallorca recupera variedades antiguas de almendro')] } }));
 
 const FICHAS_R = Object.values(FICHAS).map((f) => '/guia/' + f.ficha);
-const RUTAS = ['/', '/servicios', '/vivero', '/guia', '/herramientas', '/noticias', '/contacto', '/legal', '/guia/fotos', ...FICHAS_R];
+const GUIAS_R = GUIAS.map((g) => '/guias/' + g.slug);
+const RUTAS = ['/', '/servicios', '/vivero', '/guia', '/herramientas', '/noticias', '/contacto', '/legal', '/guia/fotos', ...GUIAS_R, ...FICHAS_R];
 const malas = [];
 for (const l of ['es', 'ca', 'en', 'de']) for (const r of RUTAS) {
   const ruta = (l === 'es' ? '' : '/' + l) + (r === '/' && l !== 'es' ? '' : r);
@@ -34,7 +36,7 @@ for (const l of ['es', 'ca', 'en', 'de']) for (const r of RUTAS) {
   const fallo = [res.status() !== 200 && 'estado ' + res.status(), v.h1 !== 1 && v.h1 + ' títulos', !v.cabe && 'se sale', v.guion && 'parte palabras', !v.mapa && 'sin dirección al pie'].filter(Boolean);
   if (fallo.length) malas.push((ruta || '/') + ': ' + fallo.join(', '));
 }
-ok(!malas.length, `las ${RUTAS.length * 4} páginas (con las ${FICHAS_R.length} fichas de plantas y los créditos de las fotos) cargan, caben en el móvil, no parten palabras y llevan la dirección al pie` + (malas.length ? '\n      ' + malas.join('\n      ') : ''));
+ok(!malas.length, `las ${RUTAS.length * 4} páginas (con las ${FICHAS_R.length} fichas de plantas, las ${GUIAS_R.length} guías y los créditos de las fotos) cargan, caben en el móvil, no parten palabras y llevan la dirección al pie` + (malas.length ? '\n      ' + malas.join('\n      ') : ''));
 
 await p.goto(W + '/contacto');
 ok(await p.locator('.datos a[href="tel:+34971563213"]').count() === 1 && await p.locator('.datos a[href*="google.com/maps"]').count() === 1 && (await p.textContent('.datos')).includes('Capdepera'),
@@ -143,6 +145,23 @@ const pm = await p.getAttribute('.pm-acc a.lnk', 'href');
 ok(FICHAS_R.includes(pm), 'la planta del mes enlaza con su ficha');
 const mapa = await (await fetch(W + '/sitemap.xml')).text();
 ok(FICHAS_R.every((r) => mapa.includes('/de' + r + '<')), 'el mapa del sitio incluye las fichas en los cuatro idiomas');
+// Guías prácticas: índice en la Guía verde, una página por guía con sus plantas, y enlaces desde las fichas.
+await p.goto(W + '/guia');
+const tarjetas = await p.$$eval('#guias a.guia', (as) => as.map((a) => new URL(a.href).pathname));
+ok(tarjetas.join() === GUIAS_R.join() && await p.locator('.subnav a[href="#guias"]').count() === 1, 'la Guía verde enseña las guías prácticas y las enlaza desde su barra');
+await p.goto(W + '/de/guias/plantar-un-seto');
+const plantasG = await p.$$eval('.fpar a.pl', (as) => as.map((a) => new URL(a.href).pathname.replace('/de', '')));
+ok(await p.locator('.gpasos li').count() === 5 && await p.locator('.gres li').count() === 4 && plantasG.length === 10 && plantasG.every((r) => FICHAS_R.includes(r))
+  && await p.getAttribute('.gayuda a.btn', 'href') === '/de/contacto#presupuesto' && await p.locator('.fpar a.guia').count() === 3 && (await p.textContent('h1')).includes('Hecke'),
+  'cada guía tiene resumen, pasos, sus plantas con ficha, presupuesto y otras guías, en su idioma');
+const htmlG = await (await fetch(W + '/guias/picudo-rojo')).text();
+const datosG = [...htmlG.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+ok(datosG.some((d) => d['@type'] === 'Article' && d.headline.startsWith('Picudo rojo')) && datosG.some((d) => d['@type'] === 'BreadcrumbList' && d.itemListElement[2].item.endsWith('/guias/picudo-rojo'))
+  && htmlG.includes('property="og:type" content="article"'), 'las guías llevan sus datos para Google (artículo y camino)');
+await p.goto(W + '/guia/palmera-canaria');
+const rg = await fetch(W + '/en/guias', { redirect: 'manual' });
+ok(await p.getAttribute('.fguias a', 'href') === '/guias/picudo-rojo' && rg.status === 301 && rg.headers.get('location').endsWith('/en/guia#guias') && GUIAS_R.every((r) => mapa.includes('/ca' + r + '<')),
+  'las fichas enlazan con sus guías, /guias lleva al índice y el mapa del sitio las incluye');
 await p.goto(W + '/noticias'); await p.waitForSelector('#lista a.n', { timeout: 5000 }).catch(() => {});
 ok((await p.textContent('#lista')).includes('preparar el jardín'), 'la página de noticias pinta lo que da el vigilante');
 

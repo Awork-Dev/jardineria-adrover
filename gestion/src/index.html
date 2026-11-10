@@ -599,7 +599,7 @@ async function avisoAtendido(id, el) {
 let WEB = null, webPedida = 0;
 const PAGINAS_WEB = {'/': 'Inicio', '/servicios': 'Servicios', '/vivero': 'Vivero', '/guia': 'Guía', '/herramientas': 'Herramientas', '/noticias': 'Noticias', '/contacto': 'Contacto', '/legal': 'Aviso legal', '/guia/fotos': 'Créditos de las fotos'};
 const IDIOMAS_WEB = {es: 'Castellano', ca: 'Catalán', en: 'Inglés', de: 'Alemán'};
-const nombrePagina = r => PAGINAS_WEB[r] || (r.startsWith('/guia/') ? 'Ficha: ' + r.slice(6).replace(/-/g, ' ') : r);
+const nombrePagina = r => PAGINAS_WEB[r] || (r.startsWith('/guia/') ? 'Ficha: ' + r.slice(6).replace(/-/g, ' ') : r.startsWith('/guias/') ? 'Guía: ' + r.slice(7).replace(/-/g, ' ') : r);
 const nombrePais = c => { try { return c === '??' ? 'Sin identificar' : new Intl.DisplayNames(['es'], {type: 'region'}).of(c) || c; } catch (e) { return c; } };
 function pintarWeb() { const p = $('#panel-web'); if (p && view === 'resumen') p.outerHTML = panelWeb(); }
 function cargarWeb() {
