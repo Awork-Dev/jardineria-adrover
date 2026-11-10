@@ -11,7 +11,14 @@ const w = await pagina(nav, { userAgent: UA, viewport: { width: 390, height: 844
 const foto = fs.readFileSync(IMG('flor.jpg'));
 await w.route('**/img/**', (r) => r.fulfill({ body: foto, contentType: 'image/jpeg' }));
 await w.route('**/fonts/**', (r) => r.abort());
-const api = () => fetch(G + '/api/web', { headers: { 'X-Clave': CLAVE } }).then((r) => r.json());
+// Si la lectura coincide con una escritura de la web (en local comparten archivo), se reintenta.
+const api = async () => {
+  for (let i = 0; ; i++) {
+    const d = await fetch(G + '/api/web', { headers: { 'X-Clave': CLAVE } }).then((r) => r.json()).catch(() => null);
+    if ((d && d.dias) || i === 4) return d || { dias: [], busquedas: [] };
+    await new Promise((ok) => setTimeout(ok, 300));
+  }
+};
 const total = (d) => d.dias.reduce((a, x) => a + x.n, 0);
 const antes = await api();
 ok(Array.isArray(antes.dias) && Array.isArray(antes.busquedas), 'la gestión lee las estadísticas de la web');

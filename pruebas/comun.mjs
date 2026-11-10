@@ -32,8 +32,16 @@ export async function entrarGestion(p) {
   await p.fill('#login-form [name=clave]', CLAVE); await p.click('#login-form button'); await p.waitForSelector('.kpis');
 }
 // Datos tal como los ve la gestión (para comprobar lo que hay en el servidor)
+// En local, la gestión, el equipo y la web abren los mismos archivos de base de datos desde procesos distintos y,
+// si coinciden escribiendo, la lectura puede fallar con una página de error de wrangler (en Cloudflare no pasa):
+// se reintenta unas veces antes de dar la prueba por fallida.
 export async function datos() {
-  return (await fetch(G + '/api/datos', { headers: { 'X-Clave': CLAVE } })).json();
+  for (let i = 0; ; i++) {
+    const r = await fetch(G + '/api/datos', { headers: { 'X-Clave': CLAVE } });
+    if (r.ok && (r.headers.get('content-type') || '').includes('json')) return r.json();
+    if (i === 4) throw new Error('La gestión no devuelve los datos: ' + r.status + ' ' + (await r.text()).slice(0, 120));
+    await new Promise((ok) => setTimeout(ok, 300));
+  }
 }
 export async function nuevoCliente(p, nombre, extra = {}) {
   await p.click('[data-view=clientes]'); await p.click('[data-act=new-clientes]');
