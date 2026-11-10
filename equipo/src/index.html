@@ -80,7 +80,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .campo>span{font-weight:700;font-size:.95rem}
 .campo input,.campo select,.campo textarea{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:14px;width:100%;min-width:0}
 .campo textarea{resize:vertical}
-.fila{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fila{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+/* Las dos horas del parte, cada una en su línea en el móvil: con el botón «Ahora» no caben una al lado de la otra */
+@media(max-width:520px){.fila.horas{grid-template-columns:minmax(0,1fr);gap:0}}
 .hora{display:flex;gap:8px}.hora input{flex:1}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips label{position:relative}
@@ -182,7 +184,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     <label class="campo"><span>Fecha</span><input type="date" name="fecha" required></label>
     <span></span>
   </div>
-  <div class="fila">
+  <div class="fila horas">
     <div class="campo"><span>Empezamos</span><div class="hora"><input type="time" name="inicio" required aria-label="Hora de inicio"><button type="button" class="btn peq" data-ahora="inicio">Ahora</button></div></div>
     <div class="campo"><span>Terminamos</span><div class="hora"><input type="time" name="fin" required aria-label="Hora de fin"><button type="button" class="btn peq" data-ahora="fin">Ahora</button></div></div>
   </div>

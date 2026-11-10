@@ -96,7 +96,10 @@ ok(Object.values((await datos()).fotos).some(x => x.operario === op && x.fotos.l
 // Parte del jefe con foto
 const j = await pagina(nav, movil, 'jefe'); await entrarEquipo(j, pinJ);
 ok(await j.isVisible('#partes-card'), 'el jefe ve los partes');
-await j.click('#nuevo-parte'); await elegir(j, '#hoja [name=clienteId]', cli);
+await j.click('#nuevo-parte');
+ok(await j.evaluate(() => { const h = document.querySelector('#hoja'); return h.scrollWidth <= h.clientWidth && [...h.querySelectorAll('[data-ahora]')].every((b) => b.getBoundingClientRect().right <= innerWidth); }),
+  'el parte nuevo cabe en el móvil: las dos horas y sus botones «Ahora» se ven enteros');
+await elegir(j, '#hoja [name=clienteId]', cli);
 await j.fill('#hoja [name=inicio]', '08:00'); await j.fill('#hoja [name=fin]', '10:30');
 await j.check(`#quien label:has-text("${op}") input`); await j.check('#tareas label:has-text("Poda") input');
 await j.fill('#hoja [name=incidencias]', 'Picudo en la palmera ' + T);
