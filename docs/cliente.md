@@ -69,9 +69,8 @@
 Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`.
 
 **Dónde están los datos:** la base D1 tiene jurisdicción UE (los datos se guardan y procesan solo en la
-Unión Europea). Se movió el 22-10-2026 desde una base en EE. UU. (`jardineria-adrover-gestion`) con la
-tarea `.github/workflows/mover-base-europa.yml`; la antigua se conserva unos días como copia y después se
-borra. Los KV (fotos del equipo y copias nocturnas) son globales de Cloudflare: para tenerlos también solo en
+Unión Europea). Se movió el 22-10-2026 desde una base en EE. UU. (`jardineria-adrover-gestion`), que se
+borró el 10-11-2026 tras comprobar que todos sus datos estaban en la nueva. Los KV (fotos del equipo y copias nocturnas) son globales de Cloudflare: para tenerlos también solo en
 la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con una tarjeta).
 
 ## Copias de seguridad
