@@ -3,6 +3,7 @@ import AYUDA from './ayuda.html';
 // El manual (docs/manual-equipo.md) va dentro de la página, en el botón «?»: se puede leer sin cobertura.
 const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA);
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
+import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
 import { TAREAS, TIPOS_GASTO } from '../../compartido/constantes.js';
 
@@ -84,11 +85,14 @@ async function fotosDe(env, yo, lista) {
   return ids.filter(id => hay.has(id));
 }
 
+let CABECERAS;
 export default {
   async fetch(req, env) {
     const url = new URL(req.url), ruta = url.pathname;
     if (ruta === '/' || ruta === '/index.html') {
-      return new Response(HTML, {headers: {'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-cache', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer', 'x-robots-tag': 'noindex'}});
+      // Además de lo común: el service worker (para abrir la app sin cobertura) y la ubicación al fichar.
+      CABECERAS ||= await cabecerasPagina(HTML, {extra: "worker-src 'self'; ", permisos: 'geolocation=(self), microphone=(), payment=()'});
+      return new Response(HTML, {headers: {...CABECERAS, 'cache-control': 'no-cache'}});
     }
     if (ruta === '/sw.js') return new Response(SW, {headers: {'content-type': 'text/javascript;charset=utf-8', 'cache-control': 'no-cache'}});
     if (ruta === '/manifest.webmanifest') return manifiesto('Adrover Equipo', 'Equipo', '/', 'equipo');

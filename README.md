@@ -55,6 +55,10 @@ Lo más habitual al hacer cambios:
   después `node web/generar-fotos.mjs` para su foto (va despacio: Wikimedia limita las descargas).
 - Estadísticas de la web (visitas y búsquedas sin resultado, anónimas): las apunta `web/src/visitas.js` en la base D1
   `jardineria-adrover-web` (tablas en `web/schema.sql`) y se ven en la gestión, Resumen → «La web».
+- Actualizar la librería de los PDF (jsPDF) → copiar `dist/jspdf.umd.min.js` del paquete npm `jspdf` a
+  `gestion/public/jspdf-<versión>.umd.min.js`, borrar la anterior y cambiar el nombre en `gestion/src/index.html`.
+- Cabeceras de seguridad de las apps (qué scripts y conexiones admite el navegador) → `compartido/cabeceras.js`
+  (gestión y equipo) y el final de `web/src/worker.js` (web).
 - Cambiar los iconos → `node compartido/generar-pngs.mjs` (colores en ese archivo), crear el
   `favicon.ico` de cada app y ejecutar `node compartido/generar-iconos.mjs`.
 - Cambiar las tareas rápidas de los partes → `TAREAS` en `equipo/src/worker.js`.

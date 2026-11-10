@@ -4,6 +4,7 @@ import { constantesJS } from '../../compartido/constantes.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
 const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
+import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
 
@@ -66,13 +67,16 @@ async function caducarUbicaciones(env) {
   await quitarUbicacion(env, results);
 }
 
+let CABECERAS;
 export default {
   async scheduled(event, env, ctx) { ctx.waitUntil(Promise.all([hacerCopia(env), caducarUbicaciones(env)])); },
 
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === '/' || url.pathname === '/index.html') {
-      return new Response(HTML, {headers: {'content-type': 'text/html;charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer'}});
+      // «blob:» en las conexiones: las fotos del equipo se piden con la clave y se leen de memoria al hacer los PDF.
+      CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(), payment=()'});
+      return new Response(HTML, {headers: {...CABECERAS, 'cache-control': 'no-store'}});
     }
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');
     // Los PDF para clientes llevan el logo verde de la empresa, no el dorado de la gestión.

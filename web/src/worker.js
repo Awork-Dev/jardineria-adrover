@@ -218,7 +218,7 @@ for (const l of IDIOMAS) T[l].meta[NO_ESTA] = T[l].noEsta.meta;
 CUERPOS[NO_ESTA] = (t, lang) => {
   const x = t.noEsta;
   return `<section class="fhead noesta"><div class="wrap"><div class="eyebrow" style="color:#a9d39a">${x.ph[0]}</div><h1 style="margin-top:14px">${x.ph[1]}</h1><p class="intro">${x.ph[2]}</p>
-<div class="botones"><a class="btn" href="${u(lang, "/")}">${x.btn[0]}</a><button type="button" class="btn claro" onclick="document.getElementById('lupa').click()">${ICO.lupa}${x.btn[1]}</button><a class="btn claro" href="${u(lang, "/guia")}">${x.btn[2]}</a><a class="btn claro" href="${u(lang, "/contacto")}">${x.btn[3]}</a></div></div></section>`;
+<div class="botones"><a class="btn" href="${u(lang, "/")}">${x.btn[0]}</a><button type="button" class="btn claro" data-buscar>${ICO.lupa}${x.btn[1]}</button><a class="btn claro" href="${u(lang, "/guia")}">${x.btn[2]}</a><a class="btn claro" href="${u(lang, "/contacto")}">${x.btn[3]}</a></div></div></section>`;
 };
 CUERPOS["/guia/fotos"] = (t, lang) => {
   const x = FT[lang];
@@ -452,6 +452,7 @@ bres.innerHTML=r.length?r.map(p=>'<a class="bitem" href="'+p.u+'">'+(p.f?'<img s
 :'<p class="bnada">'+BUS.nada+'</p>'+(BUS.tel?'<a class="canal wa" target="_blank" rel="noopener" href="https://wa.me/'+BUS.tel+'?text='+encodeURIComponent(BUS.msg.replace('{q}',v))+'">'+BUS.wa+'<span>'+BUS.pedir+'</span></a>':'');
 if(PL&&PL.length&&!r.length)tB=setTimeout(()=>apuntaB(v),1500)}
 bres.addEventListener('click',e=>{if(e.target.closest('a.canal'))apuntaB(bq.value.trim())});
+document.querySelectorAll('[data-buscar]').forEach(b=>b.onclick=abreB);
 async function abreB(){bus.hidden=false;document.body.classList.add('sinscroll');bq.focus();pintaB();if(!PL){try{PL=await(await fetch('/api/plantas/${lang}')).json()}catch(e){PL=[]}pintaB()}}
 function cierraB(){bus.hidden=true;document.body.classList.remove('sinscroll');lupa.focus()}
 lupa.onclick=abreB;bq.oninput=pintaB;bus.onclick=e=>{if(e.target===bus)cierraB()};document.getElementById('bcierra').onclick=cierraB;
@@ -798,9 +799,14 @@ export default {
       // Lo que no es una página (los robots prueban /wp-login.php, /.env…) se despacha con una línea.
       if (/\.[a-z0-9]{2,5}$/i.test(p)) return new Response("No encontrada", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
     } else ctx.waitUntil(contarVisita(env, req, lang, p));
-    return new Response(pagina(lang, existe ? p : NO_ESTA, url.origin), { status: existe ? 200 : 404, headers: {
+    // El navegador solo ejecuta los scripts que escribe la propia web (llevan un número distinto en cada visita) y
+    // solo carga cosas de este dominio: si alguien lograra colar código en una página, no se ejecutaría.
+    const numero = crypto.randomUUID().replace(/-/g, "");
+    return new Response(pagina(lang, existe ? p : NO_ESTA, url.origin).replace(/<script>/g, `<script nonce="${numero}">`), { status: existe ? 200 : 404, headers: {
       // Sin copia guardada: la web app instalada en el móvil siempre enseña la última versión.
       "content-type": "text/html; charset=utf-8", "cache-control": "no-cache",
+      "content-security-policy": `default-src 'self'; script-src 'nonce-${numero}'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'`,
+      "strict-transport-security": "max-age=31536000", "permissions-policy": "geolocation=(), camera=(), microphone=(), payment=()",
       "x-content-type-options": "nosniff", "referrer-policy": "strict-origin-when-cross-origin", "x-frame-options": "SAMEORIGIN",
       // La copia en workers.dev no debe salir en Google: la buena es jardineriaadrover.es.
       ...(url.hostname.endsWith(".workers.dev") ? { "x-robots-tag": "noindex" } : {}),

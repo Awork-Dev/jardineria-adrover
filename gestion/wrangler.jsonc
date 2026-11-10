@@ -7,6 +7,8 @@
   "workers_dev": true,
   // No borrar al publicar las variables puestas a mano en el panel de Cloudflare.
   "keep_vars": true,
+  // La librería que genera los PDF (jsPDF) se sirve desde aquí, no desde un servidor externo.
+  "assets": { "directory": "./public" },
   // Copia diaria de todos los datos a las 03:15 (hora UTC), se guardan 60 días.
   "triggers": { "crons": ["15 3 * * *"] },
   "kv_namespaces": [

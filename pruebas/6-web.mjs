@@ -95,6 +95,11 @@ const [aviso] = await Promise.all([p.waitForResponse((r) => r.url().endsWith('/a
 ok(sinAviso && aviso.status() === 204 && JSON.parse(aviso.request().postData()).q === 'peonia azul', 'buscador: avisa de la planta que se busca y no está, y no de las que sí están');
 await p.keyboard.press('Escape');
 
+// Cabeceras de seguridad: la web solo ejecuta los scripts que escribe ella, con un número distinto en cada visita.
+const c1 = await fetch(W + '/'), c2 = await fetch(W + '/herramientas'), h1 = await c1.text(), h2 = await c2.text();
+const n1 = (c1.headers.get('content-security-policy') || '').match(/script-src 'nonce-(\w+)';/), n2 = (c2.headers.get('content-security-policy') || '').match(/script-src 'nonce-(\w+)';/);
+ok(n1 && n2 && n1[1] !== n2[1] && [[h1, n1[1]], [h2, n2[1]]].every(([h, n]) => !h.includes('<script>') && h.includes(`<script nonce="${n}">`) && !/ on[a-z]+="/.test(h)) && c1.headers.get('strict-transport-security'),
+  'la web solo ejecuta sus propios scripts y no tiene código suelto en los botones');
 // Una dirección que no existe responde «no encontrada» (404) en su idioma y Google no la guarda.
 const r404 = await fetch(W + '/no-existe'), h404 = await r404.text(), d404 = await fetch(W + '/de/guia/no-existe');
 ok(r404.status === 404 && h404.includes('Esta página no existe') && h404.includes('name="robots" content="noindex"') && !h404.includes('rel="canonical"')

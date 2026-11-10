@@ -20,6 +20,10 @@ ok((await o.textContent('#pin-error')).includes('incorrecto'), 'un PIN malo avis
 for (const d of pinO) await o.click(`[data-n="${d}"]`); await o.waitForSelector('#app:not([hidden])');
 ok(!(await o.isVisible('#partes-card')), 'un operario no ve los partes');
 
+const cabE = await fetch(E + '/'), cspE = cabE.headers.get('content-security-policy') || '';
+ok(/script-src 'self' 'sha256-/.test(cspE) && !/script-src[^;]*unsafe-inline/.test(cspE) && cspE.includes("worker-src 'self'") && (cabE.headers.get('permissions-policy') || '').includes('geolocation=(self)'),
+  'la app solo ejecuta sus propios scripts y solo ella puede pedir la ubicación');
+
 // Fichar
 await o.click('#fichar'); await o.waitForTimeout(800);
 ok((await o.textContent('#estado span')).startsWith('Trabajando'), 'fichar la entrada');

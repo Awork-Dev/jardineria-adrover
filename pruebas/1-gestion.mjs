@@ -64,6 +64,12 @@ await nuevoCliente(p, 'Tel España ' + T, { telefono: '626 900 428' }); await nu
 const lineaTel = (n) => p.$eval('#list', (l, n) => [...l.querySelectorAll('.card, .row')].find(c => c.textContent.includes(n))?.textContent || '', n);
 ok((await lineaTel('Tel España ' + T)).includes('+34 626 900 428') && (await lineaTel('Tel Alemania ' + T)).includes('+49 171 1234567') && !(await lineaTel('Tel Alemania ' + T)).includes('+34'),
   'los teléfonos españoles salen con +34 y los extranjeros con su prefijo');
+// Cabeceras de seguridad: solo scripts propios, nada de servidores externos, y fuera de Google.
+const cab = await fetch(G + '/'), csp = cab.headers.get('content-security-policy') || '', pagG = await cab.text();
+ok(/script-src 'self' 'sha256-[^;]+;/.test(csp) && !/script-src[^;]*unsafe-inline/.test(csp) && csp.includes("frame-ancestors 'none'") && cab.headers.get('x-robots-tag') === 'noindex'
+  && cab.headers.get('strict-transport-security') && !/src="https?:/.test(pagG), 'la gestión solo ejecuta sus propios scripts, no carga nada de fuera y no sale en Google');
+const lib = await fetch(G + '/jspdf-4.2.1.umd.min.js');
+ok(lib.ok && /javascript/.test(lib.headers.get('content-type')) && /immutable/.test(lib.headers.get('cache-control') || ''), 'la librería de los PDF se sirve desde la propia gestión');
 // Recargar mantiene la sesión
 await p.reload(); await p.waitForSelector('.kpis', { timeout: 10000 });
 ok(await p.isHidden('#login'), 'al recargar no vuelve a pedir la clave');

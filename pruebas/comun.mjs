@@ -22,6 +22,8 @@ export async function pagina(nav, opciones = {}, nombre = 'página') {
   const ctx = await nav.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true, timezoneId: 'Europe/Madrid', ...opciones });
   const p = await ctx.newPage();
   p.on('pageerror', (e) => errores.push(nombre + ': ' + e.message));
+  // Si las cabeceras de seguridad bloquean un script, una imagen o una conexión de la propia app, también es un fallo.
+  p.on('console', (m) => { if (m.type() === 'error' && /Content Security Policy|Refused to/.test(m.text())) errores.push(nombre + ': ' + m.text().slice(0, 220)); });
   return p;
 }
 export const movil = { viewport: { width: 390, height: 844 }, hasTouch: true };
