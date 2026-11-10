@@ -100,6 +100,8 @@ const c1 = await fetch(W + '/'), c2 = await fetch(W + '/herramientas'), h1 = awa
 const n1 = (c1.headers.get('content-security-policy') || '').match(/script-src 'nonce-(\w+)';/), n2 = (c2.headers.get('content-security-policy') || '').match(/script-src 'nonce-(\w+)';/);
 ok(n1 && n2 && n1[1] !== n2[1] && [[h1, n1[1]], [h2, n2[1]]].every(([h, n]) => !h.includes('<script>') && h.includes(`<script nonce="${n}">`) && !/ on[a-z]+="/.test(h)) && c1.headers.get('strict-transport-security'),
   'la web solo ejecuta sus propios scripts y no tiene código suelto en los botones');
+ok(/no-transform/.test(c1.headers.get('cache-control')) && !/https?:\/\/(?!jardineriaadrover\.es)[^"']+\.(js|css)/.test(h1), 'la portada no carga scripts ni estilos de terceros');
+ok((h1.match(/<a class="guia"/g) || []).length === 3 && h1.includes('#guias') && /<footer[\s\S]*<h3>/.test(h1) && !/<footer[\s\S]*<h4>/.test(h1), 'la portada enseña tres guías y el pie lleva sus títulos en orden');
 // Una dirección que no existe responde «no encontrada» (404) en su idioma y Google no la guarda.
 const r404 = await fetch(W + '/no-existe'), h404 = await r404.text(), d404 = await fetch(W + '/de/guia/no-existe');
 ok(r404.status === 404 && h404.includes('Esta página no existe') && h404.includes('name="robots" content="noindex"') && !h404.includes('rel="canonical"')
