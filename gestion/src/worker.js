@@ -1,6 +1,6 @@
 import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
-import { constantesJS } from '../../compartido/constantes.js';
+import { constantesJS, PIN_TODAS } from '../../compartido/constantes.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
 const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
@@ -134,6 +134,18 @@ export default {
       }
       await quitarUbicacion(env, filas, {validado: Date.now()});
       return json({ok: true, validados: filas.length});
+    }
+
+    // PIN incorrectos en la app del equipo (todas las conexiones juntas): cuántos van y si la entrada está bloqueada.
+    // La oficina puede desbloquearla si ha sido un despiste del equipo.
+    if (url.pathname === '/api/pin' && req.method === 'GET') {
+      const r = await env.DB.prepare('SELECT fallos, desde FROM intentos WHERE ip = ?').bind(PIN_TODAS.clave).first();
+      const vivo = !!r && Date.now() - r.desde < PIN_TODAS.ventana;
+      return json({fallos: vivo ? r.fallos : 0, desde: vivo ? r.desde : 0, bloqueado: vivo && r.fallos >= PIN_TODAS.max});
+    }
+    if (url.pathname === '/api/pin' && req.method === 'DELETE') {
+      await env.DB.prepare('DELETE FROM intentos WHERE ip = ?').bind(PIN_TODAS.clave).run();
+      return json({ok: true});
     }
 
     // La web: visitas de los últimos 30 días y plantas que se buscan y no están en la guía. Las cuenta la propia

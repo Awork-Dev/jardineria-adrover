@@ -594,6 +594,32 @@ async function avisoAtendido(id, el) {
   catch (e) { toast(e.message, true); el.disabled = false; }
 }
 
+/* ---------- Aviso de PIN incorrectos en la app del equipo ---------- */
+// Se enseña en el Resumen cuando ha habido bastantes en el día (alguien puede estar probando números) y, si la
+// entrada con PIN ha quedado bloqueada, deja desbloquearla.
+let PIN = null, pinPedido = 0;
+function pintarPin() { const p = $('#aviso-pin'); if (p && view === 'resumen') p.outerHTML = avisoPin(); }
+function cargarPin() {
+  if (Date.now() - pinPedido < 5 * 60e3) return;
+  pinPedido = Date.now();
+  api('GET', '/api/pin').then(d => { PIN = d; pintarPin(); }).catch(() => { pinPedido = 0; });
+}
+function avisoPin() {
+  if (!PIN || PIN.fallos < 10) return '<div id="aviso-pin" hidden></div>';
+  const desde = fmtFecha(diaDe(PIN.desde)) + ' a las ' + horaDe(PIN.desde);
+  return `<section class="panel" id="aviso-pin" style="margin-bottom:18px;border-color:var(--rej-ink)">
+    <b>${PIN.bloqueado ? 'La entrada con PIN a la app del equipo está bloqueada' : 'Muchos PIN incorrectos en la app del equipo'}</b>
+    <p class="meta" style="margin:4px 0 ${PIN.bloqueado ? 12 : 0}px">Desde el ${esc(desde)} ha habido <b>${PIN.fallos}</b> intentos de entrar con un PIN incorrecto.
+      ${PIN.bloqueado ? 'Por seguridad, nadie puede entrar con PIN durante un día; quien ya tenía la app abierta sigue trabajando con normalidad. Si ha sido un despiste del equipo, desbloquéala. Si no sabéis quién ha sido, cambiad antes los PIN en Equipo → Personas.'
+        : 'Si no es un despiste del equipo, alguien está probando números: conviene cambiar los PIN en Equipo → Personas.'}</p>
+    ${PIN.bloqueado ? '<button class="btn" data-act="pin-desbloquear">Desbloquear la entrada con PIN</button>' : ''}</section>`;
+}
+async function desbloquearPin(el) {
+  el.disabled = true;
+  try { await api('DELETE', '/api/pin'); PIN = {fallos: 0, desde: 0, bloqueado: false}; pintarPin(); toast('Entrada con PIN desbloqueada'); }
+  catch (e) { toast(e.message, true); el.disabled = false; }
+}
+
 /* ---------- La web: visitas y plantas que se buscan y no están ---------- */
 // Lo cuenta la propia web, sin cookies y sin guardar nada de quien entra; aquí solo se lee (cada 5 minutos como mucho).
 let WEB = null, webPedida = 0;
@@ -647,7 +673,7 @@ async function quitarBusqueda(el) {
   catch (e) { toast(e.message, true); el.disabled = false; }
 }
 function vResumen() {
-  cargarWeb();
+  cargarWeb(); cargarPin();
   const P = Object.values(S.presupuestos);
   const tot = p => totalsOf(p.lineas, ivaDe(p)).total;
   const acept = P.filter(p => p.estado === 'aceptado');
@@ -680,6 +706,7 @@ function vResumen() {
   ${ejemplos().length ? `<section class="panel" style="margin-bottom:18px;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-color:var(--sand)">
     <div><b>Hay datos de ejemplo cargados</b><p class="meta" style="margin:2px 0 0">Todo lo marcado «(Ejemplo)» sirve para enseñar la aplicación. Cuando ya no lo necesites, bórralo de una vez; tus datos reales no se tocan.</p></div>
     <button class="btn danger" data-act="borrar-ejemplos">Borrar ejemplos</button></section>` : ''}
+  ${avisoPin()}
   ${hoyEquipo()}
   <div class="kpis">
     <div class="kpi"><span>Clientes</span><b>${Object.keys(S.clientes).length}</b></div>
@@ -1209,6 +1236,7 @@ document.addEventListener('click', e => {
     case 'pdf-jornada': pdfJornada(); break;
     case 'validar-jornada': validarJornada(el); break;
     case 'quitar-busqueda': quitarBusqueda(el); break;
+    case 'pin-desbloquear': desbloquearPin(el); break;
     case 'jornada-ajustes': jornadaSheet(); break;
     case 'csv-extra': csvExtra(); break;
     case 'pdf-extra': pdfExtra(); break;

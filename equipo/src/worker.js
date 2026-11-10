@@ -5,7 +5,7 @@ const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo'))
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
-import { TAREAS, TIPOS_GASTO } from '../../compartido/constantes.js';
+import { TAREAS, TIPOS_GASTO, PIN_TODAS } from '../../compartido/constantes.js';
 
 // Los datos se guardan en la tabla «docs» de la gestión (colecciones operarios, fichajes, partes, gastos,
 // fotos y clientes), las sesiones de los móviles en la tabla «sesiones» y las imágenes en el KV FOTOS.
@@ -51,14 +51,15 @@ function ubicacion(b) {
 // ---------- Acceso con PIN ----------
 // Tras 10 PIN incorrectos desde la misma conexión, se bloquea 15 minutos (misma tabla que la gestión).
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
-async function bloqueada(env, ip) {
+// Y un tope para todas las conexiones juntas (PIN_TODAS, en compartido/constantes.js).
+async function bloqueada(env, ip, max = MAX_FALLOS, ventana = VENTANA) {
   const r = await env.DB.prepare('SELECT fallos, desde FROM intentos WHERE ip = ?').bind(ip).first().catch(() => null);
-  return !!r && r.fallos >= MAX_FALLOS && Date.now() - r.desde < VENTANA;
+  return !!r && r.fallos >= max && Date.now() - r.desde < ventana;
 }
-async function fallo(env, ip) {
+async function fallo(env, ip, ventana = VENTANA) {
   const ahora = Date.now();
   await env.DB.prepare('INSERT INTO intentos (ip, fallos, desde) VALUES (?, 1, ?) ON CONFLICT(ip) DO UPDATE SET fallos = CASE WHEN ? - desde > ? THEN 1 ELSE fallos + 1 END, desde = CASE WHEN ? - desde > ? THEN ? ELSE desde END')
-    .bind(ip, ahora, ahora, VENTANA, ahora, VENTANA, ahora).run().catch(() => {});
+    .bind(ip, ahora, ahora, ventana, ahora, ventana, ahora).run().catch(() => {});
 }
 // La sesión deja de valer si el operario se da de baja o si se le cambia el PIN (por ejemplo, si pierde el móvil).
 async function quienEs(req, env) {
@@ -103,9 +104,10 @@ export default {
     if (ruta === '/api/entrar' && req.method === 'POST') {
       const ip = 'equipo:' + (req.headers.get('cf-connecting-ip') || 'desconocida');
       if (await bloqueada(env, ip)) return json({error: 'Demasiados intentos. Espera 15 minutos.'}, 429);
+      if (await bloqueada(env, PIN_TODAS.clave, PIN_TODAS.max, PIN_TODAS.ventana)) return json({error: 'La entrada con PIN está bloqueada por seguridad. Avisa a la oficina.'}, 429);
       const {pin} = await req.json().catch(() => ({}));
       const op = /^\d{4}$/.test(pin || '') && (await coleccion(env, 'operarios')).find(o => o.pin === pin && o.activo !== false);
-      if (!op) { await fallo(env, ip); return json({error: 'PIN incorrecto.'}, 401); }
+      if (!op) { await fallo(env, ip); await fallo(env, PIN_TODAS.clave, PIN_TODAS.ventana); return json({error: 'PIN incorrecto.'}, 401); }
       const token = crypto.randomUUID() + '-' + crypto.randomUUID();
       await env.DB.prepare('INSERT INTO sesiones (token, operarioId, pin, creado) VALUES (?, ?, ?, ?)').bind(token, op.id, op.pin, Date.now()).run();
       return json({token, yo: publico(op)});

@@ -87,6 +87,7 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 3. Apunta el **PIN** que sale y pulsa **Guardar**. Dale el PIN y el enlace de la app del equipo.
 
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
+- **Aviso de PIN incorrectos (en el Resumen):** si alguien prueba muchos PIN en la app del equipo, sale un aviso. Tras 60 fallos en un día la entrada con PIN se bloquea sola (quien ya tenía la app abierta sigue trabajando): si ha sido un despiste, pulsa **Desbloquear**; si no sabéis quién ha sido, cambiad antes los PIN.
 - **La web (en el Resumen):** visitas a jardineriaadrover.es de los últimos 30 días (por día, página, país e idioma) y las plantas que la gente busca en la web y no están en la guía, para saber qué fichas añadir. Se cuenta sin cookies y sin guardar ningún dato de quien entra.
 - **Jornada:** elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
 - **Horas extra:** elige un mes o un año entero y sale cada persona con sus horas trabajadas y sus horas extra. Son extra las que pasan de la jornada diaria en un día laborable y todas las de sábados, domingos y festivos. **Descargar Excel** (para la gestoría) o **Descargar PDF**. Pulsa un nombre para ver sus días.
