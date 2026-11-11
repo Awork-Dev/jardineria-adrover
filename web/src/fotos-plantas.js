@@ -242,14 +242,6 @@ export const FOTOS_COMMONS = {
   "ancho": 720,
   "alto": 960
  },
- "pita": {
-  "archivo": "Agave americana Toulouse.jpg",
-  "autor": "Léna",
-  "licencia": "CC BY 3.0",
-  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
-  "ancho": 720,
-  "alto": 480
- },
  "flor-de-pascua": {
   "archivo": "Weihnachtsstern - groß.jpg",
   "autor": "André Karwath aka Aka",

@@ -153,11 +153,6 @@ export const PLANTAS_G = [
     ca: ["Au del paradís", "Flor exòtica taronja i blava a l'hivern i la primavera. A l'exterior necessita un racó sense gelades; en test, molta llum."],
     en: ["Bird of paradise", "An exotic orange-and-blue flower in winter and spring. Outdoors it needs a frost-free spot; in a pot, lots of light."],
     de: ["Paradiesvogelblume", "Exotische orange-blaue Blüte im Winter und Frühling. Draußen braucht sie einen frostfreien Platz, im Topf viel Licht."] }],
-    ["Agave americana", "sol", "bajo", "no", false, {
-    es: ["Pita (agave)", "Escultural y casi sin riego. Sus puntas pinchan mucho: plántala lejos de caminos y zonas de juego. Su savia irrita."],
-    ca: ["Pita (atzavara)", "Escultural i gairebé sense reg. Les seves puntes punxen molt: planta-la lluny de camins i zones de joc. La saba irrita."],
-    en: ["Century plant (agave)", "Sculptural and almost water-free. Its tips are very sharp: plant it away from paths and play areas. The sap is irritating."],
-    de: ["Agave", "Skulptural und fast ohne Wasser. Die Spitzen stechen stark: fern von Wegen und Spielbereichen pflanzen. Der Saft reizt."] }],
     ["Euphorbia pulcherrima", "semi", "medio", "no", false, {
     es: ["Flor de Pascua", "La planta de la Navidad. Luz abundante sin sol directo, lejos de corrientes y radiadores, y riego solo cuando la tierra se seque."],
     ca: ["Flor de Nadal", "La planta de Nadal. Llum abundant sense sol directe, lluny de corrents i radiadors, i reg només quan la terra s'assequi."],

@@ -801,6 +801,8 @@ export default {
     if (!existe) {
       // El índice de las guías está dentro de la Guía verde.
       if (p === "/guias") return Response.redirect(url.origin + u(lang, "/guia") + "#guias", 301);
+      // Fichas retiradas (la pita, Agave americana, por si figura como especie invasora): su dirección lleva a la guía.
+      if (p === "/guia/pita") return Response.redirect(url.origin + u(lang, "/guia") + "#plantas", 301);
       // El castellano no lleva prefijo: /es/guia es /guia.
       const es = p.match(/^\/es(\/.*)?$/);
       if (es) return Response.redirect(url.origin + (es[1] || "/"), 301);

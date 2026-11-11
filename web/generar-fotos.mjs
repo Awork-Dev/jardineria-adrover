@@ -23,7 +23,6 @@ const ELEGIDAS = {
   geranio: 'File:Red and white horseshoe geranium in Tuntorp 1.jpg',
   calathea: 'File:Houseplant Calathea orbifolia.jpg',
   cinta: "File:Chlorophytum comosum 'Variegatum' kz01.jpg",
-  pita: 'File:Agave americana Toulouse.jpg',
   olivo: 'File:Olive tree olea europaea mallorca.jpg',
   higuera: 'File:Figuier FR Mai 2013.jpg',
   jazmin: 'File:Jasminum officionale flowers, 74 Sunbury St Geebung IMGP2384.jpg',

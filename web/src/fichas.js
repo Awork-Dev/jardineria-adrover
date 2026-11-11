@@ -39,7 +39,6 @@ export const FICHAS = {
   "Bougainvillea spectabilis": F("buganvilla", "trepadora", [3, 8], true, true, [7, 0], [4, 5, 6], DE(5, 11), [2, 3], [4, 6], ["pulgon", "cochinilla"], ["pergola", "seco", "costa"]),
   "Plumbago auriculata": F("plumbago", "arbusto", [1, 3], true, true, [7, 0], [3, 4, 5, 10], DE(4, 11), [2, 3], [4, 6], ["cochinilla"], ["seto", "pergola", "maceta"]),
   "Strelitzia reginae": F("ave-del-paraiso", "flor", [1, 1.5], false, true, [5, 15], [4, 5], [11, 12, 1, 2, 3, 4, 5], [], DE(3, 9), ["cochinilla"], ["maceta", "aislada"]),
-  "Agave americana": F("pita", "suculenta", [1, 2], true, true, [30, 0], [3, 4, 5, 9, 10], [], [], [], ["picudoAgave"], ["rocalla", "seco", "costa", "aislada"]),
   "Euphorbia pulcherrima": F("flor-de-pascua", "interior", [0.3, 0.6], false, true, [5, 7], [4, 5], [11, 12, 1, 2], [4, 5], DE(4, 9), ["mosca", "cochinilla"], ["interior"]),
   "Zamioculcas zamiifolia": F("zamioculca", "interior", [0.4, 1], false, true, [14, 28], [4, 5], [], [], [5, 7], ["podredumbre"], ["interior"]),
   "Spathiphyllum wallisii": F("espatifilo", "interior", [0.3, 0.7], false, true, [5, 8], [3, 4], DE(3, 9), [], DE(4, 9), ["arana", "cochinilla"], ["interior"]),
@@ -130,7 +129,7 @@ export const FT = {
     meta: ["{p}: cuidados, riego y poda en Mallorca · Jardinería Adrover", "{p} ({l}): cuándo plantarla, regarla, podarla y abonarla en Mallorca, y qué plagas vigilar. Ficha del vivero Jardinería Adrover."],
     tipos: { arbol: "Árbol", arbusto: "Arbusto", palmera: "Palmera", aromatica: "Aromática", trepadora: "Trepadora", tapizante: "Tapizante", suculenta: "Suculenta", interior: "Planta de interior", frutal: "Frutal", flor: "Planta de flor" },
     usosT: { seto: "Setos", rocalla: "Rocallas y bordes", maceta: "Maceta y terraza", seco: "Jardín de bajo consumo", costa: "Jardines junto al mar", abejas: "Atrae abejas y mariposas", cocina: "Para cocinar", sombra: "Da sombra", aislada: "Planta protagonista", tapizante: "Cubrir suelos y taludes", pergola: "Vallas y pérgolas", interior: "Interior", colgante: "Colgante", frutal: "Fruta en casa", aroma: "Perfuma el jardín" },
-    plagasT: { pulgon: "Pulgón", cochinilla: "Cochinilla", arana: "Araña roja", mosca: "Mosca blanca", oidio: "Oídio", podredumbre: "Podredumbre por exceso de riego", taladro: "Taladro del geranio (mariposa)", picudo: "Picudo rojo", paysandisia: "Paysandisia (mariposa de las palmeras)", procesionaria: "Procesionaria", xylella: "Xylella", minador: "Minador de los cítricos", picudoAgave: "Picudo negro del agave" },
+    plagasT: { pulgon: "Pulgón", cochinilla: "Cochinilla", arana: "Araña roja", mosca: "Mosca blanca", oidio: "Oídio", podredumbre: "Podredumbre por exceso de riego", taladro: "Taladro del geranio (mariposa)", picudo: "Picudo rojo", paysandisia: "Paysandisia (mariposa de las palmeras)", procesionaria: "Procesionaria", xylella: "Xylella", minador: "Minador de los cítricos" },
   },
   ca: {
     ficha: "Fitxa de planta", volver: "Totes les plantes", cuidados: "Cures", tam: "Mida", alto: "De {a} a {b} m d'alçada",
@@ -152,7 +151,7 @@ export const FT = {
     meta: ["{p}: cures, reg i poda a Mallorca · Jardinería Adrover", "{p} ({l}): quan plantar-la, regar-la, podar-la i adobar-la a Mallorca, i quines plagues vigilar. Fitxa del viver Jardinería Adrover."],
     tipos: { arbol: "Arbre", arbusto: "Arbust", palmera: "Palmera", aromatica: "Aromàtica", trepadora: "Enfiladissa", tapizante: "Entapissant", suculenta: "Suculenta", interior: "Planta d'interior", frutal: "Fruiter", flor: "Planta de flor" },
     usosT: { seto: "Tanques", rocalla: "Rocalles i vores", maceta: "Test i terrassa", seco: "Jardí de baix consum", costa: "Jardins vora la mar", abejas: "Atreu abelles i papallones", cocina: "Per cuinar", sombra: "Fa ombra", aislada: "Planta protagonista", tapizante: "Cobrir sòls i talussos", pergola: "Tanques i pèrgoles", interior: "Interior", colgante: "Penjant", frutal: "Fruita a casa", aroma: "Perfuma el jardí" },
-    plagasT: { pulgon: "Pugó", cochinilla: "Cotxinilla", arana: "Aranya vermella", mosca: "Mosca blanca", oidio: "Oïdi", podredumbre: "Podridura per excés de reg", taladro: "Barrinadora del gerani (papallona)", picudo: "Morrut roig", paysandisia: "Paysandisia (papallona de les palmeres)", procesionaria: "Processionària", xylella: "Xylella", minador: "Minador dels cítrics", picudoAgave: "Morrut negre de l'atzavara" },
+    plagasT: { pulgon: "Pugó", cochinilla: "Cotxinilla", arana: "Aranya vermella", mosca: "Mosca blanca", oidio: "Oïdi", podredumbre: "Podridura per excés de reg", taladro: "Barrinadora del gerani (papallona)", picudo: "Morrut roig", paysandisia: "Paysandisia (papallona de les palmeres)", procesionaria: "Processionària", xylella: "Xylella", minador: "Minador dels cítrics" },
   },
   en: {
     ficha: "Plant profile", volver: "All plants", cuidados: "Care", tam: "Size", alto: "{a} to {b} m tall",
@@ -174,7 +173,7 @@ export const FT = {
     meta: ["{p}: care, watering and pruning in Mallorca · Jardinería Adrover", "{p} ({l}): when to plant, water, prune and feed it in Mallorca, and which pests to watch for. Plant profile from the Jardinería Adrover nursery."],
     tipos: { arbol: "Tree", arbusto: "Shrub", palmera: "Palm", aromatica: "Herb", trepadora: "Climber", tapizante: "Ground cover", suculenta: "Succulent", interior: "Houseplant", frutal: "Fruit tree", flor: "Flowering plant" },
     usosT: { seto: "Hedges", rocalla: "Rockeries and edges", maceta: "Pots and terraces", seco: "Low-water gardens", costa: "Seaside gardens", abejas: "Attracts bees and butterflies", cocina: "Cooking", sombra: "Gives shade", aislada: "Feature plant", tapizante: "Covering ground and slopes", pergola: "Fences and pergolas", interior: "Indoors", colgante: "Hanging", frutal: "Home-grown fruit", aroma: "Scented" },
-    plagasT: { pulgon: "Aphids", cochinilla: "Mealybugs and scale", arana: "Spider mites", mosca: "Whitefly", oidio: "Powdery mildew", podredumbre: "Root rot from overwatering", taladro: "Geranium bronze butterfly", picudo: "Red palm weevil", paysandisia: "Palm moth (Paysandisia)", procesionaria: "Pine processionary caterpillar", xylella: "Xylella", minador: "Citrus leaf miner", picudoAgave: "Agave snout weevil" },
+    plagasT: { pulgon: "Aphids", cochinilla: "Mealybugs and scale", arana: "Spider mites", mosca: "Whitefly", oidio: "Powdery mildew", podredumbre: "Root rot from overwatering", taladro: "Geranium bronze butterfly", picudo: "Red palm weevil", paysandisia: "Palm moth (Paysandisia)", procesionaria: "Pine processionary caterpillar", xylella: "Xylella", minador: "Citrus leaf miner" },
   },
   de: {
     ficha: "Pflanzenprofil", volver: "Alle Pflanzen", cuidados: "Pflege", tam: "Größe", alto: "{a} bis {b} m hoch",
@@ -196,7 +195,7 @@ export const FT = {
     meta: ["{p}: Pflege, Gießen und Schnitt auf Mallorca · Jardinería Adrover", "{p} ({l}): wann pflanzen, gießen, schneiden und düngen auf Mallorca und auf welche Schädlinge achten. Pflanzenprofil der Gärtnerei Jardinería Adrover."],
     tipos: { arbol: "Baum", arbusto: "Strauch", palmera: "Palme", aromatica: "Kräuterpflanze", trepadora: "Kletterpflanze", tapizante: "Bodendecker", suculenta: "Sukkulente", interior: "Zimmerpflanze", frutal: "Obstbaum", flor: "Blühpflanze" },
     usosT: { seto: "Hecken", rocalla: "Steingärten und Ränder", maceta: "Kübel und Terrasse", seco: "Wassersparende Gärten", costa: "Gärten am Meer", abejas: "Lockt Bienen und Schmetterlinge an", cocina: "Zum Kochen", sombra: "Spendet Schatten", aislada: "Blickfang", tapizante: "Boden und Böschungen bedecken", pergola: "Zäune und Pergolen", interior: "Innenräume", colgante: "Ampelpflanze", frutal: "Eigenes Obst", aroma: "Duftet" },
-    plagasT: { pulgon: "Blattläuse", cochinilla: "Woll- und Schildläuse", arana: "Spinnmilben", mosca: "Weiße Fliege", oidio: "Echter Mehltau", podredumbre: "Wurzelfäule durch zu viel Wasser", taladro: "Geranien-Bläuling", picudo: "Roter Palmrüssler", paysandisia: "Palmenfalter (Paysandisia)", procesionaria: "Pinien-Prozessionsspinner", xylella: "Xylella", minador: "Zitrusminiermotte", picudoAgave: "Agavenrüssler" },
+    plagasT: { pulgon: "Blattläuse", cochinilla: "Woll- und Schildläuse", arana: "Spinnmilben", mosca: "Weiße Fliege", oidio: "Echter Mehltau", podredumbre: "Wurzelfäule durch zu viel Wasser", taladro: "Geranien-Bläuling", picudo: "Roter Palmrüssler", paysandisia: "Palmenfalter (Paysandisia)", procesionaria: "Pinien-Prozessionsspinner", xylella: "Xylella", minador: "Zitrusminiermotte" },
   },
 };
 
