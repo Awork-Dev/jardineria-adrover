@@ -483,6 +483,121 @@ export const PLANTAS_G = [
     ca: ["Fonoll marí", "El fonoll marí que a Mallorca es menja envinagrat. Creix a les roques vora la mar: aguanta salinitat, vent i sequera com cap altra. Ideal per a jardins a primera línia."],
     en: ["Rock samphire", "The sea fennel that Majorcans eat pickled. It grows on seaside rocks: nothing copes better with salt, wind and drought. Ideal for seafront gardens."],
     de: ["Meerfenchel", "Der Meerfenchel, den man auf Mallorca eingelegt isst. Wächst auf Felsen am Meer: Nichts verträgt Salz, Wind und Trockenheit besser. Ideal für Gärten in erster Meereslinie."] }],
+    ["Tamarix africana", "sol", "bajo", "?", true, {
+    es: ["Taray", "El «tamarell» de las playas mallorquinas. Aguanta como ninguno el salitre, el viento y los suelos salinos; espigas rosadas en primavera. Ideal como cortavientos junto al mar."],
+    ca: ["Tamarell", "El tamarell de les platges mallorquines. Aguanta com cap altre la salinitat, el vent i els sòls salins; espigues rosades a la primavera. Ideal com a paravent vora la mar."],
+    en: ["Tamarisk", "The tree of Majorcan beaches. Nothing copes better with salt spray, wind and saline soil; pink flower spikes in spring. Ideal as a windbreak by the sea."],
+    de: ["Tamariske", "Der Baum der mallorquinischen Strände. Nichts verträgt Salzgischt, Wind und salzige Böden besser; rosa Blütenähren im Frühling. Ideal als Windschutz am Meer."] }],
+    ["Crataegus monogyna", "sol semi", "bajo", "?", true, {
+    es: ["Majuelo", "Arbolito espinoso que se cubre de flor blanca en primavera y de bayas rojas en otoño, alimento de pájaros. Sirve para setos defensivos y no necesita riego."],
+    ca: ["Cirerer de pastor", "Arbret espinós que es cobreix de flor blanca a la primavera i de baies vermelles a la tardor, aliment dels ocells. Serveix per a tanques defensives i no necessita reg."],
+    en: ["Hawthorn", "A thorny small tree smothered in white blossom in spring and red berries in autumn, food for birds. Good for defensive hedges and needs no watering."],
+    de: ["Eingriffeliger Weißdorn", "Dorniger Kleinbaum, im Frühling voller weißer Blüten und im Herbst voller roter Beeren – Vogelfutter. Für wehrhafte Hecken, braucht kein Gießen."] }],
+    ["Quercus coccifera", "sol", "bajo", "?", true, {
+    es: ["Coscoja", "Prima pequeña de la encina, de hoja pinchuda y brillante. Forma matas densas e impenetrables, rebrota tras la poda y vive en los suelos más secos y pedregosos."],
+    ca: ["Coscoll", "Parent petit de l'alzina, de fulla punxosa i lluent. Fa mates denses i impenetrables, rebrota després de la poda i viu als sòls més secs i pedregosos."],
+    en: ["Kermes oak", "A small relative of the holm oak, with glossy, prickly leaves. Forms dense, impenetrable thickets, resprouts after pruning and lives in the driest, stoniest soils."],
+    de: ["Kermes-Eiche", "Kleine Verwandte der Steineiche mit glänzenden, stacheligen Blättern. Bildet dichtes, undurchdringliches Gebüsch, treibt nach dem Schnitt wieder aus und wächst auf trockensten, steinigen Böden."] }],
+    ["Phillyrea angustifolia", "sol semi", "bajo", "?", true, {
+    es: ["Labiérnago", "Arbusto autóctono de hoja estrecha, parecido a un olivo fino. Se recorta tan bien como el boj y aguanta sequía, viento y salitre: un seto mediterráneo sin riego."],
+    ca: ["Aladern de fulla estreta", "Arbust autòcton de fulla estreta, semblant a una olivera fina. Es retalla tan bé com el boix i aguanta sequera, vent i salinitat: una tanca mediterrània sense reg."],
+    en: ["Narrow-leaved mock privet", "A native shrub with narrow leaves, like a fine-leaved olive. Clips as well as box and takes drought, wind and salt: a Mediterranean hedge without irrigation."],
+    de: ["Schmalblättrige Steinlinde", "Heimischer Strauch mit schmalen Blättern, ähnlich einem feinlaubigen Olivenbaum. Lässt sich so gut schneiden wie Buchs und verträgt Trockenheit, Wind und Salz: eine mediterrane Hecke ohne Bewässerung."] }],
+    ["Buxus balearica", "sol semi", "bajo", "no", true, {
+    es: ["Boj balear", "El boj de las montañas de Mallorca, de hoja más grande y clara que el común y mucho más resistente al calor. Crece despacio y se recorta bien. Cómpralo siempre de vivero."],
+    ca: ["Boix baleàric", "El boix de les muntanyes de Mallorca, de fulla més grossa i clara que el comú i molt més resistent a la calor. Creix a poc a poc i es retalla bé. Compra'l sempre de viver."],
+    en: ["Balearic box", "The box of Mallorca's mountains, with larger, paler leaves than common box and far more heat-tolerant. Slow-growing and clips well. Always buy nursery-grown plants."],
+    de: ["Balearen-Buchsbaum", "Der Buchs der Berge Mallorcas, mit größeren, helleren Blättern als der gewöhnliche und viel hitzefester. Wächst langsam und lässt sich gut schneiden. Nur aus Gärtnereien kaufen."] }],
+    ["Cistus monspeliensis", "sol", "bajo", "?", true, {
+    es: ["Estepa negra", "Hojas estrechas, oscuras y pegajosas, muy aromáticas con el calor, y flores blancas en primavera. De las plantas más sufridas de la garriga: sol, suelo pobre y nada de riego."],
+    ca: ["Estepa llimonenca", "Fulles estretes, fosques i aferradisses, molt aromàtiques amb la calor, i flors blanques a la primavera. De les plantes més sofertes de la garriga: sol, sòl pobre i gens de reg."],
+    en: ["Montpellier cistus", "Narrow, dark, sticky leaves, strongly aromatic in the heat, and white flowers in spring. One of the toughest plants of the scrubland: sun, poor soil and no watering."],
+    de: ["Montpellier-Zistrose", "Schmale, dunkle, klebrige Blätter, die in der Hitze stark duften, und weiße Blüten im Frühling. Eine der genügsamsten Pflanzen der Garrigue: Sonne, karger Boden, kein Gießen."] }],
+    ["Cistus salviifolius", "sol semi", "bajo", "?", true, {
+    es: ["Jara de hoja de salvia", "Estepa baja y redondeada, de hojas rugosas y flores blancas con el centro amarillo. Tolera algo de sombra bajo los pinos y cubre bien los taludes secos."],
+    ca: ["Estepa borrera", "Estepa baixa i arrodonida, de fulles rugoses i flors blanques amb el centre groc. Tolera un poc d'ombra davall els pins i cobreix bé els talussos secs."],
+    en: ["Sage-leaved cistus", "A low, rounded rockrose with wrinkled leaves and white flowers with a yellow centre. Tolerates some shade under pines and covers dry banks well."],
+    de: ["Salbeiblättrige Zistrose", "Niedrige, rundliche Zistrose mit runzeligen Blättern und weißen Blüten mit gelber Mitte. Verträgt etwas Schatten unter Kiefern und begrünt trockene Böschungen gut."] }],
+    ["Euphorbia dendroides", "sol", "bajo", "no", true, {
+    es: ["Lechetrezna arbórea", "Bola perfecta que se viste de verde en otoño, de amarillo en primavera y de rojo antes de perder la hoja en verano: así ahorra agua. Su látex es tóxico e irritante."],
+    ca: ["Lleteresa arbòria", "Bolla perfecta que es vesteix de verd a la tardor, de groc a la primavera i de vermell abans de perdre la fulla a l'estiu: així estalvia aigua. El seu làtex és tòxic i irritant."],
+    en: ["Tree spurge", "A perfect dome that turns green in autumn, yellow in spring and red before dropping its leaves in summer: that is how it saves water. Its latex is toxic and an irritant."],
+    de: ["Baum-Wolfsmilch", "Eine perfekte Kugel: grün im Herbst, gelb im Frühling und rot, bevor sie im Sommer das Laub abwirft – so spart sie Wasser. Der Milchsaft ist giftig und reizend."] }],
+    ["Anthyllis cytisoides", "sol", "bajo", "?", true, {
+    es: ["Albaida", "Mata plateada que en primavera se llena de espigas amarillas y de abejas. Fija taludes y enriquece los suelos pobres; no hay que regarla ni abonarla."],
+    ca: ["Albada", "Mata platejada que a la primavera s'omple d'espigues grogues i d'abelles. Fixa talussos i enriqueix els sòls pobres; no s'ha de regar ni adobar."],
+    en: ["Albaida", "A silvery shrub that fills with yellow flower spikes and bees in spring. It stabilises banks and enriches poor soils; needs neither watering nor feeding."],
+    de: ["Zwergginster-Wundklee", "Silbriger Strauch, der sich im Frühling mit gelben Blütenähren und Bienen füllt. Befestigt Böschungen und verbessert karge Böden; braucht weder Wasser noch Dünger."] }],
+    ["Vitex agnus-castus", "sol", "medio", "?", true, {
+    es: ["Sauzgatillo", "El «aloc» de los torrentes. Espigas azul violeta en pleno verano, cuando el jardín está más apagado, y hojas aromáticas. Pódalo fuerte en invierno: florece en la madera nueva."],
+    ca: ["Aloc", "L'aloc dels torrents. Espigues blau violeta en ple estiu, quan el jardí és més apagat, i fulles aromàtiques. Poda'l fort a l'hivern: floreix en la fusta nova."],
+    en: ["Chaste tree", "A native of Mallorca's stream beds. Violet-blue flower spikes in high summer, when the garden is at its dullest, and aromatic leaves. Prune hard in winter: it flowers on new wood."],
+    de: ["Mönchspfeffer", "Heimisch an den Sturzbächen Mallorcas. Blauviolette Blütenähren im Hochsommer, wenn der Garten am blassesten ist, und duftendes Laub. Im Winter stark zurückschneiden: Er blüht am neuen Holz."] }],
+    ["Globularia alypum", "sol", "bajo", "?", true, {
+    es: ["Coronilla de fraile", "Pequeña mata que florece en pleno invierno con pompones azules, cuando casi nada lo hace. Vive entre piedras, sin riego, y es perfecta para rocallas soleadas."],
+    ca: ["Foixarda", "Petita mata que floreix en ple hivern amb pompons blaus, quan gairebé res ho fa. Viu entre pedres, sense reg, i és perfecta per a rocalles assolellades."],
+    en: ["Shrubby globularia", "A small shrub that flowers in midwinter with blue pompoms, when almost nothing else does. Lives among stones, unwatered, and is perfect for sunny rockeries."],
+    de: ["Strauchige Kugelblume", "Kleiner Strauch, der mitten im Winter mit blauen Pompons blüht, wenn fast nichts anderes blüht. Lebt zwischen Steinen ohne Gießen – ideal für sonnige Steingärten."] }],
+    ["Cneorum tricoccon", "sol semi", "bajo", "no", true, {
+    es: ["Olivillo", "Mata compacta de hoja estrecha y brillante, flores amarillas y frutos rojos de tres bolitas. Exclusiva del Mediterráneo occidental; no pide riego ni poda. Tóxica si se ingiere."],
+    ca: ["Escanyacabres", "Mata compacta de fulla estreta i lluent, flors grogues i fruits vermells de tres bolletes. Exclusiva de la Mediterrània occidental; no demana reg ni poda. Tòxica si s'ingereix."],
+    en: ["Spurge olive", "A compact shrub with narrow glossy leaves, yellow flowers and red three-lobed fruits. Found only in the western Mediterranean; needs no watering or pruning. Toxic if eaten."],
+    de: ["Zwergölbaum (Zeiland)", "Kompakter Strauch mit schmalen, glänzenden Blättern, gelben Blüten und roten, dreiteiligen Früchten. Nur im westlichen Mittelmeerraum heimisch; braucht weder Wasser noch Schnitt. Giftig bei Verzehr."] }],
+    ["Clematis cirrhosa", "sol semi", "bajo", "no", true, {
+    es: ["Clemátide de invierno", "La «vidalba» de los márgenes: trepadora que florece en invierno con campanillas color crema y luego da plumeros plateados. En verano pierde hojas para ahorrar agua."],
+    ca: ["Vidalba", "La vidalba dels marges: enfiladissa que floreix a l'hivern amb campanetes de color crema i després fa plomalls platejats. A l'estiu perd fulles per estalviar aigua."],
+    en: ["Winter clematis", "A climber of Majorcan dry-stone walls: it flowers in winter with cream bells, followed by silvery seed heads. In summer it sheds leaves to save water."],
+    de: ["Winter-Waldrebe", "Eine Kletterpflanze der mallorquinischen Trockenmauern: blüht im Winter mit cremefarbenen Glöckchen, danach silbrige Fruchtstände. Im Sommer wirft sie Laub ab, um Wasser zu sparen."] }],
+    ["Paeonia cambessedesii", "semi", "medio", "no", true, {
+    es: ["Peonía balear", "Joya que solo existe en Baleares: grandes flores rosas en marzo sobre hojas de envés púrpura. Quiere media sombra y suelo fresco con buen drenaje. Cómprala de vivero: en el campo está protegida."],
+    ca: ["Palònia", "Joia que només existeix a les Balears: grans flors roses al març sobre fulles de revers porpra. Vol mitja ombra i sòl fresc amb bon drenatge. Compra-la de viver: al camp està protegida."],
+    en: ["Balearic peony", "A gem found only in the Balearics: large pink flowers in March above leaves with purple undersides. Wants part shade and cool, well-drained soil. Buy it nursery-grown: in the wild it is protected."],
+    de: ["Balearen-Pfingstrose", "Ein Juwel, das es nur auf den Balearen gibt: große rosa Blüten im März über Blättern mit purpurner Unterseite. Braucht Halbschatten und frischen, durchlässigen Boden. Nur aus Gärtnereien kaufen: Wild ist sie geschützt."] }],
+    ["Helleborus lividus", "semi sombra", "medio", "no", true, {
+    es: ["Eléboro balear", "Solo crece silvestre en Mallorca. Flores verde rosado en pleno invierno sobre hojas veteadas de plata. Para rincones de media sombra; toda la planta es tóxica."],
+    ca: ["Palònia borda", "Només creix silvestre a Mallorca. Flors verd rosat en ple hivern sobre fulles venades de plata. Per a racons de mitja ombra; tota la planta és tòxica."],
+    en: ["Majorcan hellebore", "Grows wild only in Mallorca. Pinkish-green flowers in midwinter above silver-veined leaves. For part-shaded corners; the whole plant is toxic."],
+    de: ["Mallorca-Nieswurz", "Wächst wild nur auf Mallorca. Grünlich-rosa Blüten mitten im Winter über silbern geaderten Blättern. Für halbschattige Ecken; die ganze Pflanze ist giftig."] }],
+    ["Digitalis minor", "sol semi", "bajo", "no", true, {
+    es: ["Dedalera balear", "La «didalera» de las rocas de la Serra, exclusiva de Baleares: espigas de campanas rosas en primavera sobre rosetas de hoja aterciopelada. Muy tóxica: no apta con niños pequeños ni mascotas."],
+    ca: ["Didalera", "La didalera de les roques de la Serra, exclusiva de les Balears: espigues de campanes roses a la primavera sobre rosetes de fulla vellutada. Molt tòxica: no apta amb infants petits ni mascotes."],
+    en: ["Balearic foxglove", "The foxglove of the Serra's rocks, found only in the Balearics: spikes of pink bells in spring above rosettes of velvety leaves. Highly toxic: not for homes with small children or pets."],
+    de: ["Balearen-Fingerhut", "Der Fingerhut der Felsen der Serra, nur auf den Balearen heimisch: Ähren mit rosa Glocken im Frühling über samtigen Blattrosetten. Sehr giftig: nichts für Haushalte mit kleinen Kindern oder Haustieren."] }],
+    ["Pancratium maritimum", "sol", "bajo", "no", true, {
+    es: ["Azucena de mar", "El «lliri de mar» de las dunas: grandes flores blancas y perfumadas en pleno agosto, sin una gota de riego. Necesita arena o suelo muy drenante. Nunca la arranques de la playa: cómprala de vivero."],
+    ca: ["Lliri de mar", "El lliri de mar de les dunes: grans flors blanques i perfumades en ple agost, sense una gota de reg. Necessita arena o sòl molt drenant. No l'arrabassis mai de la platja: compra'l de viver."],
+    en: ["Sea daffodil", "The lily of the dunes: large, scented white flowers in mid-August without a drop of irrigation. Needs sand or very free-draining soil. Never dig it up from the beach: buy it nursery-grown."],
+    de: ["Dünen-Trichternarzisse", "Die Lilie der Dünen: große, duftende weiße Blüten mitten im August, ganz ohne Gießen. Braucht Sand oder sehr durchlässigen Boden. Nie am Strand ausgraben: nur aus Gärtnereien kaufen."] }],
+    ["Helichrysum stoechas", "sol", "bajo", "?", true, {
+    es: ["Siempreviva", "Mata gris con olor a curry y botones amarillos que duran meses, también secos en un jarrón. Vive en arena y roca junto al mar; recórtala tras la floración."],
+    ca: ["Sempreviva", "Mata grisa amb olor de curri i botons grocs que duren mesos, també secs dins un gerro. Viu en arena i roca vora la mar; retalla-la després de la floració."],
+    en: ["Everlasting", "A grey, curry-scented shrublet with yellow button flowers that last for months, even dried in a vase. Lives in sand and rock by the sea; trim after flowering."],
+    de: ["Mittelmeer-Strohblume", "Grauer, nach Curry duftender Halbstrauch mit gelben Blütenknöpfen, die monatelang halten, auch getrocknet in der Vase. Lebt in Sand und Fels am Meer; nach der Blüte zurückschneiden."] }],
+    ["Foeniculum vulgare", "sol", "bajo", "si", true, {
+    es: ["Hinojo", "El «fonoll» de los caminos, imprescindible en la cocina mallorquina. Hojas finas con sabor a anís y flores amarillas llenas de insectos beneficiosos. Se resiembra solo."],
+    ca: ["Fonoll", "El fonoll dels camins, imprescindible a la cuina mallorquina. Fulles fines amb gust d'anís i flors grogues plenes d'insectes beneficiosos. Es ressembra tot sol."],
+    en: ["Fennel", "The wild fennel of country lanes, essential in Majorcan cooking. Feathery aniseed-flavoured leaves and yellow flowers buzzing with beneficial insects. It self-seeds."],
+    de: ["Fenchel", "Der wilde Fenchel der Feldwege, unverzichtbar in der mallorquinischen Küche. Feines Laub mit Anisgeschmack und gelbe Blüten voller Nützlinge. Sät sich selbst aus."] }],
+    ["Ruta chalepensis", "sol semi", "bajo", "no", true, {
+    es: ["Ruda", "Planta de la tradición mallorquina, de olor intenso y hojas azuladas con flores amarillas. Muy resistente y sin plagas. Su savia puede irritar la piel al sol: usa guantes."],
+    ca: ["Ruda", "Planta de la tradició mallorquina, d'olor intensa i fulles blavoses amb flors grogues. Molt resistent i sense plagues. La saba pot irritar la pell al sol: posa't guants."],
+    en: ["Fringed rue", "A plant of Majorcan tradition, strongly scented, with bluish leaves and yellow flowers. Very tough and pest-free. Its sap can irritate skin in sunlight: wear gloves."],
+    de: ["Gefranste Raute", "Eine Pflanze der mallorquinischen Tradition, stark duftend, mit bläulichem Laub und gelben Blüten. Sehr robust und schädlingsfrei. Der Saft kann die Haut in der Sonne reizen: Handschuhe tragen."] }],
+    ["Sedum sediforme", "sol", "bajo", "?", true, {
+    es: ["Uña de gato", "El «crespinell» que crece sobre los muros de piedra. Tapiza con hojas carnosas azuladas y florece en verano sin riego alguno. Ideal para rocallas, tejados verdes y macetas olvidadas."],
+    ca: ["Crespinell", "El crespinell que creix damunt les parets de pedra. Entapissa amb fulles carnoses blavoses i floreix a l'estiu sense gens de reg. Ideal per a rocalles, cobertes verdes i tests oblidats."],
+    en: ["Pale stonecrop", "The stonecrop that grows on dry-stone walls. It carpets with bluish fleshy leaves and flowers in summer with no watering at all. Ideal for rockeries, green roofs and forgotten pots."],
+    de: ["Nizza-Mauerpfeffer", "Die Fetthenne, die auf Trockenmauern wächst. Bildet Teppiche aus bläulichen, fleischigen Blättern und blüht im Sommer ganz ohne Gießen. Ideal für Steingärten, Gründächer und vergessene Töpfe."] }],
+    ["Ampelodesmos mauritanicus", "sol", "bajo", "?", true, {
+    es: ["Carrizo (càrritx)", "La gran gramínea de las montañas mallorquinas: matas de hojas largas y espigas altas que se mecen con el viento. Sujeta taludes y no necesita nada. Déjale espacio: las hojas cortan."],
+    ca: ["Càrritx", "La gran gramínia de les muntanyes mallorquines: mates de fulles llargues i espigues altes que es gronxen amb el vent. Subjecta talussos i no necessita res. Deixa-li espai: les fulles tallen."],
+    en: ["Mauritanian grass", "The great grass of Mallorca's mountains: clumps of long leaves and tall plumes that sway in the wind. Holds banks and needs nothing. Give it room: the leaf edges cut."],
+    de: ["Mauretanisches Dissgras", "Das große Gras der Berge Mallorcas: Horste mit langen Blättern und hohen Rispen, die sich im Wind wiegen. Befestigt Böschungen und braucht nichts. Platz lassen: Die Blattränder schneiden."] }],
+    ["Malva subovata", "sol", "bajo", "?", true, {
+    es: ["Malva marina", "Arbusto de hoja gris aterciopelada y flores rosa pálido con el centro oscuro, de invierno a primavera. Crece en roquedos junto al mar; recórtala en verano para que no se abra."],
+    ca: ["Malva marina", "Arbust de fulla grisa vellutada i flors rosa pàl·lid amb el centre fosc, d'hivern a primavera. Creix en roquissars vora la mar; retalla-la a l'estiu perquè no s'obri."],
+    en: ["Sea mallow", "A shrub with grey velvety leaves and pale pink, dark-centred flowers from winter to spring. Grows on rocky ground by the sea; trim in summer to keep it compact."],
+    de: ["Strand-Strauchpappel", "Strauch mit grausamtigen Blättern und blassrosa Blüten mit dunkler Mitte, von Winter bis Frühling. Wächst auf Felsen am Meer; im Sommer zurückschneiden, damit er kompakt bleibt."] }],
     ];
 // Calendario (clima de Mallorca): 12 meses × tareas
 export const CAL_G = {

@@ -6,8 +6,6 @@ export const gn = (q, lang = "es") => lang === "es"
 // Las mismas búsquedas en Bing News (ordenadas por fecha): desde Cloudflare, Google News a veces deja de responder
 // durante días, y con varias fuentes siempre entra algo nuevo.
 export const bn = (q) => `https://www.bing.com/news/search?q=${encodeURIComponent(q)}&format=rss&setlang=es-ES&cc=ES&qft=${encodeURIComponent('sortbydate="1"')}`;
-// Webs de jardinería: todo lo que publican es del tema, no hace falta comprobarlo en el titular.
-export const FIABLES = /jardineriaon\.com/;
 export const FUENTES = {
   jardineria: [
     gn("jardinería OR paisajismo OR vivero OR jardines when:7d"),
@@ -41,6 +39,34 @@ export const INDUSTRIA = /plantas? (solar|fotovolt|de (hidr|biog|tratamiento|rec
 export const PRODUCTO = /\bpack de \d|\b\d+([.,]\d+)?\s?(mm|cm|uds?|unidades|piezas)\b|\b\d+\s?m\b.*[–-]/i;
 export const PLANTAS = /plant|tree|flower|crop|soil|seed|root|leaf|leaves|forest|botan|pollinat|\bbees?\b|garden|fung|photosynth|weed|fruit|grass|árbol|arbol|flor|semilla|cultivo|bosque|suelo|hoja|polin|abeja|jard|vegetal|xylella|hongo|palmer|vivero|agricult|agrono/i;
 export const NATURA = /sequ[ií]a|sequera|riego|\breg\b|plaga|plague|picudo|morrut|xylella|oliv|almendr|ametl|pinar|pinos?\b|pins\b|parque natural|parc natural|espacio natural|espai natural|tramuntana|posidonia|medio ambiente|medi ambient|incendio forestal|incendi forestal|zona verde|zones verdes|zonas verdes|poda|tala\b|vivers?\b|viveros?\b|natural/i;
+// Lo que se cuela con cualquier búsqueda y no es jardinería: deporte, famosos y sus casas, turismo, actos y premios,
+// empleo, empresas y dinero, colegios, agricultura comercial, obras y avisos de ayuntamientos, plagas de las casas.
+export const RUIDO = new RegExp([
+  "\\b(el|del|al) mallorca\\b|\\bliga\\b|partido|\\bduelo\\b|ausencias|fichaje|entrenador|\\bgol(es)?\\b|derbi|utmb|marat[oó]n|torneo|campeonato",
+  "la casa de|el refugio de|chalet|mansi[oó]n|entramos en|vivir gratis|voluntarios",
+  "qu[eé] ver|imprescindibles|senderismo|\\bruta\\b|escapada|pueblo de|pueblos m[aá]s|\\bhotel|alta cocina|unesco|avistamiento|ballenas|\\bplanes\\b",
+  "concierto|festival|reunir[aá] a|premios?\\b|awards|galard|\\bcharla|presenta\\b|exposici[oó]n|puertas abiertas|\\btaller\\b|inaugur|estrena\\b|homenaje|disertaci|memoria de",
+  "\\bplazas\\b|empleo|busca (encargad|jardiner|operari)|factura\\b|millones|\\beuros\\b|€|se integra|ayudas|subvenci|\\bbecas?\\b|formaci[oó]n remunerada",
+  "\\bceip\\b|colegio|alumn|escolar|estudiantes",
+  "kg/ha|hect[aá]reas?|productores|fincas de|exporta|\\blonja\\b|ganader|hidropon",
+  "cerrar[aá]|cierra parques|preemergencia|alumbrado|obras de|vecinal|\\bbarrio\\b|olvidado por|reclamos|gobierno de|\\bgovern\\b.*recib",
+  "plantas? hospitalari|control de plagas|cucaracha|chinches|termitas|cannabis|marcian|\\bmarte\\b|\\bmars\\b|rotonda",
+].join("|"), "i");
+// Medios de América: sus consejos van con las estaciones al revés y con otros nombres de plantas.
+export const AMERICA_WEB = /\.(ar|mx|cl|co|pe|uy|ec|bo|py|ve|cr|gt|do|hn|ni|sv|pa)$/i;
+export const AMERICA = /canal ?26|\ba24\b|\bmdz\b|todo noticias|milenio|el espectador|r[ií]o negro|cronista|los andes|radio mitre|infobae|gastrolab|clar[ií]n|la naci[oó]n|p[aá]gina ?12|[aá]mbito|el universal|exc[eé]lsior|el tiempo|el comercio|la tercera|biob[ií]o|\bemol\b|mongabay|entre r[ií]os|el agrario|austral|rafaela|ruidoenlared|\bchile\b|radio polar/i;
+const deAmerica = (n) => { let h = ""; try { h = new URL(n.enlace).hostname; } catch { /* sin dirección válida */ } return AMERICA_WEB.test(h) || AMERICA.test(n.fuente); };
+// Webs de jardinería: no hace falta que el titular nombre el jardín, pero sí que sea un consejo y no ruido.
+export const FIABLES = /jardineriaon\.com/;
+// Jardinería de verdad: el titular tiene que hablar de plantas o de cuidarlas.
+export const JARDIN = /jard[ií]n|plantas?\b|macetas?|huerto|\bpoda|podar|\briego|regar|c[eé]sped|\bsetos?\b|arbust|[aá]rbol|frutal|\bflor(es|ece|ecen|aci[oó]n)?\b|rosal|orqu[ií]dea|lavanda|\bolivos?\b|limonero|naranjo|palmera|cactus|suculenta|hortensia|geranio|tulipan|bulbos?\b|semillas?\b|sembrar|plantar|trasplant|\babon(o|ar)\b|compost|sustrato|pulg[oó]n|cochinilla|picudo|procesionaria|xylella|helada|bons[aá]i|helecho|hiedra|romero|albahaca|salvia|philodendron|jengibre/i;
+// Y además tiene que servirle a quien cuida un jardín: consejos, guías, épocas de plantar o podar, plagas.
+export const PRACTICO = /c[oó]mo|gu[ií]a|cuidados?|cuidar|consejos?|cu[aá]ndo|por qu[eé]|trucos?|errores|razones|mejor(es)?\b|necesitan?\b|\d+ plantas|plantas? (de interior|que)\b|plantar|podar|\bpoda\b|sembrar|regar|\briego\b|abonar|trasplant|cultivar|florecer|variedades|opci[oó]n|picudo|procesionaria|xylella|cochinilla|pulg[oó]n|heladas?\b/i;
+export const NO_JARDIN = /medicinal|museo|\bvecin/i;
+// En la pestaña de Baleares no entran las noticias de otros sitios que solo comparten una palabra (la Albufera de Valencia).
+export const OTRAS = /val[eè]ncia|catalu[ñn]|andaluc|galicia|canarias|madrid|murcia|alicante|barcelona|sevilla|m[aá]laga|asturias|arag[oó]n/i;
+// Ciencia de plantas, no de animales.
+export const ANIMALES = /\bbirds?\b|turtle|\bcats?\b|orangutan|whale|\bfish\b|rodent|elephant|barnacle|\bwasps?\b|zombie|fruit fl(y|ies)|insects? support|\baves\b|ballena|tortuga|elefante|orangut|abejas/i;
 export const dec = (s) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([\da-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
@@ -77,19 +103,21 @@ export async function leer(url) {
 }
 export const leerFeed = async (url) => (await leer(url)).items;
 // Si una noticia merece salir en la web, según su categoría.
+// Se decide por el titular (el resumen trae palabras sueltas que engañan): tiene que ser del tema de su pestaña,
+// no ser ruido y, en Baleares, nombrar un sitio de las islas.
 export function interesa(n, cat) {
-  const txt = n.titulo + " " + n.resumen;
-  if (FUERA.test(txt) || FUENTES_FUERA.test(n.fuente) || PRODUCTO.test(n.titulo) || INDUSTRIA.test(txt)) return false;
-  if (n.titulo.split(/\s+/).length < 4) return false; // titulares vacíos, como «AyuntamientoJaen»
-  if (cat === "jardineria" && (MUNICIPAL.test(txt) || !(FIABLES.test(n.enlace) || PLANTAS.test(n.titulo) || NATURA.test(n.titulo)))) return false;
-  if (cat === "ciencia" && !PLANTAS.test(txt)) return false;
-  if (cat === "baleares" && (POLITICA.test(txt) || (!PLANTAS.test(txt) && !NATURA.test(txt)) || (!/news\.google\.com/.test(n.enlace) && !BALEARES.test(txt)))) return false;
-  return true;
+  const t = n.titulo, txt = t + " " + n.resumen;
+  if (FUERA.test(txt) || FUENTES_FUERA.test(n.fuente) || PRODUCTO.test(t) || INDUSTRIA.test(txt) || RUIDO.test(t)) return false;
+  if (t.split(/\s+/).length < 4) return false; // titulares vacíos, como «AyuntamientoJaen»
+  if (deAmerica(n)) return false;
+  if (cat === "jardineria") return (JARDIN.test(t) || FIABLES.test(n.enlace)) && PRACTICO.test(t) && !NO_JARDIN.test(t) && !MUNICIPAL.test(txt);
+  if (cat === "ciencia") return PLANTAS.test(t) && !ANIMALES.test(t) && !MUNICIPAL.test(t);
+  return BALEARES.test(t) && !OTRAS.test(t) && (JARDIN.test(t) || NATURA.test(t)) && !POLITICA.test(txt);
 }
 // La clave cambia cuando cambia el filtro, para que la web no siga enseñando noticias que ya no pasarían.
 // Mientras la nueva no tenga de todo, se parte de lo guardado con la anterior (pasado por el filtro nuevo):
 // desde Cloudflare, Google News a veces no responde y la sección se quedaría vacía.
-export const CLAVE = "noticias6", ANTERIOR = "noticias5";
+export const CLAVE = "noticias7", ANTERIOR = "noticias6";
 export async function vigilar(env) {
   const prev = env.DATOS ? await env.DATOS.get(CLAVE, "json") : null;
   const falta = (d, c) => !((d && d[c]) || []).length;

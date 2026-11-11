@@ -31,6 +31,9 @@ const ELEGIDAS = {
   kentia: 'File:Howea forsteriana kz02.jpg',
   cipres: 'File:Viaggiando fra cipressi e olivi.jpg',
   orquidea: 'File:Phalaenopsis (aka).jpg',
+  almez: 'File:Nettle Tree (Celtis australis) - Pollença, Spain 2022-04-15.jpg',
+  alcaparra: 'File:Capparis spinosa 1.jpg',
+  'peonia-balear': 'File:Paeonia cambessedesii in BG Goettingen (1).jpg', // la primera que salía era una lámina de 1907
 };
 // Wikipedia no siempre tiene artículo con el nombre en latín de la guía.
 const ARTICULO = {
@@ -38,6 +41,7 @@ const ARTICULO = {
   'Pelargonium spp.': 'Pelargonium', 'Calathea spp.': 'Calathea', 'Rosa spp.': 'Garden roses', 'Citrus × limon': 'Lemon',
   'Dracaena trifasciata (Sansevieria)': 'Dracaena trifasciata',
   'Petunia × hybrida': 'Petunia',
+  'Foeniculum vulgare': 'Fennel', 'Sedum sediforme': 'Petrosedum sediforme',
 };
 
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));

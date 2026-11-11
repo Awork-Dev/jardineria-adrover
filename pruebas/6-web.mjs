@@ -180,6 +180,27 @@ ok(!interesa(n('El Ayuntamiento inicia la campaña de poda del arbolado urbano')
 ok(interesa(n('Sant Lluís será el primer municipio de Menorca en restringir el uso de césped en todos los jardines'), 'baleares')
   && !interesa(n('SAMPOL invierte cerca de 20M€ en dos plantas solares con baterías en Mallorca'), 'baleares'),
   'noticias de Baleares: sí las normas de riego y césped, no las «plantas» solares');
+// Titulares reales que se colaron: el resumen traía «jardín» o «Mallorca» y el titular iba de otra cosa.
+const nn = (titulo, fuente = 'Prueba', enlace = 'https://ejemplo.es/a') => ({ titulo, resumen: 'jardín plantas Mallorca', fuente, enlace });
+ok(!interesa(nn('Plaga de ausencias en el Mallorca de cara al duelo ante el Córdoba'), 'baleares')
+  && !interesa(nn('Qué ver en Valldemossa: los imprescindibles del pueblo más bonito de Mallorca'), 'baleares')
+  && !interesa(nn('Parc Natural Albufera Valencia otoño actividades'), 'baleares')
+  && !interesa(nn('El tiempo en Madrid: heladas y sequía en los jardines'), 'baleares')
+  && interesa(nn('Las reservas de agua de Baleares suben al 37 %, pero tres zonas de Mallorca siguen en alerta por sequía'), 'baleares')
+  && interesa(nn('Cuando Mallorca vio caer a sus palmeras: Se cumplen 20 años de la llegada del picudo rojo'), 'baleares'),
+  'noticias de Baleares: ni fútbol, ni turismo, ni otras regiones; el sitio de las islas tiene que salir en el titular');
+ok(!interesa(nn('El Puerto cerrará este miércoles parques, jardines y cementerios por el temporal'), 'jardineria')
+  && !interesa(nn('Entramos en la casa de una actriz: un jardín de ensueño'), 'jardineria')
+  && !interesa(nn('Vivero Sujardín: 70 años dando vida a los pies de la muralla'), 'jardineria')
+  && !interesa(nn('Cómo podar el rosal en agosto para que florezca', 'Los Andes', 'https://www.losandes.com.ar/x'), 'jardineria')
+  && !interesa(nn('La empresa de jardinería factura 12 millones y busca jardineros', 'Jardinería On', 'https://www.jardineriaon.com/x'), 'jardineria')
+  && interesa(nn('Tulipanes: 5 razones para plantarlos en noviembre'), 'jardineria')
+  && interesa(nn('Cómo atraer mariposas al jardín con plantas que casi no piden riego', 'Jardinería On', 'https://www.jardineriaon.com/x'), 'jardineria'),
+  'noticias de jardinería: solo consejos y plagas; fuera cierres, casas de famosos, negocios y medios de América');
+ok(!interesa(nn('Why the tropics lose the most birds when cities expand'), 'ciencia')
+  && !interesa(nn('Pamplona coloca plantas en las rotondas de San Jorge para medir la calidad del aire'), 'ciencia')
+  && interesa(nn('Scientists discover the hidden muscles trees use to straighten themselves'), 'ciencia'),
+  'noticias de ciencia: de plantas, no de animales ni de ayuntamientos');
 // Si Google News no responde justo al cambiar el filtro, no se pierde lo que ya había guardado.
 {
   const kv = new Map([[ANTERIOR, JSON.stringify({ actualizado: Date.now(), jardineria: [{ ...noticia('Ideas para un jardín mediterráneo que casi no necesita riego'), resumen: '' }, { ...noticia('El Ayuntamiento inicia la campaña de poda del arbolado urbano'), resumen: '' }], ciencia: [], baleares: [] })]]);

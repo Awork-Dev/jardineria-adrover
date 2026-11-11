@@ -571,12 +571,12 @@ export const FOTOS_COMMONS = {
   "alto": 479
  },
  "almez": {
-  "archivo": "Illustration Celtis australis0.jpg",
-  "autor": "Autor desconocido",
-  "licencia": "Public domain",
-  "licenciaUrl": "",
+  "archivo": "Nettle Tree (Celtis australis) - Pollença, Spain 2022-04-15.jpg",
+  "autor": "Ryan Hodnett",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
   "ancho": 720,
-  "alto": 1173
+  "alto": 720
  },
  "albaricoquero": {
   "archivo": "Apricots.jpg",
@@ -651,12 +651,12 @@ export const FOTOS_COMMONS = {
   "alto": 480
  },
  "alcaparra": {
-  "archivo": "Illustration Capparis spinosa0.jpg",
-  "autor": "Otto Wilhelm Thomé (1840-1925)",
-  "licencia": "Public domain",
-  "licenciaUrl": "",
+  "archivo": "Capparis spinosa 1.jpg",
+  "autor": "Meshari Alawfi",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
   "ancho": 720,
-  "alto": 1167
+  "alto": 480
  },
  "dipladenia": {
   "archivo": "Flower-center142058.jpg",
@@ -767,6 +767,190 @@ export const FOTOS_COMMONS = {
   "autor": "E Wusk",
   "licencia": "CC BY 4.0",
   "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "taray": {
+  "archivo": "T. africana-1.JPG",
+  "autor": "Philmarin",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 541
+ },
+ "majuelo": {
+  "archivo": "Hawthorn fruit.JPG",
+  "autor": "Elstro",
+  "licencia": "CC BY 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "coscoja": {
+  "archivo": "Quercus coccifera coccifera, Bot.jpg",
+  "autor": "Josep Gesti",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "labiernago": {
+  "archivo": "Phillyrea angustifolia g1.jpg",
+  "autor": "Autor desconocido",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 844
+ },
+ "boj-balear": {
+  "archivo": "Buxus balearica0427.jpg",
+  "autor": "Nanosanchez",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 1078
+ },
+ "estepa-negra": {
+  "archivo": "Cistus May 2014-3.jpg",
+  "autor": "Alvesgaspar",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 537
+ },
+ "estepa-borrera": {
+  "archivo": "Cistus April 2008-1.jpg",
+  "autor": "Alvesgaspar",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 684
+ },
+ "lechetrezna-arborea": {
+  "archivo": "Euphorbia dendroides.jpg",
+  "autor": "Sparrer77",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 428
+ },
+ "albaida": {
+  "archivo": "Anthyllis cytisoides (flower spike).jpg",
+  "autor": "Hans Hillewaert",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "sauzgatillo": {
+  "archivo": "Vitex agnus-castus 1.JPG",
+  "autor": "Cillas",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "coronilla-de-fraile": {
+  "archivo": "Globularia alypum 02.jpg",
+  "autor": "\"pastilletes\"/Joan Simon , Barcelona, España",
+  "licencia": "CC BY-SA 2.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+  "ancho": 640,
+  "alto": 480
+ },
+ "olivillo": {
+  "archivo": "Cneorum tricoccon1.jpg",
+  "autor": "Autor desconocido",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 569,
+  "alto": 722
+ },
+ "clematide-de-invierno": {
+  "archivo": "Clematis cirrhosa Blüte.JPG",
+  "autor": "Dericks-Tan",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 670
+ },
+ "peonia-balear": {
+  "archivo": "Paeonia cambessedesii in BG Goettingen (1).jpg",
+  "autor": "Tournasol7",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "eleboro-balear": {
+  "archivo": "Helleborus lividus (23794254383).jpg",
+  "autor": "peganum from Small Dole, England",
+  "licencia": "CC BY-SA 2.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "dedalera-balear": {
+  "archivo": "Digitalis minor 2.JPG",
+  "autor": "Gabriele Kothe-Heinrich",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "azucena-de-mar": {
+  "archivo": "Pacratium maritimum Paestum.jpg",
+  "autor": "User:Stemonitis",
+  "licencia": "CC BY-SA 2.5",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+  "ancho": 720,
+  "alto": 965
+ },
+ "siempreviva": {
+  "archivo": "HELICHRYSUM STOECHAS - AGUDA - IB-813 (Sempreviva borda).JPG",
+  "autor": "Isidre blanc",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "hinojo": {
+  "archivo": "Foeniculum July 2011-1a.jpg",
+  "autor": "Alvesgaspar",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 862
+ },
+ "ruda": {
+  "archivo": "Ruta chalepensis ce.JPG",
+  "autor": "Xemenendura",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "una-de-gato": {
+  "archivo": "SEDUM SEDIFORME - AGUDA - IB-029 (Crespinell gros).JPG",
+  "autor": "Isidre blanc",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "carrizo": {
+  "archivo": "Ampelodesmos mauritanica 1.JPG",
+  "autor": "User:Xemenendura",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "malva-marina": {
+  "archivo": "Lavatera maritima 1c.JPG",
+  "autor": "Consultaplantas",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
   "ancho": 720,
   "alto": 540
  }
