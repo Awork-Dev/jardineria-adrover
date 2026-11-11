@@ -553,5 +553,229 @@ export const FOTOS_COMMONS = {
   "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
   "ancho": 640,
   "alto": 480
+ },
+ "mandarino": {
+  "archivo": "Citrus reticulata April 2013 Nordbaden.JPG",
+  "autor": "4028mdk09",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "nispero": {
+  "archivo": "Loquat-0.jpg",
+  "autor": "Aftabbanoori",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "encina": {
+  "archivo": "Quercus ilex JPG1.jpg",
+  "autor": "Jean-Pol GRANDMONT",
+  "licencia": "CC BY 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
+  "ancho": 720,
+  "alto": 479
+ },
+ "almez": {
+  "archivo": "Illustration Celtis australis0.jpg",
+  "autor": "Autor desconocido",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 1173
+ },
+ "albaricoquero": {
+  "archivo": "Apricots.jpg",
+  "autor": "Fir0002",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 543
+ },
+ "morera": {
+  "archivo": "Rosales - Morus alba - 3.jpg",
+  "autor": "Emőke Dénes",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "washingtonia": {
+  "archivo": "Arecales - Washingtonia robusta - 1.jpg",
+  "autor": "Emőke Dénes",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 1280
+ },
+ "palmera-datilera": {
+  "archivo": "Dates005.jpg",
+  "autor": "Nepenthes",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 482
+ },
+ "dodonea": {
+  "archivo": "Dodonaea viscosa (Hopbush) W2 IMG 1899.jpg",
+  "autor": "J.M.Garg",
+  "licencia": "CC BY 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0",
+  "ancho": 720,
+  "alto": 597
+ },
+ "galan-de-noche": {
+  "archivo": "Cestrum nocturnum (2464189820).jpg",
+  "autor": "Dinesh Valke from Thane, India",
+  "licencia": "CC BY-SA 2.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "hortensia": {
+  "archivo": "(Natural) Hydrangea macrophylla, Iwafune, Isumi, Chiba, Japan 2.jpg",
+  "autor": "belvedere04",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 534
+ },
+ "brezo": {
+  "archivo": "Erica multiflora 001.jpg",
+  "autor": "H. Zell",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 429
+ },
+ "estepa-joana": {
+  "archivo": "Hypericum balearicum.jpg",
+  "autor": "Eric in SF",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "alcaparra": {
+  "archivo": "Illustration Capparis spinosa0.jpg",
+  "autor": "Otto Wilhelm Thomé (1840-1925)",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 1167
+ },
+ "dipladenia": {
+  "archivo": "Flower-center142058.jpg",
+  "autor": "日: Jnn",
+  "licencia": "CC BY 2.1 jp",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/2.1/jp/deed.en",
+  "ancho": 720,
+  "alto": 540
+ },
+ "falso-jazmin": {
+  "archivo": "Solanum 2.JPG",
+  "autor": "RoyFocker",
+  "licencia": "Public domain",
+  "licenciaUrl": "",
+  "ancho": 720,
+  "alto": 540
+ },
+ "petunia": {
+  "archivo": "Petúnia (do tupi petyma, 'tabaco').jpg",
+  "autor": "Gabriel Collares",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "ciclamen": {
+  "archivo": "Yagur – Nesher, the Green Path – Mount Carmel 016.JPG",
+  "autor": "Hanay",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "vinca": {
+  "archivo": "Vinca (Catharanthus roseus) cultivada em Bagé, RS, Brasil - 55231652268.jpg",
+  "autor": "O Tupinólogo",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 960
+ },
+ "crisantemo": {
+  "archivo": "Chrysanthemum.JPG",
+  "autor": "Aruna at Malayalam Wikipedia",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "hierbabuena": {
+  "archivo": "Minze.jpg",
+  "autor": "Simon Eugster -- Simon 13:07, 2 July 2006 (UTC)",
+  "licencia": "CC BY-SA 3.0",
+  "licenciaUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "ancho": 720,
+  "alto": 540
+ },
+ "albahaca": {
+  "archivo": "Ocimum basilicum 8zz.jpg",
+  "autor": "Photo by David J. Stang",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 480
+ },
+ "kalanchoe": {
+  "archivo": "Kalanchoe blossfeldiana 3.jpg",
+  "autor": "বাক্যবাগীশ",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 540
+ },
+ "echeveria": {
+  "archivo": "Echeveria elegans - 1.png",
+  "autor": "EriaWei",
+  "licencia": "CC BY-SA 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "ancho": 720,
+  "alto": 720
+ },
+ "ficus-benjamina": {
+  "archivo": "Starr-080608-7576-Ficus benjamina-habit with Laysan albatross-Gym Sand Island-Midway Atoll (24823189861).jpg",
+  "autor": "Forest and Kim Starr",
+  "licencia": "CC BY 3.0 us",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/us/deed.en",
+  "ancho": 720,
+  "alto": 540
+ },
+ "anturio": {
+  "archivo": "AnthuriumAndraenum.jpg",
+  "autor": "Taken by Fanghong",
+  "licencia": "CC BY 2.5",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/2.5",
+  "ancho": 720,
+  "alto": 540
+ },
+ "helecho": {
+  "archivo": "Boston Fern (2873392811).png",
+  "autor": "Homer Edward Price",
+  "licencia": "CC BY 2.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/2.0",
+  "ancho": 720,
+  "alto": 542
+ },
+ "hinojo-marino": {
+  "archivo": "Crithmum maritimum Marazion.jpg",
+  "autor": "E Wusk",
+  "licencia": "CC BY 4.0",
+  "licenciaUrl": "https://creativecommons.org/licenses/by/4.0",
+  "ancho": 720,
+  "alto": 540
  }
 };

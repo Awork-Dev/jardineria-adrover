@@ -38,6 +38,7 @@ const ARTICULO = {
   'Olea europaea var. sylvestris': 'Olea europaea subsp. europaea', 'Lavandula angustifolia / dentata': 'Lavandula angustifolia',
   'Pelargonium spp.': 'Pelargonium', 'Calathea spp.': 'Calathea', 'Rosa spp.': 'Garden roses', 'Citrus × limon': 'Lemon',
   'Dracaena trifasciata (Sansevieria)': 'Dracaena trifasciata',
+  'Petunia × hybrida': 'Petunia',
 };
 
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));

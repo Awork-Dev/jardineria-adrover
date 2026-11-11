@@ -14,11 +14,12 @@
    guía verde (plantas, calendario, doctor de plantas, xerojardinería), herramientas, noticias, contacto
    con presupuesto, aviso legal y mapa del sitio. Cambia de colores y avisos según la temporada.
    La dirección, el teléfono fijo y «Cómo llegar» (Google Maps) salen en contacto, en vivero y al pie de todas las páginas.
-   Cada una de las 69 plantas de la guía tiene su ficha (`/guia/romero`, `/ca/guia/romero`…): tipo, tamaño, riego en
+   Cada una de las 97 plantas de la guía tiene su ficha (`/guia/romero`, `/ca/guia/romero`…): tipo, tamaño, riego en
    verano e invierno, calendario de plantar, flor, poda y abono, qué plagas vigilar, para qué va bien, plantas parecidas
    y botón de WhatsApp «¿La tenéis en el vivero?» con el nombre de la planta. Datos en `web/src/fichas.js`.
-   Guías prácticas (`/guias/riego-en-verano`…): seis guías paso a paso en los cuatro idiomas (riego en verano, plantar
-   un seto, picudo rojo, poda de olivos y frutales, terraza con sol y viento, recuperar el césped), con sus plantas
+   Guías prácticas (`/guias/riego-en-verano`…): doce guías paso a paso en los cuatro idiomas (riego en verano, plantar
+   un seto, picudo rojo, poda, terraza con sol y viento, césped, plantar un árbol, cítricos, plantas de interior, el
+   jardín cuando no estás, jardín con mascotas y abonado), con sus plantas
    enlazadas a las fichas y botón de presupuesto. Índice en la Guía verde. Textos en `web/src/guias.js`.
    En la guía, «Ideas para…» filtra las plantas por uso (maceta, setos, junto al mar, bajo consumo, abejas, interior,
    vallas y pérgolas, sombra) y cada mes del calendario dice qué florece, qué plantar y qué podar. El presupuesto
