@@ -78,11 +78,17 @@ ok(conFoto.length > 0 && !sinCargar.length, `las ${conFoto.length} fichas con fo
 await p.goto(W + '/guia/fotos');
 ok(await p.locator('.creditos li').count() === conFoto.length, 'la página de créditos cita todas las fotos');
 // Buscador de plantas: por nombre común en cualquier idioma o científico, sin tildes; si no está, ofrece preguntar.
+// La lista de plantas se retrasa a propósito (móvil con mala cobertura): mientras llega no puede decir «no está en la guía».
+await p.route('**/api/plantas/*', async (r) => { await new Promise((s) => setTimeout(s, 700)); await r.continue(); });
 await p.goto(W + '/');
 await p.click('#lupa');
-const busca = async (q) => { await p.fill('#bq', q); await p.waitForFunction(() => document.querySelector('#bres').textContent.trim() !== ''); return p.$$eval('#bres a.bitem', (as) => as.map((a) => new URL(a.href).pathname)); };
+await p.fill('#bq', 'halepensis');
+const prisas = await p.locator('#bres .bnada').count();
+const busca = async (q) => { await p.fill('#bq', q); await p.waitForFunction(() => document.querySelector('#bres a.bitem, #bres .bnada')); return p.$$eval('#bres a.bitem', (as) => as.map((a) => new URL(a.href).pathname)); };
 ok((await busca('halepensis'))[0] === '/guia/pino-carrasco' && (await busca('jazmin')).includes('/guia/jazmin-estrellado') && (await busca('lavender'))[0] === '/guia/lavanda',
   'buscador: encuentra por nombre científico, sin tildes y en otros idiomas');
+ok(prisas === 0, 'buscador: con la lista aún cargando no dice que la planta no está');
+await p.unroute('**/api/plantas/*');
 ok((await busca('olivo centenario')).length === 0 && await p.locator('#bres a.canal.wa').count() === 1, 'buscador: si no está en la guía, ofrece preguntar por WhatsApp');
 await p.keyboard.press('Escape');
 ok(await p.evaluate(() => document.getElementById('buscador').hidden), 'buscador: se cierra con Escape');

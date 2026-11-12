@@ -448,7 +448,7 @@ const nrm=s=>s.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase(),e
 const lupa=document.getElementById('lupa'),bus=document.getElementById('buscador'),bq=document.getElementById('bq'),bres=document.getElementById('bres');let PL=null;
 let tB=0;const yaB=new Set();
 function apuntaB(v){const k=v.toLowerCase();if(k.length<3||yaB.has(k))return;yaB.add(k);fetch('/api/busqueda',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({q:v,l:'${lang}'}),keepalive:true}).catch(()=>{})}
-function pintaB(){clearTimeout(tB);const v=bq.value.trim(),q=nrm(v);if(!q){bres.innerHTML='<p class="bpista">'+BUS.vacio+'</p>';return}const ws=q.split(/\\s+/);
+function pintaB(){clearTimeout(tB);const v=bq.value.trim(),q=nrm(v);if(!q){bres.innerHTML='<p class="bpista">'+BUS.vacio+'</p>';return}if(!PL){bres.innerHTML='';return}const ws=q.split(/\\s+/);
 const r=(PL||[]).filter(p=>ws.every(w=>p.b.includes(w))).map(p=>[p,nrm(p.n).startsWith(q)?0:nrm(p.n).includes(q)?1:nrm(p.l).includes(q)?2:3]).sort((a,b)=>a[1]-b[1]).slice(0,8).map(x=>x[0]);
 bres.innerHTML=r.length?r.map(p=>'<a class="bitem" href="'+p.u+'">'+(p.f?'<img src="'+p.f+'" alt="" loading="lazy">':'<span class="bsin"></span>')+'<span><b>'+escB(p.n)+'</b><i>'+escB(p.l)+'</i><small>'+escB(p.t)+'</small></span></a>').join('')
 :'<p class="bnada">'+BUS.nada+'</p>'+(BUS.tel?'<a class="canal wa" target="_blank" rel="noopener" href="https://wa.me/'+BUS.tel+'?text='+encodeURIComponent(BUS.msg.replace('{q}',v))+'">'+BUS.wa+'<span>'+BUS.pedir+'</span></a>':'');
