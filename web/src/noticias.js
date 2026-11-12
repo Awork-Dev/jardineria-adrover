@@ -50,7 +50,7 @@ export const RUIDO = new RegExp([
   "\\bceip\\b|colegio|alumn|escolar|estudiantes",
   "kg/ha|hect[aá]reas?|productores|fincas de|exporta|\\blonja\\b|ganader|hidropon",
   "cerrar[aá]|cierra parques|preemergencia|alumbrado|obras de|vecinal|\\bbarrio\\b|olvidado por|reclamos|gobierno de|\\bgovern\\b.*recib",
-  "plantas? hospitalari|control de plagas|cucaracha|chinches|termitas|cannabis|marcian|\\bmarte\\b|\\bmars\\b|rotonda",
+  "plantas? hospitalari|control de plagas|cucaracha|chinches|termitas|cannabis|marcian|\\bmarte\\b|\\bmars\\b|rotonda|\\bcursos?\\b|\\bexpone\\b|referente|\\bsetas\\b",
 ].join("|"), "i");
 // Medios de América: sus consejos van con las estaciones al revés y con otros nombres de plantas.
 export const AMERICA_WEB = /\.(ar|mx|cl|co|pe|uy|ec|bo|py|ve|cr|gt|do|hn|ni|sv|pa)$/i;
@@ -61,12 +61,12 @@ export const FIABLES = /jardineriaon\.com/;
 // Jardinería de verdad: el titular tiene que hablar de plantas o de cuidarlas.
 export const JARDIN = /jard[ií]n|plantas?\b|macetas?|huerto|\bpoda|podar|\briego|regar|c[eé]sped|\bsetos?\b|arbust|[aá]rbol|frutal|\bflor(es|ece|ecen|aci[oó]n)?\b|rosal|orqu[ií]dea|lavanda|\bolivos?\b|limonero|naranjo|palmera|cactus|suculenta|hortensia|geranio|tulipan|bulbos?\b|semillas?\b|sembrar|plantar|trasplant|\babon(o|ar)\b|compost|sustrato|pulg[oó]n|cochinilla|picudo|procesionaria|xylella|helada|bons[aá]i|helecho|hiedra|romero|albahaca|salvia|philodendron|jengibre/i;
 // Y además tiene que servirle a quien cuida un jardín: consejos, guías, épocas de plantar o podar, plagas.
-export const PRACTICO = /c[oó]mo|gu[ií]a|cuidados?|cuidar|consejos?|cu[aá]ndo|por qu[eé]|trucos?|errores|razones|mejor(es)?\b|necesitan?\b|\d+ plantas|plantas? (de interior|que)\b|plantar|podar|\bpoda\b|sembrar|regar|\briego\b|abonar|trasplant|cultivar|florecer|variedades|opci[oó]n|picudo|procesionaria|xylella|cochinilla|pulg[oó]n|heladas?\b/i;
+export const PRACTICO = /cómo|^como\b|gu[ií]a|cuidados?|cuidar|consejos?|cu[aá]ndo|por qu[eé]|trucos?|errores|razones|mejor(es)?\b|necesitan?\b|\d+ plantas|plantas? (de interior|que)\b|plantar|podar|\bpoda\b|sembrar|regar|\briego\b|abonar|trasplant|cultivar|florecer|variedades|opci[oó]n|picudo|procesionaria|xylella|cochinilla|pulg[oó]n|heladas?\b/i;
 export const NO_JARDIN = /medicinal|museo|\bvecin/i;
 // En la pestaña de Baleares no entran las noticias de otros sitios que solo comparten una palabra (la Albufera de Valencia).
 export const OTRAS = /val[eè]ncia|catalu[ñn]|andaluc|galicia|canarias|madrid|murcia|alicante|barcelona|sevilla|m[aá]laga|asturias|arag[oó]n/i;
 // Ciencia de plantas, no de animales.
-export const ANIMALES = /\bbirds?\b|turtle|\bcats?\b|orangutan|whale|\bfish\b|rodent|elephant|barnacle|\bwasps?\b|zombie|fruit fl(y|ies)|insects? support|\baves\b|ballena|tortuga|elefante|orangut|abejas/i;
+export const ANIMALES = /\bbirds?\b|turtle|\bcats?\b|orangutan|whale|\bfish\b|rodent|elephant|barnacle|\bwasps?\b|zombie|fruit fl(y|ies)|insects? support|\baves\b|ballena|tortuga|elefante|orangut|abejas|\bbees?\b/i;
 export const dec = (s) => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
   .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
   .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n)).replace(/&#x([\da-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
@@ -117,7 +117,7 @@ export function interesa(n, cat) {
 // La clave cambia cuando cambia el filtro, para que la web no siga enseñando noticias que ya no pasarían.
 // Mientras la nueva no tenga de todo, se parte de lo guardado con la anterior (pasado por el filtro nuevo):
 // desde Cloudflare, Google News a veces no responde y la sección se quedaría vacía.
-export const CLAVE = "noticias7", ANTERIOR = "noticias6";
+export const CLAVE = "noticias8", ANTERIOR = "noticias7";
 export async function vigilar(env) {
   const prev = env.DATOS ? await env.DATOS.get(CLAVE, "json") : null;
   const falta = (d, c) => !((d && d[c]) || []).length;

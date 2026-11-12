@@ -200,6 +200,8 @@ ok(!interesa(nn('El Puerto cerrará este miércoles parques, jardines y cementer
   && !interesa(nn('Vivero Sujardín: 70 años dando vida a los pies de la muralla'), 'jardineria')
   && !interesa(nn('Cómo podar el rosal en agosto para que florezca', 'Los Andes', 'https://www.losandes.com.ar/x'), 'jardineria')
   && !interesa(nn('La empresa de jardinería factura 12 millones y busca jardineros', 'Jardinería On', 'https://www.jardineriaon.com/x'), 'jardineria')
+  && !interesa(nn('Oleiros se consolida como referente internacional por su gestión de zonas verdes y jardines'), 'jardineria')
+  && !interesa(nn('Villa de Mazo abre un curso de poda e injerto de frutales este lunes y martes: cómo apuntarse'), 'jardineria')
   && interesa(nn('Tulipanes: 5 razones para plantarlos en noviembre'), 'jardineria')
   && interesa(nn('Cómo atraer mariposas al jardín con plantas que casi no piden riego', 'Jardinería On', 'https://www.jardineriaon.com/x'), 'jardineria'),
   'noticias de jardinería: solo consejos y plagas; fuera cierres, casas de famosos, negocios y medios de América');
