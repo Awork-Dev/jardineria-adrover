@@ -260,7 +260,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
   .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 }
 /* Dictado por voz */
-.mw{position:relative;display:block;min-width:0}
+.mw,.fld span.mw,.line-r label span.mw{position:relative;display:block;min-width:0;margin:0;font:inherit;color:inherit}
 .mw>input,.mw>textarea{padding-right:42px!important}
 .mw.s{margin-bottom:16px}
 .mw.s>.search{margin-bottom:0}
@@ -273,7 +273,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
 @keyframes micp{50%{box-shadow:0 0 0 7px rgba(138,63,22,.18)}}
 @media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
 .dict{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px dashed var(--line);border-radius:14px;background:var(--soft)}
-.dictbtn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start}
+.dictbtn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
 .dictbtn svg{width:18px;height:18px}
 .btn.rec{background:var(--rej-ink);border-color:var(--rej-ink);color:#fff}
 #dict-txt{margin:0}
@@ -696,7 +696,7 @@ function parteSheet(id) {
   const personas = Object.entries(S.operarios).filter(([k, o]) => o.activo !== false || quien.has(k)).sort(byNombre);
   const marcas = (name, items, sel) => `<div class="marcas">${items.map(([val, txt]) => `<label><input type="checkbox" name="${name}" value="${esc(val)}"${sel(val) ? ' checked' : ''}><span>${esc(txt)}</span></label>`).join('')}</div>`;
   const info = deApp ? `<p class="meta" style="margin:0">Enviado desde la app del equipo por ${esc(v.autor || '')}${v.editadoOficina ? ' · corregido por la oficina' : ''}</p>` : '';
-  const dict = `<div class="dict"><button type="button" class="btn primary small dictbtn" data-act="dictar-parte">${MIC_SVG}<span>Dictar parte completo</span></button><p class="meta" id="dict-txt">Ej.: «Hoy en casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»</p></div>`;
+  const dict = `<div class="dict"><button type="button" class="btn small dictbtn" data-act="dictar-parte">${MIC_SVG}<span>Dictar parte completo</span></button><p class="meta" id="dict-txt">Ej.: «Hoy en casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»</p></div>`;
   const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button>
       <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}${dict}
     <div class="grid2">
