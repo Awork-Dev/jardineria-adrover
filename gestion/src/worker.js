@@ -75,7 +75,7 @@ export default {
     const url = new URL(req.url);
     if (url.pathname === '/' || url.pathname === '/index.html') {
       // «blob:» en las conexiones: las fotos del equipo se piden con la clave y se leen de memoria al hacer los PDF.
-      CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(), payment=()'});
+      CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(self), payment=()'});
       return new Response(HTML, {headers: {...CABECERAS, 'cache-control': 'no-store'}});
     }
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');

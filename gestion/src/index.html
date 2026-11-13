@@ -259,6 +259,24 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
   #sheet-form>.actions:last-child{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
   .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 }
+/* Dictado por voz */
+.mw{position:relative;display:block;min-width:0}
+.mw>input,.mw>textarea{padding-right:42px!important}
+.mw.s{margin-bottom:16px}
+.mw.s>.search{margin-bottom:0}
+.mic{all:unset;cursor:pointer;position:absolute;right:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:var(--brand)}
+.mw.ta .mic{top:5px;transform:none}
+.mic:hover{background:var(--soft)}
+.mic:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.mic svg{width:19px;height:19px}
+.mic.rec{background:var(--rej-ink);color:#fff;animation:micp 1.1s ease-in-out infinite}
+@keyframes micp{50%{box-shadow:0 0 0 7px rgba(138,63,22,.18)}}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+.dict{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px dashed var(--line);border-radius:14px;background:var(--soft)}
+.dictbtn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start}
+.dictbtn svg{width:18px;height:18px}
+.btn.rec{background:var(--rej-ink);border-color:var(--rej-ink);color:#fff}
+#dict-txt{margin:0}
 </style>
 </head>
 <body>
@@ -283,6 +301,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
       <button class="btn small" data-act="export">Descargar copia</button>
       <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
       <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
+      <button class="btn small ghost" data-act="recargar">↻ Forzar actualización</button>
       <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
     </div>
   </aside>
@@ -365,6 +384,192 @@ function toast(msg, bad) {
   toast._t = setTimeout(() => { t.className = 'toast'; }, 3200);
 }
 
+/* ---------- Dictado por voz ----------
+   Un micrófono en cada campo de texto: se pulsa, se habla y el texto se escribe solo (reconocimiento de voz del
+   navegador, en español). En los partes, «Dictar parte completo» rellena cliente, fecha, horario u horas, quién ha
+   ido, tareas, trabajo y avisos a partir de una sola frase. Si el navegador no lo admite, se dice al pulsar. */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>';
+const NO_SR = 'Este navegador no deja dictar desde la página. Ábrela en Chrome o Safari, o usa el micrófono del teclado.';
+let rec = null, recBtn = null;
+function addMics(root) {
+  if (!root) return;
+  root.querySelectorAll('input[type=text],input:not([type]),input[type=email],input[type=tel],input[type=search],textarea').forEach(inp => {
+    if (inp.parentElement.classList.contains('mw') || inp.closest('.dict')) return;
+    const w = document.createElement('span');
+    w.className = 'mw' + (inp.tagName === 'TEXTAREA' ? ' ta' : '') + (inp.classList.contains('search') ? ' s' : '');
+    inp.replaceWith(w);
+    w.append(inp);
+    w.insertAdjacentHTML('beforeend', '<button type="button" class="mic" data-act="mic" aria-label="Dictar por voz" title="Dictar por voz">' + MIC_SVG + '</button>');
+  });
+}
+function errorMic(ev) {
+  const m = ev.error === 'not-allowed' || ev.error === 'service-not-allowed'
+    ? 'El micrófono no tiene permiso. Actívalo para esta página en el navegador, o usa el micrófono del teclado.'
+    : ev.error === 'no-speech' ? 'No te he oído. Pulsa y prueba otra vez.'
+    : ev.error === 'network' ? 'El dictado necesita conexión a internet.'
+    : ev.error === 'aborted' ? '' : 'Error del micrófono (' + ev.error + ').';
+  if (m) toast(m, true);
+}
+function stopMic() { if (rec) { rec._ab = true; try { rec.abort(); } catch (e) {} } rec = null; if (recBtn) recBtn.classList.remove('rec'); recBtn = null; }
+function toggleMic(btn) {
+  if (!SR) { toast(NO_SR, true); return; }
+  const same = recBtn === btn;
+  if (rec) { try { rec.stop(); } catch (e) {} if (same) return; stopMic(); }
+  const input = btn.parentElement.querySelector('input,textarea');
+  if (!input) return;
+  const r = new SR();
+  r.lang = 'es-ES'; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
+  const base = input.value.trim() ? input.value.replace(/\s*$/, ' ') : '';
+  r.onresult = ev => {
+    let t = '';
+    for (const res of ev.results) t += res[0].transcript;
+    if (input.type === 'email') t = t.replace(/\s*arroba\s*/gi, '@').replace(/\s*punto\s*/gi, '.').replace(/\s+/g, '').toLowerCase();
+    else if (input.type === 'tel') t = t.replace(/[^\d+ ]/g, '');
+    else if (!base && t) t = t.charAt(0).toUpperCase() + t.slice(1);
+    input.value = base + t;
+    input.dispatchEvent(new Event('input', {bubbles: true}));
+  };
+  r.onerror = errorMic;
+  r.onend = () => { btn.classList.remove('rec'); if (rec === r) { rec = null; recBtn = null; } };
+  rec = r; recBtn = btn; btn.classList.add('rec');
+  try { r.start(); } catch (e) { stopMic(); toast('No se pudo activar el micrófono.', true); }
+}
+
+/* Dictar un parte completo: de la frase se sacan los datos y lo que queda es el «Trabajo realizado». */
+const NUMS = {un:1, una:1, uno:1, dos:2, tres:3, cuatro:4, cinco:5, seis:6, siete:7, ocho:8, nueve:9, diez:10, once:11, doce:12};
+const normV = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const CSTOP = new Set(['del', 'las', 'los', 'comunidad', 'propietarios', 'calle', 'slu', 'sociedad', 'limitada']);
+const TAREAS_VOZ = {
+  'Corte de césped': /\b(cesped|segar|siega|segado)\b/, 'Poda': /\bpod(a|ar|ado|amos|ando)\b/,
+  'Desbroce': /\bdesbro(ce|zar|zado|zamos|zando)\b/, 'Riego': /\b(riego|regar|regado|regamos)\b/,
+  'Plantación': /\bplant(acion|ar|ado|amos|ando)\b/, 'Limpieza': /\blimpi(eza|ar|ado|amos|ando)\b/,
+  'Retirada de restos': /\b(restos|retirada|retirar|retirado|recogida de ramas)\b/, 'Tratamiento': /\b(tratamiento|tratar|tratado|fumig\w*|sulfat\w*|fitosanitario\w*)\b/,
+};
+function parseParte(raw) {
+  const t = String(raw).normalize('NFC').trim(), n = normV(t), cuts = [], out = {};
+  const back = (start, re) => { const m = n.slice(0, start).match(re); return m ? start - m[0].length : start; };
+  const NW = Object.keys(NUMS).join('|');
+  const valor = x => NUMS[x] ?? parseFloat(String(x).replace(',', '.'));
+  let m;
+  // Avisos para la oficina: desde «aviso», «incidencia» u «ojo» hasta el final.
+  if ((m = n.match(/\b(avisos?|avisar a la oficina|avisar|incidencias?|ojo|para la oficina)\b[\s:,]*/))) {
+    out.incidencias = t.slice(m.index + m[0].length).replace(/^(que|de que)\s+/i, '').trim();
+    if (out.incidencias) out.incidencias = out.incidencias.charAt(0).toUpperCase() + out.incidencias.slice(1);
+    cuts.push([m.index, t.length]);
+  }
+  const fin0 = out.incidencias !== undefined ? m.index : n.length, nn = n.slice(0, fin0);
+  // Horario «de 8 a 13», «desde las 8:30 hasta las 2»
+  const H = '(\\d{1,2}|' + NW + ')(?:[:.h]\\s?(\\d{2})|\\s+y\\s+(media|cuarto))?';
+  if ((m = nn.match(new RegExp('\\b(?:de|desde)\\s+(?:las?\\s+)?' + H + '\\s+(?:a|hasta)\\s+(?:las?\\s+)?' + H + '(?:\\s+(?:horas|h))?\\b')))) {
+    const hm = (h, mm, fr) => [valor(h), mm ? +mm : fr === 'media' ? 30 : fr === 'cuarto' ? 15 : 0];
+    let [h1, m1] = hm(m[1], m[2], m[3]), [h2, m2] = hm(m[4], m[5], m[6]);
+    if (h1 < 6) h1 += 12;
+    if (h2 * 60 + m2 <= h1 * 60 + m1 && h2 < 12) h2 += 12;
+    if (h1 < 24 && h2 < 24 && m1 < 60 && m2 < 60 && h2 * 60 + m2 > h1 * 60 + m1) {
+      const f = (h, mm) => String(h).padStart(2, '0') + ':' + String(mm).padStart(2, '0');
+      out.inicio = f(h1, m1); out.fin = f(h2, m2);
+      cuts.push([back(m.index, /(?:\b(?:hemos estado|estuvimos|trabajando|horario)\s+)+$/), m.index + m[0].length]);
+    }
+  }
+  // Horas en total
+  if (!out.inicio) {
+    if ((m = nn.match(new RegExp('\\b(\\d+(?:[.,]\\d+)?|' + NW + ')\\s+horas?(?:\\s+y\\s+(media|cuarto|tres cuartos))?\\b')))) {
+      let h = valor(m[1]);
+      if (m[2]) h += m[2] === 'media' ? 0.5 : m[2] === 'cuarto' ? 0.25 : 0.75;
+      out.horas = h;
+      cuts.push([back(m.index, /(?:\b(?:durante|unas|son|de|en total)\s+)+$/), m.index + m[0].length]);
+    } else if ((m = nn.match(/\bhora y media\b/))) {
+      out.horas = 1.5; cuts.push([back(m.index, /(?:\b(?:durante|una)\s+)+$/), m.index + m[0].length]);
+    } else if ((m = nn.match(/\bmedia hora\b/))) {
+      out.horas = 0.5; cuts.push([back(m.index, /(?:\bdurante\s+)+$/), m.index + m[0].length]);
+    }
+  }
+  // Fecha
+  if ((m = nn.match(/\b(anteayer|antes de ayer)\b/))) { out.dias = -2; cuts.push([m.index, m.index + m[0].length]); }
+  else if ((m = nn.match(/\bayer\b/))) { out.dias = -1; cuts.push([m.index, m.index + m[0].length]); }
+  else if ((m = nn.match(/\bhoy\b/))) { out.dias = 0; cuts.push([m.index, m.index + m[0].length]); }
+  // Quién ha ido: las personas del equipo, por nombre completo o por el nombre de pila.
+  out.operarios = [];
+  for (const [k, o] of Object.entries(S.operarios || {})) {
+    if (o.activo === false || !o.nombre) continue;
+    const full = normV(o.nombre).trim(), first = full.split(/\s+/)[0];
+    const r = new RegExp('\\b' + escRe(full) + '\\b').exec(nn) || (first.length >= 3 ? new RegExp('\\b' + escRe(first) + '\\b').exec(nn) : null);
+    if (r) { out.operarios.push(k); cuts.push([back(r.index, /(?:\b(?:con|y|e|operarios?|operarias?|hemos ido|ha ido|han ido|fuimos)\s+|,\s*)+$/), r.index + r[0].length]); }
+  }
+  // Cliente: el que más palabras de su nombre tenga en la frase.
+  let best = null;
+  for (const [id, c] of Object.entries(S.clientes)) {
+    const toks = normV(c.nombre).split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !CSTOP.has(w));
+    if (!toks.length) continue;
+    const hits = [];
+    toks.forEach(w => { const r = new RegExp('\\b' + escRe(w) + '\\b').exec(nn); if (r) hits.push([r.index, r.index + w.length]); });
+    if (!hits.length) continue;
+    const score = hits.length / toks.length + hits.length * 0.01;
+    if (!best || score > best.score) best = {id, score, hits};
+  }
+  if (best) {
+    out.clienteId = best.id;
+    const s0 = Math.min(...best.hits.map(h => h[0])), e0 = Math.max(...best.hits.map(h => h[1]));
+    (e0 - s0 < 40 ? [[s0, e0]] : best.hits).forEach(([s, e]) => cuts.push([back(s, /(?:\b(?:en casa de|en casa del|en casa|en|el|la|los|las|para|de|del|al|a|cliente|con)\s+)+$/), e]));
+  }
+  // Tareas: se marcan, pero se quedan en el texto.
+  out.tareas = TAREAS.filter(x => TAREAS_VOZ[x] && TAREAS_VOZ[x].test(nn));
+  // Lo que queda es el trabajo realizado.
+  cuts.sort((a, b) => a[0] - b[0]);
+  let d = '', pos = 0;
+  for (const [s, e] of cuts) { if (s > pos) d += t.slice(pos, s) + ' '; pos = Math.max(pos, e); }
+  d += t.slice(pos);
+  d = d.replace(/\s+([,.;:])/g, '$1').replace(/([,.;:])(\s*[,.;:])+/g, '$1').replace(/\s{2,}/g, ' ')
+    .replace(/^[\s,.;:]+|[\s,.;:]+$/g, '').replace(/^(y|e)\s+/i, '');
+  out.descripcion = d ? d.charAt(0).toUpperCase() + d.slice(1) : '';
+  return out;
+}
+function applyParte(raw) {
+  const form = $('#sheet-form');
+  if (!form || !form.elements.descripcion) return;
+  const p = parseParte(raw), F = form.elements;
+  if (p.clienteId) F.clienteId.value = p.clienteId;
+  if (p.dias !== undefined) { const d = new Date(); d.setDate(d.getDate() + p.dias); F.fecha.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+  if (p.inicio) { F.inicio.value = p.inicio; F.fin.value = p.fin; if (F.horas) F.horas.value = ''; }
+  else if (p.horas && F.horas) F.horas.value = p.horas;
+  form.querySelectorAll('input[name=operarios]').forEach(c => { if (p.operarios.includes(c.value)) c.checked = true; });
+  form.querySelectorAll('input[name=tareas]').forEach(c => { if (p.tareas.includes(c.value)) c.checked = true; });
+  const anadir = (el, txt) => { if (el && txt) el.value = el.value.trim() ? el.value.trim() + '. ' + txt : txt; };
+  anadir(F.descripcion, p.descripcion);
+  anadir(F.incidencias, p.incidencias);
+  const res = [p.clienteId ? clienteNombre(p.clienteId) : '', p.inicio ? p.inicio + '–' + p.fin : p.horas ? String(p.horas).replace('.', ',') + ' h' : '',
+    p.operarios.map(k => (S.operarios[k] || {}).nombre).join(', ')].filter(Boolean).join(' · ');
+  toast(p.clienteId ? 'Rellenado: ' + res + '. Revisa y guarda.' : 'No he reconocido el cliente: elígelo tú.' + (res ? ' (' + res + ')' : ''), !p.clienteId);
+}
+function toggleDictado(btn) {
+  if (!SR) { toast(NO_SR, true); return; }
+  if (rec && recBtn === btn) { try { rec.stop(); } catch (e) {} return; }
+  stopMic();
+  const txt = $('#dict-txt'), lab = btn.querySelector('span');
+  let last = '';
+  const r = new SR();
+  r.lang = 'es-ES'; r.continuous = true; r.interimResults = true;
+  r.onresult = ev => {
+    let f = '', i = '';
+    for (const res of ev.results) { if (res.isFinal) f += res[0].transcript + ' '; else i += res[0].transcript; }
+    last = (f + i).trim();
+    if (txt) txt.textContent = last || 'Te escucho…';
+  };
+  r.onerror = errorMic;
+  r.onend = () => {
+    btn.classList.remove('rec'); if (lab) lab.textContent = 'Dictar parte completo';
+    const ab = r._ab;
+    if (rec === r) { rec = null; recBtn = null; }
+    if (!ab && last) applyParte(last);
+  };
+  rec = r; recBtn = btn; btn.classList.add('rec');
+  if (lab) lab.textContent = 'Parar y rellenar';
+  if (txt) txt.textContent = 'Te escucho… pulsa otra vez cuando acabes.';
+  try { r.start(); } catch (e) { stopMic(); toast('No se pudo activar el micrófono.', true); }
+}
+
 const put = (col, id, data) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).set(data); };
 const del = (col, id) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).delete(); };
 const readObj = fd => Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v).trim()]));
@@ -402,11 +607,12 @@ function openSheet(title, html, onSave, onDel) {
   $('#sheet-title').textContent = title;
   $('#sheet-form').innerHTML = html + `<div class="actions">${onDel ? '<button type="button" class="btn danger" data-act="del">Eliminar</button>' : ''}<span class="grow"></span><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn primary">Guardar</button></div>`;
   sheetSave = onSave; sheetDel = onDel;
+  addMics($('#sheet-form'));
   $('#overlay').hidden = false; $('#overlay .sheet').scrollTop = 0;
   const first = $('#sheet-form input, #sheet-form select, #sheet-form textarea');
   if (first && matchMedia('(hover: hover)').matches) first.focus();
 }
-function closeSheet() { $('#overlay').hidden = true; $('#sheet-form').innerHTML = ''; sheetSave = sheetDel = null; }
+function closeSheet() { stopMic(); $('#overlay').hidden = true; $('#sheet-form').innerHTML = ''; sheetSave = sheetDel = null; }
 
 function contactSheet(kind, id) {
   const isC = kind === 'clientes';
@@ -490,8 +696,9 @@ function parteSheet(id) {
   const personas = Object.entries(S.operarios).filter(([k, o]) => o.activo !== false || quien.has(k)).sort(byNombre);
   const marcas = (name, items, sel) => `<div class="marcas">${items.map(([val, txt]) => `<label><input type="checkbox" name="${name}" value="${esc(val)}"${sel(val) ? ' checked' : ''}><span>${esc(txt)}</span></label>`).join('')}</div>`;
   const info = deApp ? `<p class="meta" style="margin:0">Enviado desde la app del equipo por ${esc(v.autor || '')}${v.editadoOficina ? ' · corregido por la oficina' : ''}</p>` : '';
+  const dict = `<div class="dict"><button type="button" class="btn primary small dictbtn" data-act="dictar-parte">${MIC_SVG}<span>Dictar parte completo</span></button><p class="meta" id="dict-txt">Ej.: «Hoy en casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»</p></div>`;
   const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button>
-      <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}
+      <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}${dict}
     <div class="grid2">
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
@@ -734,7 +941,8 @@ function vResumen() {
           <button class="btn small" data-act="export">Descargar copia</button>
           <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
           <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
-          <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
+          <button class="btn small ghost" data-act="recargar">↻ Forzar actualización</button>
+      <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
         </div>
   </section>`;
 }
@@ -1210,6 +1418,7 @@ function render() {
   }
   lastView = view;
   $('#view').innerHTML = VIEWS[view]();
+  addMics($('#view'));
 }
 
 /* ---------- Eventos ---------- */
@@ -1222,6 +1431,9 @@ document.addEventListener('click', e => {
   switch (a) {
     case 'nav': view = el.dataset.view; estadoF = 'todos'; q = ''; render(); $('main').scrollTop = 0; window.scrollTo(0, 0); break;
     case 'close': closeSheet(); break;
+    case 'mic': toggleMic(el); break;
+    case 'dictar-parte': toggleDictado(el); break;
+    case 'recargar': location.reload(); break;
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
     case 'ayuda':
@@ -1271,7 +1483,7 @@ document.addEventListener('click', e => {
     case 'filter': estadoF = el.dataset.v; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === estadoF)); $('#list').innerHTML = listaDocs(view); break;
     case 'addline': {
       const wrap = $('#lines');
-      if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); updateTotals($('#sheet-form')); }
+      if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); addMics(wrap); updateTotals($('#sheet-form')); }
       break;
     }
     case 'rmline': el.closest('.line-r').remove(); updateTotals($('#sheet-form')); break;
