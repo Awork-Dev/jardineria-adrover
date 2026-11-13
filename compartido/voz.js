@@ -3,9 +3,11 @@
 // el trabajo y los avisos. Usa el reconocimiento de voz del navegador (Chrome y Safari), en español.
 // Se inyecta en las dos páginas como <script> (marca /*VOZ*/) y deja un objeto global VOZ.
 // Cada página pone VOZ.aviso = su función de avisos (toast).
-export const vozJS = () => `const VOZ = (${codigo.toString()})();`;
+// Va como texto (String.raw) y no como función: al publicar, el empaquetador añade a las funciones ayudas
+// (__name) que no existen en el navegador.
+export const vozJS = () => `const VOZ = (${CODIGO})();`;
 
-function codigo() {
+const CODIGO = String.raw`function () {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const MIC_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg>';
   const NO_SR = 'Este navegador no deja dictar desde la página. Ábrela en Chrome o Safari, o usa el micrófono del teclado.';
@@ -94,7 +96,7 @@ function codigo() {
   // Lo que no se reconoce como dato queda como trabajo realizado.
   const NUMS = {un: 1, una: 1, uno: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12};
   const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const escRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const escRe = (s) => s.replace(/[.*+?^$(){}|[\]\\]/g, '\\$&');
   const CSTOP = new Set(['del', 'las', 'los', 'comunidad', 'propietarios', 'calle', 'slu', 'sociedad', 'limitada']);
   const TAREAS_VOZ = {
     'Corte de césped': /\b(cesped|segar|siega|segado)\b/, 'Poda': /\bpod(a|ar|ado|amos|ando)\b/,
@@ -186,4 +188,4 @@ function codigo() {
   // Añade un texto al final de un campo, separado por un punto.
   V.anadir = (el, txt) => { if (el && txt) el.value = el.value.trim() ? el.value.trim().replace(/[.\s]*$/, '') + '. ' + txt : txt; };
   return V;
-}
+}`;
