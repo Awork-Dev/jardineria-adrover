@@ -107,6 +107,20 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .ay-btn{position:static;background:transparent;color:var(--lima)}.ay-indice a{background:var(--panel2);color:var(--lima)}.ay a{color:var(--lima)}
 #acceso .ay-btn{position:fixed}
 @media (prefers-reduced-motion:reduce){#toast{transition:none}}
+/* Dictado por voz */
+.mw,.campo>span.mw{position:relative;display:block;min-width:0;font-weight:inherit;font-size:inherit}
+.mw>input,.mw>textarea{padding-right:50px!important}
+.mic{all:unset;cursor:pointer;position:absolute;right:6px;top:8px;width:40px;height:40px;display:grid;place-items:center;border-radius:50%;color:var(--lima)}
+.mic svg{width:22px;height:22px}
+.mic:focus-visible{outline:3px solid var(--lima);outline-offset:1px}
+.mic.rec{background:var(--rojo);color:#111;animation:micp 1.1s ease-in-out infinite}
+@keyframes micp{50%{box-shadow:0 0 0 8px rgba(255,122,89,.22)}}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+.dict{display:flex;flex-direction:column;gap:8px;padding:14px;margin-bottom:16px;border:2px dashed var(--line);border-radius:16px;background:var(--panel)}
+.dictbtn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--lima);color:var(--lima-ink)}
+.dictbtn svg{width:20px;height:20px}
+.dictbtn.rec{background:var(--rojo);color:#111}
+#dict-txt{margin:0;color:var(--muted);font-size:.9rem}
 </style>
 </head>
 <body>
@@ -178,6 +192,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 <form id="hoja" class="hoja" hidden autocomplete="off">
   <header class="top"><h1 id="hoja-titulo">Nuevo parte</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
+  <div class="dict"><button type="button" class="btn dictbtn" data-dictar><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg><span>Dictar parte completo</span></button><p id="dict-txt">Ej.: «En casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»</p></div>
   <label class="campo"><span>Cliente</span><select name="clienteId" required></select></label>
   <a class="llegar" hidden target="_blank" rel="noopener">📍 Cómo llegar</a>
   <div class="fila">
@@ -224,6 +239,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </div>
 <div id="toast" role="status"></div>
 
+<script>/*VOZ*/</script>
 <script>
 (function () {
 const $ = (s) => document.querySelector(s);
@@ -242,6 +258,38 @@ function toast(msg, mal) {
   const t = $('#toast'); t.textContent = msg; t.className = 'show' + (mal ? ' mal' : '');
   clearTimeout(toast.t); toast.t = setTimeout(() => { t.className = ''; }, 3000);
 }
+
+// ---------- Dictado por voz (el código común está en compartido/voz.js) ----------
+VOZ.aviso = toast;
+const DICT_EJ = 'Ej.: «En casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»';
+// «Dictar parte completo»: rellena el parte con lo que se entiende de la frase. Se revisa antes de guardar.
+function rellenarParte(raw) {
+  const h = $('#hoja'), p = VOZ.parse(raw, {
+    clientes: (D.clientes || []).map((c) => [c.id, c.nombre]),
+    operarios: (D.equipo || []).map((o) => [o.id, o.nombre]),
+    tareas: D.tareas || [],
+  });
+  const dos2 = (n) => String(n).padStart(2, '0');
+  if (p.clienteId) { h.clienteId.value = p.clienteId; pintarLlegar(h); }
+  if (p.fecha) h.fecha.value = p.fecha;
+  if (p.inicio) { h.inicio.value = p.inicio; h.fin.value = p.fin; }
+  else if (p.horas && h.fin.value) {
+    // Solo se dijeron las horas: se cuenta hacia atrás desde la hora de fin.
+    const m = +h.fin.value.slice(0, 2) * 60 + +h.fin.value.slice(3) - Math.round(p.horas * 60);
+    if (m >= 0) h.inicio.value = dos2(Math.floor(m / 60)) + ':' + dos2(m % 60);
+  }
+  h.querySelectorAll('input[name=operarios]').forEach((c) => { if (p.operarios.includes(c.value)) c.checked = true; });
+  h.querySelectorAll('input[name=tareas]').forEach((c) => { if (p.tareas.includes(c.value)) c.checked = true; });
+  VOZ.anadir(h.descripcion, p.descripcion);
+  VOZ.anadir(h.incidencias, p.incidencias);
+  const cli = (D.clientes || []).find((c) => c.id === p.clienteId);
+  const res = [cli ? cli.nombre : '', h.inicio.value && h.fin.value ? h.inicio.value + '–' + h.fin.value : ''].filter(Boolean).join(' · ');
+  toast(cli ? 'Rellenado: ' + res + '. Revisa y guarda.' : 'No he reconocido el cliente: elígelo tú.', !cli);
+}
+document.addEventListener('click', (e) => {
+  const mic = e.target.closest('[data-mic]'); if (mic) return VOZ.toggleMic(mic);
+  const dc = e.target.closest('[data-dictar]'); if (dc) return VOZ.dictar(dc, $('#dict-txt'), rellenarParte);
+});
 
 // ---------- Fotos: se reducen en el móvil y esperan en IndexedDB hasta que se envían ----------
 const almacen = (() => {
@@ -529,6 +577,7 @@ function abrirParte(p) {
   pintarLlegar(hoja);
   hoja.incidencias.value = p ? p.incidencias || '' : '';
   limpiarFotos(hoja);
+  $('#dict-txt').textContent = DICT_EJ;
   hoja.hidden = false; scrollTo(0, 0);
 }
 // Recién entrado, la lista de clientes puede no haber llegado aún: se espera a tenerla.
@@ -546,12 +595,13 @@ $('#partes').onclick = (e) => {
 };
 document.addEventListener('click', (e) => {
   const c = e.target.closest('[data-cerrar]');
-  if (c) { const f = c.closest('form'); limpiarFotos(f); f.hidden = true; return; }
+  if (c) { VOZ.stop(); const f = c.closest('form'); limpiarFotos(f); f.hidden = true; return; }
   const a = e.target.closest('[data-ahora]');
   if (a) { const h = new Date(); hoja[a.dataset.ahora].value = dos(h.getHours()) + ':' + dos(h.getMinutes()); }
 });
 hoja.onsubmit = async (e) => {
   e.preventDefault();
+  VOZ.stop();
   const fd = new FormData(hoja), p = {
     id: editando, clienteId: fd.get('clienteId'), fecha: fd.get('fecha'), inicio: fd.get('inicio'), fin: fd.get('fin'),
     operarios: fd.getAll('operarios'), tareas: fd.getAll('tareas'),
@@ -670,6 +720,7 @@ document.addEventListener('click', (e) => {
 });
 
 // ---------- Arranque ----------
+VOZ.addMics(document.body);
 mostrar();
 enviarCola(); actualizar();
 addEventListener('online', enviarCola);

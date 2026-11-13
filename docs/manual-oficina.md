@@ -38,6 +38,7 @@ El Resumen enseña cómo va el negocio: clientes, lo aceptado, lo pendiente de r
 
 - **Para hacerle una nota**, el cliente necesita **NIF/CIF, dirección, C.P. y población**.
 - **Buscar:** por nombre, CIF, correo o teléfono.
+- **Dictar en vez de escribir:** cada campo de texto tiene un **micrófono** a la derecha. Púlsalo, habla y el texto se escribe solo.
 - **Borrar:** abre la ficha y pulsa **Eliminar** dos veces. Si tiene documentos, avisa antes.
 
 ## Presupuestos
@@ -76,6 +77,7 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 - **Corregir:** ábrelo y cambia lo que haga falta. La ficha es igual que la del jefe en la app: horario, quién ha ido y tareas, y las horas se calculan solas. Al guardar, el jefe ya no puede modificarlo desde su app.
 - **Pasar a nota:** dentro del parte, **Crear nota**; o en **Partes** elige cliente y mes y pulsa **Crear nota con estos partes**. Cada parte sale como una línea de mano de obra con sus horas y el precio por hora. Los partes quedan marcados con el número de la nota para no cobrarlos dos veces.
 - **PDF de un parte:** ábrelo y pulsa **Descargar PDF**. Sale con los datos del cliente, horas, tareas, fotos y un recuadro para la firma de la empresa. Los avisos para la oficina no salen.
+- **Dictar un parte:** en **+ Nuevo**, pulsa **Dictar parte completo** y di por ejemplo «Hoy en casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos. Aviso: falta un aspersor». Se rellenan cliente, fecha, horario u horas, quién ha ido, tareas, trabajo y avisos (lo que digas tras «aviso», «incidencia» u «ojo»). Revisa y guarda.
 - **PDF del mes de un cliente** (para adjuntar a la factura o archivar): en **Partes** elige **cliente** y **mes** y pulsa **PDF de estos partes**. Sale una tabla con todos los partes y el total de horas.
 
 ## Equipo
@@ -111,6 +113,8 @@ Cada noche se guarda sola una copia de todo y se conserva 60 días.
 | Qué pasa | Qué hacer |
 | --- | --- |
 | No carga en el ordenador | Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador |
+| No sale un cambio nuevo | **Forzar actualización**, junto a **Cerrar sesión** (en el móvil, en Resumen → Copias y sesión) |
+| El micrófono no funciona | La primera vez, permite el micrófono cuando el navegador lo pida. Si no lo pide, usa Chrome o Safari, o el micrófono del teclado |
 | No llega un parte o un gasto | Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse **Sincronizar** |
 | Un operario no puede entrar | Revisa su PIN en **Equipo → Personas** y que no esté **De baja** |
 | El icono del móvil sale antiguo | Borra el acceso y vuelve a añadirlo |

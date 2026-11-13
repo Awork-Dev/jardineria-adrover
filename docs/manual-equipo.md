@@ -52,6 +52,8 @@ Puedes usar la app sin cobertura: todo se guarda en el móvil y se envía solo c
 
 - Puedes corregir un parte tocándolo en la lista. Si pone **Revisado por la oficina**, ya no se puede cambiar desde la app: llama a la oficina.
 - Cuando la oficina atiende uno de tus avisos, el parte lo indica.
+- **Dictar en vez de escribir:** pulsa **Dictar parte completo**, di el parte de una vez y vuelve a pulsar. Por ejemplo: «En casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor». Se rellenan cliente, horario, quién ha ido, tareas, detalles y avisos. Revisa y guarda.
+- Cada campo de texto tiene además su **micrófono** a la derecha. El dictado necesita cobertura; sin ella, usa el micrófono del teclado del móvil.
 
 ## Si pierdes el móvil
 
