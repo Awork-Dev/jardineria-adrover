@@ -114,6 +114,8 @@ main{padding:32px max(24px,env(safe-area-inset-right,0px)) 56px max(24px,env(saf
 .meta{color:var(--muted);font-size:.85rem}
 a.ubic{text-decoration:none;padding:2px}.sin-ubic{font-style:italic}
 .line{font-size:.92rem;overflow-wrap:anywhere}
+.uri{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85rem;border:1px solid var(--line);border-radius:10px;padding:10px 12px;overflow-wrap:anywhere;user-select:all}
+.aviso-g{margin:0;border-left:3px solid #b3261e;padding:6px 0 6px 12px;font-size:.92rem;overflow-wrap:anywhere}
 .tag{align-self:flex-start;margin-top:6px;font-size:.78rem;background:var(--soft);color:var(--brand);padding:2px 10px;border-radius:999px;font-weight:600}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 .chip{all:unset;cursor:pointer;padding:6px 14px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:.9rem;background:var(--panel)}
@@ -280,6 +282,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
     </nav>
     <div class="backup">
       <button class="btn small" data-act="copias">Copias de seguridad</button>
+      <button class="btn small" data-act="google">Google</button>
       <button class="btn small" data-act="export">Descargar copia</button>
       <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
       <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
@@ -731,6 +734,7 @@ function vResumen() {
   <section class="panel solo-movil" style="margin-top:18px"><h2>Copias y sesión</h2>
     <div class="backup">
           <button class="btn small" data-act="copias">Copias de seguridad</button>
+          <button class="btn small" data-act="google">Google</button>
           <button class="btn small" data-act="export">Descargar copia</button>
           <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
           <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
@@ -1164,6 +1168,7 @@ function pdfExtra() {
   d.line(L, y + 2.5, R, y + 2.5);
   const suma = k => filas.reduce((a, f) => a + f[k], 0);
   fila('Total', anual ? [...MESES_C.map((_, i) => filas.reduce((a, f) => a + f.porMes[i], 0)), suma('extra')] : [suma('trabajadas'), suma('lab'), suma('libre'), suma('extra')], true);
+  aDrive(d, 'horas-extra-' + periodo + '.pdf', 'horas');
   d.save('horas-extra-' + periodo + '.pdf');
 }
 function pdfJornada() {
@@ -1194,7 +1199,9 @@ function pdfJornada() {
   d.text('Horas extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo.', L, y); d.setFontSize(10);
   if (y > 240) { d.addPage(); y = 20; }
   y += 24; d.setFont('helvetica', 'normal'); d.text('Firma de la empresa', L, y); d.text('Firma del trabajador', 120, y);
-  d.save('jornada-' + o.nombre.replace(/\s+/g, '-').toLowerCase() + '-' + mesJ + '.pdf');
+  const nombreJ = 'jornada-' + o.nombre.replace(/\s+/g, '-').toLowerCase() + '-' + mesJ + '.pdf';
+  aDrive(d, nombreJ, 'horas');
+  d.save(nombreJ);
 }
 
 const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), proveedores: () => vContactos('proveedores'), presupuestos: () => vDocs('presupuestos'), notas: () => vDocs('notas'), partes: vPartes, equipo: vEquipo};
@@ -1246,6 +1253,10 @@ document.addEventListener('click', e => {
     case 'edit-gasto': gastoSheet(id); break;
     case 'bajar-foto': bajarFoto(id); break;
     case 'copias': copiasSheet(); break;
+    case 'google': googleSheet(); break;
+    case 'google-conectar': googleConectar(); break;
+    case 'google-sinc': googleSinc(); break;
+    case 'google-desconectar': googleDesconectar(); break;
     case 'copia-ahora': copiaAhora(); break;
     case 'copia-bajar': bajarCopia(el.dataset.f); break;
     case 'copia-recuperar': recuperarCopia(el.dataset.f, el); break;
@@ -1445,6 +1456,80 @@ async function copiasSheet() {
       : empty('Aún no hay copias automáticas.', 'La primera se hará esta noche. También puedes hacer una ahora.')}
     <div class="actions"><button type="button" class="btn ghost" data-act="copia-ahora">Hacer copia ahora</button><span class="grow"></span><button type="button" class="btn primary" data-act="close">Cerrar</button></div>`;
 }
+/* ---------- Google: los partes al calendario, los clientes a contactos, las copias y los PDF a Drive y las horas a una hoja ---------- */
+let GG = null, ggEnviando = false;
+const cargarGoogle = () => api('GET', '/api/google').then(g => { GG = g; }).catch(() => {});
+// Los PDF que se generan se guardan también en la carpeta de Drive de la empresa, si la cuenta está conectada.
+function aDrive(d, nombre, tipo) {
+  if (!GG || !GG.conectado || !GG.permisos.drive) return;
+  fetch('/api/google/pdf?tipo=' + tipo + '&nombre=' + encodeURIComponent(nombre), {method: 'POST', headers: {'Content-Type': 'application/pdf', 'X-Clave': clave}, body: d.output('blob')})
+    .then(r => { if (!r.ok) throw 0; toast('Guardado también en Google Drive'); }).catch(() => toast('No se ha podido guardar en Google Drive', true));
+}
+const GG_VUELTA = {ok: 'Cuenta de Google conectada', rechazado: 'No se ha dado el permiso en Google.', caducado: 'Ha pasado demasiado tiempo. Pulsa «Conectar con Google» otra vez.',
+  'sin-permisos': 'No se marcó ningún permiso. Vuelve a conectar y deja marcadas las casillas.', fallo: 'Google no ha completado la conexión. Inténtalo de nuevo.'};
+function googleHtml() {
+  const g = GG, cerrar = '<button type="button" class="btn primary" data-act="close">Cerrar</button>';
+  if (!g) return `<p class="meta">No se ha podido consultar el estado. Revisa la conexión.</p><div class="actions"><span class="grow"></span>${cerrar}</div>`;
+  const que = `<p class="meta" style="margin:0">Copia lo de la gestión a la cuenta de Google de la empresa: los partes de trabajo al calendario, los clientes a los contactos,
+    las copias de seguridad y los PDF a Drive, y las horas de cada mes a una hoja de cálculo. Solo la gestión escribe en Google y nunca borra nada allí:
+    si alguien cambia o borra algo a mano en Google, la gestión lo vuelve a poner como estaba. Un parte borrado aquí se queda en el calendario marcado como «ANULADO».</p>`;
+  if (!g.configurado) return `${que}<p class="meta" style="margin:0">Falta dar de alta la conexión en Google, una sola vez. Los pasos están en la ayuda (botón «?», apartado «Google»).
+    Cuando Google pida la «URI de redireccionamiento autorizado», es esta:</p><p class="uri" style="margin:0">${esc(g.vuelta)}</p><div class="actions"><span class="grow"></span>${cerrar}</div>`;
+  if (!g.conectado) return `${que}${g.aviso ? `<p class="aviso-g">${esc(g.aviso)}</p>` : ''}
+    <p class="meta" style="margin:0">Al pulsar el botón se abre Google: entra con la cuenta de la empresa y deja marcadas todas las casillas de permiso.${g.cuenta ? ' La última cuenta conectada fue ' + esc(g.cuenta) + '.' : ''}</p>
+    <div class="actions"><button type="button" class="btn primary" data-act="google-conectar">Conectar con Google</button><span class="grow"></span><button type="button" class="btn ghost" data-act="close">Cerrar</button></div>`;
+  const fila = (titulo, texto, enlace, ok) => `<div class="row" style="cursor:default"><div><b>${esc(titulo)}</b><span class="line" style="display:block">${ok ? esc(texto) : 'Sin permiso: desconecta, vuelve a conectar y deja marcadas todas las casillas.'}</span></div>
+    ${ok && enlace ? `<div class="rowr"><a class="btn small ghost" href="${esc(enlace)}" target="_blank" rel="noopener">Abrir</a></div>` : ''}</div>`;
+  const n = (k, uno, varios) => g.enviados[k] === 1 ? '1 ' + uno : g.enviados[k] + ' ' + varios;
+  const estado = ggEnviando ? `Enviando a Google… quedan ${g.pendientes}. No cierres esta ventana.`
+    : g.pendientes ? `Quedan ${g.pendientes} por enviar: salen solos en los próximos minutos, o ya con «Sincronizar ahora».` : 'Todo enviado.';
+  return `<p style="margin:0"><b>Conectada</b>${g.cuenta ? ' con ' + esc(g.cuenta) : ''}</p>
+    <div class="rows">
+      ${fila('Calendario «Trabajos Adrover»', n('evento', 'parte de trabajo', 'partes de trabajo') + (g.desde ? ' (desde el ' + fmtFecha(g.desde) + ')' : ''), g.enlaces.calendario, g.permisos.calendario)}
+      ${fila('Contactos «Clientes Adrover»', n('contacto', 'cliente', 'clientes'), g.enlaces.contactos, g.permisos.contactos)}
+      ${fila('Drive: copias y PDF', g.copia ? 'Última copia: ' + fmtFecha(g.copia) : 'La primera copia se guardará esta noche', g.enlaces.carpeta, g.permisos.drive)}
+      ${fila('Hoja de horas', n('hoja', 'mes', 'meses'), g.enlaces.hoja, g.permisos.drive)}
+    </div>
+    <p class="meta" id="gg-estado" style="margin:0">${esc(estado)}${g.conError ? ` ${g.conError === 1 ? 'Hay 1 cosa que no se ha podido enviar.' : 'Hay ' + g.conError + ' cosas que no se han podido enviar.'}` : ''}</p>
+    ${g.error ? `<p class="aviso-g">${esc(g.error)}</p>` : ''}
+    <div class="actions"><button type="button" class="btn" data-act="google-sinc"${ggEnviando ? ' disabled' : ''}>Sincronizar ahora</button>
+      <button type="button" class="btn ghost" data-act="google-desconectar">Desconectar</button><span class="grow"></span>${cerrar}</div>`;
+}
+const googleAbierto = () => !$('#overlay').hidden && $('#sheet-title').textContent === 'Google';
+function pintarGoogle() { if (googleAbierto()) $('#sheet-form').innerHTML = googleHtml(); }
+async function googleSheet() {
+  $('#sheet-title').textContent = 'Google';
+  sheetSave = sheetDel = null;
+  $('#sheet-form').innerHTML = '<p class="meta">Cargando…</p>';
+  $('#overlay').hidden = false;
+  await cargarGoogle();
+  pintarGoogle();
+}
+async function googleConectar() {
+  try { location.href = (await api('POST', '/api/google/conectar')).url; } catch (e) { toast('No se ha podido abrir Google. Inténtalo de nuevo.', true); }
+}
+// El servidor envía un trozo en cada pasada: se repite hasta que no queda nada (o deja de avanzar).
+async function googleSinc() {
+  if (ggEnviando) return;
+  ggEnviando = true; pintarGoogle();
+  try {
+    let antes = Infinity, quietas = 0;
+    for (let i = 0; i < 300 && googleAbierto(); i++) {
+      GG = await api('POST', '/api/google/sincronizar' + (i ? '' : '?revisar=1')); // la primera vez, además, se revisa lo tocado a mano en Google
+      pintarGoogle();
+      if (!GG.conectado || !GG.pendientes) break;
+      quietas = GG.pendientes < antes ? 0 : quietas + 1;
+      if (quietas >= 3) break;
+      if (quietas) await new Promise(r => setTimeout(r, 1500));
+      antes = GG.pendientes;
+    }
+  } catch (e) { toast(e.message, true); }
+  ggEnviando = false; pintarGoogle();
+}
+async function googleDesconectar() {
+  if (!window.confirm('¿Desconectar la cuenta de Google? Lo ya enviado se queda en Google, pero deja de actualizarse.')) return;
+  try { GG = await api('DELETE', '/api/google'); pintarGoogle(); toast('Cuenta de Google desconectada'); } catch (e) { toast(e.message, true); }
+}
 async function copiaAhora() {
   try { await api('POST', '/api/copias'); toast('Copia hecha'); copiasSheet(); } catch (e) { toast(e.message, true); }
 }
@@ -1591,6 +1676,7 @@ function generarPDF(kind, id) {
   // En el móvil se abre «Compartir» (WhatsApp, correo…); en el ordenador se descarga.
   const nombre = (p.numero || K.uno) + '.pdf';
   const archivo = new File([d.output('blob')], nombre, {type: 'application/pdf'});
+  aDrive(d, nombre, 'documentos');
   const movil = matchMedia('(pointer:coarse)').matches;
   if (movil && navigator.canShare && navigator.canShare({files: [archivo]})) {
     navigator.share({files: [archivo], title: K.Uno + ' ' + (p.numero || '')}).then(() => {
@@ -1731,6 +1817,7 @@ async function pdfPartes(ids) {
   const cli = clientes.length === 1 ? '-' + clienteNombre(clientes[0]).replace(/\(Ejemplo\)/, '').trim().replace(/[^\wáéíóúñü]+/gi, '-').toLowerCase() : '';
   const nombre = (uno ? 'parte-' + p0.fecha : 'partes-' + (partesMes || p0.fecha)) + cli + '.pdf';
   const archivo = new File([d.output('blob')], nombre, {type: 'application/pdf'});
+  aDrive(d, nombre, 'partes');
   if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({files: [archivo]})) {
     navigator.share({files: [archivo], title: uno ? 'Parte de trabajo' : 'Partes de trabajo'}).catch(err => { if (err.name !== 'AbortError') d.save(nombre); });
   } else d.save(nombre);
@@ -1775,6 +1862,14 @@ async function sincronizar() {
   }
   cargarEnPantalla();
   cargarLogo();
+  // Estado de la conexión con Google (para guardar los PDF en Drive) y aviso al volver de dar el permiso.
+  const vg = new URLSearchParams(location.search).get('google');
+  if (vg) {
+    history.replaceState(null, '', location.pathname);
+    await googleSheet();
+    toast(GG_VUELTA[vg] || 'No se ha podido conectar con Google.', vg !== 'ok');
+    if (vg === 'ok' && GG && GG.conectado) googleSinc();
+  } else cargarGoogle();
   // Lo que llega de la app del equipo aparece solo: al volver a la gestión y cada minuto mientras está
   // a la vista. No se recarga con una ficha abierta, para no perder lo que se está escribiendo.
   let ultima = Date.now();

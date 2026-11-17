@@ -9,3 +9,10 @@ CREATE INDEX IF NOT EXISTS docs_autor ON docs (coleccion, json_extract(data, '$.
 -- Borrados recientes, para que la gestión los quite de pantalla al sincronizar solo los cambios.
 CREATE TABLE IF NOT EXISTS borrados (coleccion TEXT NOT NULL, id TEXT NOT NULL, cuando TEXT NOT NULL, PRIMARY KEY (coleccion, id));
 CREATE INDEX IF NOT EXISTS borrados_cuando ON borrados (cuando);
+-- Conexión con Google (gestion/src/google.js): ajustes y llave cifrada, lo ya enviado y lo pendiente de enviar.
+-- No son documentos: no van en las copias de seguridad.
+CREATE TABLE IF NOT EXISTS google (clave TEXT PRIMARY KEY, valor TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS google_sinc (tipo TEXT NOT NULL, id TEXT NOT NULL, gid TEXT NOT NULL, huella TEXT NOT NULL, etag TEXT, PRIMARY KEY (tipo, id));
+CREATE TABLE IF NOT EXISTS google_cola (tipo TEXT NOT NULL, id TEXT NOT NULL, intentos INTEGER NOT NULL DEFAULT 0, error TEXT, PRIMARY KEY (tipo, id));
+-- Para rehacer las citas de un cliente cuando cambia su nombre o su dirección.
+CREATE INDEX IF NOT EXISTS docs_cliente ON docs (coleccion, json_extract(data, '$.clienteId'));

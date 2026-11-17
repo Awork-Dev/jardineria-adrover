@@ -10,7 +10,8 @@
   // La librería que genera los PDF (jsPDF) se sirve desde aquí, no desde un servidor externo.
   "assets": { "directory": "./public" },
   // Copia diaria de todos los datos a las 03:15 (hora UTC), se guardan 60 días.
-  "triggers": { "crons": ["15 3 * * *"] },
+  // Cada media hora, si hay cuenta de Google conectada, se le envía lo que haya cambiado (gestion/src/google.js).
+  "triggers": { "crons": ["15 3 * * *", "*/30 * * * *"] },
   "kv_namespaces": [
     { "binding": "COPIAS", "id": "c74f881c6f0d429689e3d576bc3734cd" },
     // Fotos de tickets y del trabajo que envía el equipo desde la app.

@@ -1,5 +1,5 @@
 <!-- Generado por compartido/generar-ayuda.py desde docs/manual-oficina.md: no editar a mano. -->
-<nav class="ay-indice"><a href="#ay1">Las tres apps</a><a href="#ay2">Entrar</a><a href="#ay3">Resumen</a><a href="#ay4">Clientes y proveedores</a><a href="#ay5">Presupuestos</a><a href="#ay6">Notas</a><a href="#ay7">Partes</a><a href="#ay8">Equipo</a><a href="#ay9">Copias de seguridad</a><a href="#ay10">Si algo falla</a></nav><h3 id="ay1">Las tres apps</h3>
+<nav class="ay-indice"><a href="#ay1">Las tres apps</a><a href="#ay2">Entrar</a><a href="#ay3">Resumen</a><a href="#ay4">Clientes y proveedores</a><a href="#ay5">Presupuestos</a><a href="#ay6">Notas</a><a href="#ay7">Partes</a><a href="#ay8">Equipo</a><a href="#ay9">Google</a><a href="#ay10">Copias de seguridad</a><a href="#ay11">Si algo falla</a></nav><h3 id="ay1">Las tres apps</h3>
 <p>Jardinería Adrover funciona con tres apps: la <b>web</b> para los clientes, la <b>gestión</b> para la oficina y la <b>app del equipo</b> para los operarios. Se abren en el navegador y se pueden poner en el móvil como una app más.</p>
 <div class="ay-tabla"><table><thead><tr><th>App</th><th>Para quién</th><th>Enlace</th><th>Icono</th></tr></thead><tbody><tr><td>Web</td><td>Clientes y público</td><td><a href="https://jardineriaadrover.es" target="_blank" rel="noopener">jardineriaadrover.es</a></td><td>Verde</td></tr><tr><td>Gestión</td><td>Oficina (con clave)</td><td><a href="https://gestionadrover.jardineriaadrover.workers.dev" target="_blank" rel="noopener">gestionadrover.jardineriaadrover.workers.dev</a></td><td>Dorado</td></tr><tr><td>Equipo</td><td>Operarios (con PIN)</td><td><a href="https://equipo.jardineriaadrover.workers.dev" target="_blank" rel="noopener">equipo.jardineriaadrover.workers.dev</a></td><td>Lima y negro</td></tr></tbody></table></div>
 <p><b>Ponerla en el móvil:</b> ábrela en Safari (iPhone) y pulsa <b>Compartir → Añadir a pantalla de inicio</b>; en Android, menú <b>⋮ → Añadir a pantalla de inicio</b>.</p>
@@ -84,12 +84,32 @@
 <li><b>Gastos:</b> cada uno con la foto del ticket. Al pagarlo, ábrelo, pon <b>Pagado</b> y, si quieres, una <b>nota de la oficina</b> (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.</li>
 <li><b>Fotos:</b> las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.</li>
 </ul>
-<h3 id="ay9">Copias de seguridad</h3>
+<h3 id="ay9">Google</h3>
+<p>El botón <b>Google</b> (junto a «Copias de seguridad») conecta la gestión con la cuenta de Google de la empresa:</p>
+<ul>
+<li><b>Partes de trabajo → calendario «Trabajos Adrover»</b>, con el cliente, el lugar, el horario, quién va y las tareas. Al conectar se envían los de los últimos tres meses y, después, cada parte nuevo o cambiado.</li>
+<li><b>Clientes → contactos</b>, con la etiqueta «Clientes Adrover»: nombre, teléfono (con +34), correo y dirección. Las notas y el NIF no se envían.</li>
+<li><b>Copias de seguridad y PDF → Drive</b>, en la carpeta «Jardinería Adrover · Gestión»: la copia de cada noche y cada PDF que se descarga (presupuestos, notas, partes y horas).</li>
+<li><b>Horas → hoja de cálculo «Horas del equipo»</b>, una pestaña por mes con las horas y las horas extra de cada persona. Sin la ubicación de los fichajes.</li>
+</ul>
+<p><b>Solo la gestión escribe en Google y nunca borra nada allí.</b> Si alguien cambia o borra a mano una cita, un contacto o la hoja, la gestión lo vuelve a poner como estaba (las citas, en menos de media hora; el resto, cada noche o al pulsar «Sincronizar ahora»). Si se borra un parte en la gestión, su cita se queda en el calendario marcada como «ANULADO»; si se borra un cliente, su contacto se queda en Google. Las citas que alguien añada por su cuenta al calendario no se tocan.</p>
+<p>Las horas del equipo quedan también en Google: hay que avisar al equipo, igual que con la ubicación al fichar.</p>
+<p><b>Darla de alta (una sola vez)</b></p>
+<ol>
+<li>Entra en <a href="https://console.cloud.google.com" target="_blank" rel="noopener">Google Cloud</a> con la cuenta de la empresa y crea un proyecto, por ejemplo «Gestión Adrover».</li>
+<li>En «APIs y servicios» → «Biblioteca», activa estas cuatro: <b>Google Calendar API</b>, <b>People API</b>, <b>Google Drive API</b> y <b>Google Sheets API</b>.</li>
+<li>En «Google Auth Platform» (o «Pantalla de consentimiento de OAuth»): tipo «Externo», nombre «Gestión Jardinería Adrover» y el correo de la empresa. En «Público», pulsa <b>Publicar app</b> para que quede «En producción»: si se queda «En prueba», Google corta la conexión cada 7 días.</li>
+<li>En «Clientes» → «Crear cliente», tipo <b>Aplicación web</b>. En «URI de redireccionamiento autorizados» pon <code>https://gestionadrover.jardineriaadrover.workers.dev/google/vuelta</code> (el panel «Google» de la gestión la enseña).</li>
+<li>Google da un <b>ID de cliente</b> y un <b>secreto</b>. No los mandes por correo ni por chat: entra en <a href="https://dash.cloudflare.com" target="_blank" rel="noopener">Cloudflare</a> → Workers → gestionadrover → Configuración → Variables y secretos → Añadir, de tipo «Secreto»: <code>GOOGLE_ID</code> con el ID y <code>GOOGLE_SECRETO</code> con el secreto.</li>
+<li>En la gestión, <b>Google</b> → <b>Conectar con Google</b> y entra con la cuenta de la empresa. Google avisa de que la app «no está verificada»: es normal, porque es solo para la empresa. Pulsa «Configuración avanzada» → «Ir a Gestión Jardinería Adrover», deja marcadas todas las casillas y continúa.</li>
+</ol>
+<p><b>Desconectar</b> retira el permiso. Lo ya enviado se queda en Google; al volver a conectar la misma cuenta, no se duplica nada.</p>
+<h3 id="ay10">Copias de seguridad</h3>
 <p>Cada noche se guarda sola una copia de todo y se conserva 60 días.</p>
 <ul>
 <li><b>Copias de seguridad:</b> lista por fecha para <b>Descargar</b> o <b>Recuperar</b> (vuelve a poner lo de ese día; lo creado después se mantiene). <b>Hacer copia ahora</b> antes de un cambio grande.</li>
 <li><b>Descargar copia / Cargar copia:</b> baja todo a un archivo o lo vuelve a subir.</li>
 </ul>
-<h3 id="ay10">Si algo falla</h3>
+<h3 id="ay11">Si algo falla</h3>
 <div class="ay-tabla"><table><thead><tr><th>Qué pasa</th><th>Qué hacer</th></tr></thead><tbody><tr><td>No carga en el ordenador</td><td>Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador</td></tr><tr><td>No llega un parte o un gasto</td><td>Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse <b>Sincronizar</b></td></tr><tr><td>Un operario no puede entrar</td><td>Revisa su PIN en <b>Equipo → Personas</b> y que no esté <b>De baja</b></td></tr><tr><td>El icono del móvil sale antiguo</td><td>Borra el acceso y vuelve a añadirlo</td></tr><tr><td>«No se ha guardado: mientras lo editabas…»</td><td>Otra persona o la app del equipo lo cambió a la vez. Vuelve a abrirlo, verás lo último, y repite tu cambio</td></tr></tbody></table></div>
 <p><b>Dónde están los datos:</b> en Cloudflare, en una base de datos con jurisdicción de la Unión Europea, con copia cada noche.</p>

@@ -7,6 +7,7 @@ import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
+import * as google from './google.js';
 
 const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos'];
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
@@ -46,7 +47,10 @@ async function todosLosDatos(env, version = false) {
 async function hacerCopia(env) {
   const fecha = new Date().toISOString().slice(0, 10), datos = await todosLosDatos(env);
   for (const [id, f] of Object.entries(datos.fichajes || {})) datos.fichajes[id] = limpiarUbicacion(f);
-  await env.COPIAS.put('copia:' + fecha, JSON.stringify(datos), {expirationTtl: DIAS_COPIA * 86400});
+  const texto = JSON.stringify(datos);
+  await env.COPIAS.put('copia:' + fecha, texto, {expirationTtl: DIAS_COPIA * 86400});
+  // Con la cuenta de Google conectada, la copia se guarda también en su Drive (si falla, la de aquí ya está hecha).
+  await google.copia(env, fecha, texto).catch(() => {});
   return fecha;
 }
 
@@ -69,10 +73,15 @@ async function caducarUbicaciones(env) {
 
 let CABECERAS;
 export default {
-  async scheduled(event, env, ctx) { ctx.waitUntil(Promise.all([hacerCopia(env), caducarUbicaciones(env)])); },
+  async scheduled(event, env, ctx) {
+    // Cada media hora solo se envía a Google lo que haya cambiado; de noche, además, la copia y la limpieza.
+    if (event.cron === '*/30 * * * *') return ctx.waitUntil(google.sincronizar(env, {revisar: 'calendario'}));
+    ctx.waitUntil(Promise.all([hacerCopia(env), caducarUbicaciones(env)]).then(() => google.apuntarMeses(env)).then(() => google.sincronizar(env, {revisar: 'todo'})));
+  },
 
-  async fetch(req, env) {
+  async fetch(req, env, ctx) {
     const url = new URL(req.url);
+    const aGoogle = () => ctx.waitUntil(google.sincronizar(env).catch(() => {}));
     if (url.pathname === '/' || url.pathname === '/index.html') {
       // «blob:» en las conexiones: las fotos del equipo se piden con la clave y se leen de memoria al hacer los PDF.
       CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(), payment=()'});
@@ -82,6 +91,9 @@ export default {
     // Los PDF para clientes llevan el logo verde de la empresa, no el dorado de la gestión.
     if (url.pathname === '/logo.png') return icono('/icon-192.png', ICONOS_WEB);
     const ico = icono(url.pathname, ICONOS); if (ico) return ico;
+    // Vuelta de Google tras pedir el permiso: no trae la clave de la gestión, vale por el código de un solo uso
+    // que se dio al empezar (google.empezar).
+    if (url.pathname === google.VUELTA && req.method === 'GET') return Response.redirect(url.origin + '/?google=' + await google.volver(env, url), 302);
     if (!url.pathname.startsWith('/api/')) return new Response('No encontrado', {status: 404});
     const ip = req.headers.get('cf-connecting-ip') || 'desconocida';
     if (await bloqueada(env, ip)) return json({error: 'demasiados intentos'}, 429);
@@ -99,6 +111,8 @@ export default {
       const hasta = new Date().toISOString();
       const {results} = await env.DB.prepare('SELECT coleccion, id, data, actualizado FROM docs WHERE actualizado > ?').bind(desde).all();
       const {results: fuera} = await env.DB.prepare('SELECT coleccion, id FROM borrados WHERE cuando > ?').bind(desde).all();
+      // Lo que llega de la app del equipo también va a Google: se aprovecha que la gestión pregunta cada minuto.
+      if (results.some(r => google.SIGUE.includes(r.coleccion)) || fuera.length) aGoogle();
       return json({cambios: results.map(r => [r.coleccion, r.id, {...JSON.parse(r.data), _v: r.actualizado}]), borrados: fuera.map(r => [r.coleccion, r.id]), hasta});
     }
 
@@ -134,6 +148,25 @@ export default {
       }
       await quitarUbicacion(env, filas, {validado: Date.now()});
       return json({ok: true, validados: filas.length});
+    }
+
+    // Google: estado de la conexión, conectar, desconectar, enviar lo pendiente y guardar un PDF en Drive.
+    if (url.pathname === '/api/google' && req.method === 'GET') return json(await google.estado(env, url.origin));
+    if (url.pathname === '/api/google' && req.method === 'DELETE') { await google.desconectar(env); return json(await google.estado(env, url.origin)); }
+    if (url.pathname === '/api/google/conectar' && req.method === 'POST') {
+      const destino = await google.empezar(env, url.origin);
+      return destino ? json({url: destino}) : json({error: 'sin configurar'}, 400);
+    }
+    if (url.pathname === '/api/google/sincronizar' && req.method === 'POST') {
+      await google.sincronizar(env, {manual: true, revisar: url.searchParams.get('revisar') ? 'todo' : ''});
+      return json(await google.estado(env, url.origin));
+    }
+    if (url.pathname === '/api/google/pdf' && req.method === 'POST') {
+      const tipo = url.searchParams.get('tipo'), nombre = String(url.searchParams.get('nombre') || '').replace(/[^\w.\- áéíóúñüÁÉÍÓÚÑÜ()]/g, '-').slice(0, 120);
+      const bytes = await req.arrayBuffer();
+      if (!google.TIPOS_PDF.includes(tipo) || !/\.pdf$/i.test(nombre) || !bytes.byteLength || bytes.byteLength > 25e6) return json({error: 'datos'}, 400);
+      const r = await google.pdf(env, tipo, nombre, bytes);
+      return json(r, r.ok ? 200 : 502);
     }
 
     // PIN incorrectos en la app del equipo (todas las conexiones juntas): cuántos van y si la entrada está bloqueada.
@@ -193,6 +226,7 @@ export default {
             env.DB.prepare('DELETE FROM borrados WHERE coleccion = ? AND id = ?').bind(col, id),
           ]);
         }
+        if (google.SIGUE.includes(col)) aGoogle();
         return json({ok: true, _v: ahora});
       }
       if (req.method === 'DELETE') {
@@ -201,6 +235,7 @@ export default {
           env.DB.prepare('DELETE FROM docs WHERE coleccion = ? AND id = ?').bind(col, id),
           env.DB.prepare('INSERT INTO borrados (coleccion, id, cuando) VALUES (?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET cuando = excluded.cuando').bind(col, id, cuando),
         ]);
+        if (google.SIGUE.includes(col)) aGoogle();
         return json({ok: true});
       }
     }

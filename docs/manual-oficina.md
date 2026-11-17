@@ -99,6 +99,30 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 - **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y, si quieres, una **nota de la oficina** (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.
 - **Fotos:** las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.
 
+## Google
+
+El botón **Google** (junto a «Copias de seguridad») conecta la gestión con la cuenta de Google de la empresa:
+
+- **Partes de trabajo → calendario «Trabajos Adrover»**, con el cliente, el lugar, el horario, quién va y las tareas. Al conectar se envían los de los últimos tres meses y, después, cada parte nuevo o cambiado.
+- **Clientes → contactos**, con la etiqueta «Clientes Adrover»: nombre, teléfono (con +34), correo y dirección. Las notas y el NIF no se envían.
+- **Copias de seguridad y PDF → Drive**, en la carpeta «Jardinería Adrover · Gestión»: la copia de cada noche y cada PDF que se descarga (presupuestos, notas, partes y horas).
+- **Horas → hoja de cálculo «Horas del equipo»**, una pestaña por mes con las horas y las horas extra de cada persona. Sin la ubicación de los fichajes.
+
+**Solo la gestión escribe en Google y nunca borra nada allí.** Si alguien cambia o borra a mano una cita, un contacto o la hoja, la gestión lo vuelve a poner como estaba (las citas, en menos de media hora; el resto, cada noche o al pulsar «Sincronizar ahora»). Si se borra un parte en la gestión, su cita se queda en el calendario marcada como «ANULADO»; si se borra un cliente, su contacto se queda en Google. Las citas que alguien añada por su cuenta al calendario no se tocan.
+
+Las horas del equipo quedan también en Google: hay que avisar al equipo, igual que con la ubicación al fichar.
+
+**Darla de alta (una sola vez)**
+
+1. Entra en [Google Cloud](https://console.cloud.google.com) con la cuenta de la empresa y crea un proyecto, por ejemplo «Gestión Adrover».
+2. En «APIs y servicios» → «Biblioteca», activa estas cuatro: **Google Calendar API**, **People API**, **Google Drive API** y **Google Sheets API**.
+3. En «Google Auth Platform» (o «Pantalla de consentimiento de OAuth»): tipo «Externo», nombre «Gestión Jardinería Adrover» y el correo de la empresa. En «Público», pulsa **Publicar app** para que quede «En producción»: si se queda «En prueba», Google corta la conexión cada 7 días.
+4. En «Clientes» → «Crear cliente», tipo **Aplicación web**. En «URI de redireccionamiento autorizados» pon `https://gestionadrover.jardineriaadrover.workers.dev/google/vuelta` (el panel «Google» de la gestión la enseña).
+5. Google da un **ID de cliente** y un **secreto**. No los mandes por correo ni por chat: entra en [Cloudflare](https://dash.cloudflare.com) → Workers → gestionadrover → Configuración → Variables y secretos → Añadir, de tipo «Secreto»: `GOOGLE_ID` con el ID y `GOOGLE_SECRETO` con el secreto.
+6. En la gestión, **Google** → **Conectar con Google** y entra con la cuenta de la empresa. Google avisa de que la app «no está verificada»: es normal, porque es solo para la empresa. Pulsa «Configuración avanzada» → «Ir a Gestión Jardinería Adrover», deja marcadas todas las casillas y continúa.
+
+**Desconectar** retira el permiso. Lo ya enviado se queda en Google; al volver a conectar la misma cuenta, no se duplica nada.
+
 ## Copias de seguridad
 
 Cada noche se guarda sola una copia de todo y se conserva 60 días.
