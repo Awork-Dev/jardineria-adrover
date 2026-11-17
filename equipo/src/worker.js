@@ -1,7 +1,8 @@
 import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
+import { vozJS } from '../../compartido/voz.js';
 // El manual (docs/manual-equipo.md) va dentro de la página, en el botón «?»: se puede leer sin cobertura.
-const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA);
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA).replace('/*VOZ*/', () => vozJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
@@ -92,7 +93,7 @@ export default {
     const url = new URL(req.url), ruta = url.pathname;
     if (ruta === '/' || ruta === '/index.html') {
       // Además de lo común: el service worker (para abrir la app sin cobertura) y la ubicación al fichar.
-      CABECERAS ||= await cabecerasPagina(HTML, {extra: "worker-src 'self'; ", permisos: 'geolocation=(self), microphone=(), payment=()'});
+      CABECERAS ||= await cabecerasPagina(HTML, {extra: "worker-src 'self'; ", permisos: 'geolocation=(self), microphone=(self), payment=()'});
       return new Response(HTML, {headers: {...CABECERAS, 'cache-control': 'no-cache'}});
     }
     if (ruta === '/sw.js') return new Response(SW, {headers: {'content-type': 'text/javascript;charset=utf-8', 'cache-control': 'no-cache'}});

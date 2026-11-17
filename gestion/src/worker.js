@@ -1,8 +1,9 @@
 import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
 import { constantesJS, PIN_TODAS } from '../../compartido/constantes.js';
+import { vozJS } from '../../compartido/voz.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
-const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS());
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS()).replace('/*VOZ*/', () => vozJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
@@ -84,7 +85,7 @@ export default {
     const aGoogle = () => ctx.waitUntil(google.sincronizar(env).catch(() => {}));
     if (url.pathname === '/' || url.pathname === '/index.html') {
       // «blob:» en las conexiones: las fotos del equipo se piden con la clave y se leen de memoria al hacer los PDF.
-      CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(), payment=()'});
+      CABECERAS ||= await cabecerasPagina(HTML, {conexiones: "'self' blob:", permisos: 'geolocation=(), camera=(), microphone=(self), payment=()'});
       return new Response(HTML, {headers: {...CABECERAS, 'cache-control': 'no-store'}});
     }
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');

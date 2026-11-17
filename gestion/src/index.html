@@ -261,6 +261,24 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
   #sheet-form>.actions:last-child{padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
   .toast{bottom:calc(86px + env(safe-area-inset-bottom,0px))}
 }
+/* Dictado por voz */
+.mw,.fld span.mw,.line-r label span.mw{position:relative;display:block;min-width:0;margin:0;font:inherit;color:inherit}
+.mw>input,.mw>textarea{padding-right:42px!important}
+.mw.s{margin-bottom:16px}
+.mw.s>.search{margin-bottom:0}
+.mic{all:unset;cursor:pointer;position:absolute;right:4px;top:50%;transform:translateY(-50%);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;color:var(--brand)}
+.mw.ta .mic{top:5px;transform:none}
+.mic:hover{background:var(--soft)}
+.mic:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.mic svg{width:19px;height:19px}
+.mic.rec{background:var(--rej-ink);color:#fff;animation:micp 1.1s ease-in-out infinite}
+@keyframes micp{50%{box-shadow:0 0 0 7px rgba(138,63,22,.18)}}
+@media (prefers-reduced-motion:reduce){.mic.rec{animation:none}}
+.dict{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px dashed var(--line);border-radius:14px;background:var(--soft)}
+.dictbtn{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.dictbtn svg{width:18px;height:18px}
+.btn.rec{background:var(--rej-ink);border-color:var(--rej-ink);color:#fff}
+#dict-txt{margin:0}
 </style>
 </head>
 <body>
@@ -286,6 +304,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
       <button class="btn small" data-act="export">Descargar copia</button>
       <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
       <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
+      <button class="btn small ghost" data-act="recargar">↻ Forzar actualización</button>
       <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
     </div>
   </aside>
@@ -312,6 +331,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
 
 <script src="/jspdf-4.2.1.umd.min.js" defer></script>
 <script>/*CONSTANTES*/</script>
+<script>/*VOZ*/</script>
 <script>
 (function(){
 const $ = (s, r = document) => r.querySelector(s);
@@ -368,6 +388,31 @@ function toast(msg, bad) {
   toast._t = setTimeout(() => { t.className = 'toast'; }, 3200);
 }
 
+/* ---------- Dictado por voz (el código común está en compartido/voz.js) ---------- */
+VOZ.aviso = toast;
+const addMics = VOZ.addMics, stopMic = VOZ.stop, MIC_SVG = VOZ.MIC_SVG;
+// «Dictar parte completo»: rellena la ficha del parte con lo que se entiende de la frase. Se revisa antes de guardar.
+function applyParte(raw) {
+  const form = $('#sheet-form');
+  if (!form || !form.elements.descripcion) return;
+  const F = form.elements, p = VOZ.parse(raw, {
+    clientes: Object.entries(S.clientes).map(([k, c]) => [k, c.nombre]),
+    operarios: Object.entries(S.operarios || {}).filter(([, o]) => o.activo !== false).map(([k, o]) => [k, o.nombre]),
+    tareas: TAREAS,
+  });
+  if (p.clienteId) F.clienteId.value = p.clienteId;
+  if (p.fecha) F.fecha.value = p.fecha;
+  if (p.inicio) { F.inicio.value = p.inicio; F.fin.value = p.fin; if (F.horas) F.horas.value = ''; }
+  else if (p.horas && F.horas) F.horas.value = p.horas;
+  form.querySelectorAll('input[name=operarios]').forEach(c => { if (p.operarios.includes(c.value)) c.checked = true; });
+  form.querySelectorAll('input[name=tareas]').forEach(c => { if (p.tareas.includes(c.value)) c.checked = true; });
+  VOZ.anadir(F.descripcion, p.descripcion);
+  VOZ.anadir(F.incidencias, p.incidencias);
+  const res = [p.clienteId ? clienteNombre(p.clienteId) : '', p.inicio ? p.inicio + '–' + p.fin : p.horas ? String(p.horas).replace('.', ',') + ' h' : '',
+    p.operarios.map(k => (S.operarios[k] || {}).nombre).join(', ')].filter(Boolean).join(' · ');
+  toast(p.clienteId ? 'Rellenado: ' + res + '. Revisa y guarda.' : 'No he reconocido el cliente: elígelo tú.' + (res ? ' (' + res + ')' : ''), !p.clienteId);
+}
+
 const put = (col, id, data) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).set(data); };
 const del = (col, id) => { if (!db) throw new Error('Sin conexión con la base de datos.'); return db.collection(col).doc(id).delete(); };
 const readObj = fd => Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v).trim()]));
@@ -405,11 +450,12 @@ function openSheet(title, html, onSave, onDel) {
   $('#sheet-title').textContent = title;
   $('#sheet-form').innerHTML = html + `<div class="actions">${onDel ? '<button type="button" class="btn danger" data-act="del">Eliminar</button>' : ''}<span class="grow"></span><button type="button" class="btn ghost" data-act="close">Cancelar</button><button class="btn primary">Guardar</button></div>`;
   sheetSave = onSave; sheetDel = onDel;
+  addMics($('#sheet-form'));
   $('#overlay').hidden = false; $('#overlay .sheet').scrollTop = 0;
   const first = $('#sheet-form input, #sheet-form select, #sheet-form textarea');
   if (first && matchMedia('(hover: hover)').matches) first.focus();
 }
-function closeSheet() { $('#overlay').hidden = true; $('#sheet-form').innerHTML = ''; sheetSave = sheetDel = null; }
+function closeSheet() { stopMic(); $('#overlay').hidden = true; $('#sheet-form').innerHTML = ''; sheetSave = sheetDel = null; }
 
 function contactSheet(kind, id) {
   const isC = kind === 'clientes';
@@ -493,8 +539,9 @@ function parteSheet(id) {
   const personas = Object.entries(S.operarios).filter(([k, o]) => o.activo !== false || quien.has(k)).sort(byNombre);
   const marcas = (name, items, sel) => `<div class="marcas">${items.map(([val, txt]) => `<label><input type="checkbox" name="${name}" value="${esc(val)}"${sel(val) ? ' checked' : ''}><span>${esc(txt)}</span></label>`).join('')}</div>`;
   const info = deApp ? `<p class="meta" style="margin:0">Enviado desde la app del equipo por ${esc(v.autor || '')}${v.editadoOficina ? ' · corregido por la oficina' : ''}</p>` : '';
+  const dict = `<div class="dict"><button type="button" class="btn small dictbtn" data-act="dictar-parte">${MIC_SVG}<span>Dictar parte completo</span></button><p class="meta" id="dict-txt">Ej.: «Hoy en casa de Pérez, con Toni y Pedro, de 8 a 13, poda de setos y retirada de restos. Aviso: falta un aspersor»</p></div>`;
   const html = `${id ? `<div class="actions" style="margin:0"><button type="button" class="btn small" data-act="pdf-parte" data-id="${esc(id)}">Descargar PDF</button>
-      <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}
+      <button type="button" class="btn small ghost" data-act="parte-nota" data-id="${esc(id)}">Crear nota</button></div>` : ''}${info}${dict}
     <div class="grid2">
       ${fld('clienteId', 'Cliente', {options:clienteOpts(), value:v.clienteId, wide:1})}
       ${fld('fecha', 'Fecha', {type:'date', value:v.fecha})}
@@ -738,7 +785,8 @@ function vResumen() {
           <button class="btn small" data-act="export">Descargar copia</button>
           <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
           <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
-          <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
+          <button class="btn small ghost" data-act="recargar">↻ Forzar actualización</button>
+      <button class="btn small ghost" data-act="salir">Cerrar sesión</button>
         </div>
   </section>`;
 }
@@ -1217,10 +1265,13 @@ function render() {
   }
   lastView = view;
   $('#view').innerHTML = VIEWS[view]();
+  addMics($('#view'));
 }
 
 /* ---------- Eventos ---------- */
 document.addEventListener('click', e => {
+  const mic = e.target.closest('[data-mic]');
+  if (mic) { VOZ.toggleMic(mic); return; }
   const am = e.target.closest('[data-ampliar]');
   if (am) { e.preventDefault(); e.stopPropagation(); verFoto(am.dataset.ampliar); return; }
   const el = e.target.closest('[data-act]');
@@ -1229,6 +1280,8 @@ document.addEventListener('click', e => {
   switch (a) {
     case 'nav': view = el.dataset.view; estadoF = 'todos'; q = ''; render(); $('main').scrollTop = 0; window.scrollTo(0, 0); break;
     case 'close': closeSheet(); break;
+    case 'dictar-parte': VOZ.dictar(el, $('#dict-txt'), applyParte); break;
+    case 'recargar': location.reload(); break;
     case 'export': exportarCopia(); break;
     case 'salir': salir(); break;
     case 'ayuda':
@@ -1282,7 +1335,7 @@ document.addEventListener('click', e => {
     case 'filter': estadoF = el.dataset.v; document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === estadoF)); $('#list').innerHTML = listaDocs(view); break;
     case 'addline': {
       const wrap = $('#lines');
-      if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); updateTotals($('#sheet-form')); }
+      if (wrap) { wrap.insertAdjacentHTML('beforeend', lineRow({})); addMics(wrap); updateTotals($('#sheet-form')); }
       break;
     }
     case 'rmline': el.closest('.line-r').remove(); updateTotals($('#sheet-form')); break;
