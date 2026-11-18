@@ -230,6 +230,7 @@ const panel = await g.textContent('#sheet-form');
 ok(panel.includes('Conectada') && panel.includes('empresa@example.com') && panel.includes('Todo enviado') && await g.locator('#sheet-form a[href^="https://docs.google.com/spreadsheets/d/h1"]').count() === 1
   && await g.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'el panel «Google» de la gestión enseña la cuenta, lo enviado y los enlaces');
 await g.click('[data-act=close]');
+ok(await g.locator('.side a.ir-cal:not([hidden])').getAttribute('href') === 'https://calendar.google.com/calendar/r?authuser=empresa%40example.com', 'con la cuenta conectada, el botón «Calendario» abre Google Calendar con esa cuenta');
 await g.click('[data-view=equipo]').catch(() => {});
 await g.evaluate(() => { document.querySelector('[data-act=tab-equipo][data-v=extra]')?.click(); });
 await g.waitForSelector('[data-act=pdf-extra]', { timeout: 5000 }).catch(() => {});

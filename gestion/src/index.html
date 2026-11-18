@@ -301,6 +301,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
     <div class="backup">
       <button class="btn small" data-act="copias">Copias de seguridad</button>
       <button class="btn small" data-act="google">Google</button>
+      <a class="btn small ir-cal" hidden target="_blank" rel="noopener" href="https://calendar.google.com/calendar/r">Calendario</a>
       <button class="btn small" data-act="export">Descargar copia</button>
       <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
       <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
@@ -782,6 +783,7 @@ function vResumen() {
     <div class="backup">
           <button class="btn small" data-act="copias">Copias de seguridad</button>
           <button class="btn small" data-act="google">Google</button>
+      <a class="btn small ir-cal" hidden target="_blank" rel="noopener" href="https://calendar.google.com/calendar/r">Calendario</a>
           <button class="btn small" data-act="export">Descargar copia</button>
           <label class="btn small">Cargar copia<input class="imp" type="file" accept="application/json" hidden></label>
           <p class="meta" style="margin:0;font-size:.78rem">Los datos se guardan en el servidor, con una copia automática cada noche.</p>
@@ -846,6 +848,7 @@ function vPartes() {
   const filtros = `<div class="grid2 par" style="margin-bottom:12px">
       <label class="fld"><span>Cliente</span><select id="pf-cli">${[['', 'Todos los clientes'], ...clienteOpts().slice(1)].map(([k, t]) => `<option value="${esc(k)}"${k === partesCli ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
       <label class="fld"><span>Mes</span><input id="pf-mes" type="month" value="${esc(partesMes)}"></label></div>
+    ${urlCal() ? `<div class="actions" style="margin:0 0 10px"><a class="btn small ir-cal" target="_blank" rel="noopener" href="${esc(urlCal())}">Ver en Google Calendar</a></div>` : ''}
     ${all.length ? `<div class="actions" style="margin:0 0 14px"><button class="btn small" data-act="pdf-partes">PDF de ${all.length === 1 ? 'este parte' : 'estos ' + all.length + ' partes'}</button>
       ${partesCli ? `<button class="btn small ghost" data-act="partes-nota">Crear nota con ${all.length === 1 ? 'este parte' : 'estos partes'}</button>` : ''}
       <span class="meta">Para adjuntar a la factura o archivar en papel. Elige cliente y mes para el resumen mensual.</span></div>` : ''}`;
@@ -1255,6 +1258,7 @@ function pdfJornada() {
 const VIEWS = {resumen: vResumen, clientes: () => vContactos('clientes'), proveedores: () => vContactos('proveedores'), presupuestos: () => vDocs('presupuestos'), notas: () => vDocs('notas'), partes: vPartes, equipo: vEquipo};
 
 function render() {
+  setTimeout(pintarCal, 0);
   document.querySelectorAll('.side nav button').forEach(b => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
   const activo = document.querySelector('.side nav button[aria-current="page"]');
   if (activo && activo.scrollIntoView) activo.scrollIntoView({block: 'nearest', inline: 'nearest'});
@@ -1511,7 +1515,10 @@ async function copiasSheet() {
 }
 /* ---------- Google: los partes al calendario, los clientes a contactos, las copias y los PDF a Drive y las horas a una hoja ---------- */
 let GG = null, ggEnviando = false;
-const cargarGoogle = () => api('GET', '/api/google').then(g => { GG = g; }).catch(() => {});
+const cargarGoogle = () => api('GET', '/api/google').then(g => { GG = g; pintarCal(); if (view === 'partes') { lastView = ''; render(); } }).catch(() => {});
+// Botón «Calendario»: abre Google Calendar con la cuenta conectada (si hay varias en el móvil, elige esa).
+const urlCal = () => GG && GG.conectado && GG.permisos.calendario ? 'https://calendar.google.com/calendar/r' + (GG.cuenta ? '?authuser=' + encodeURIComponent(GG.cuenta) : '') : '';
+function pintarCal() { const u = urlCal(); document.querySelectorAll('.ir-cal').forEach(a => { a.hidden = !u; if (u) a.href = u; }); }
 // Los PDF que se generan se guardan también en la carpeta de Drive de la empresa, si la cuenta está conectada.
 function aDrive(d, nombre, tipo) {
   if (!GG || !GG.conectado || !GG.permisos.drive) return;
