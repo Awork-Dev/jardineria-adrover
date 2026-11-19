@@ -1013,8 +1013,22 @@ function operarioSheet(id) {
       vacaciones: num(d.vacaciones) || 30, computo: d.computo === 'laborables' ? 'laborables' : 'naturales'};
     if (contrato.dias.length && !JORNADA.horasDia(contrato)) throw new Error('Pon la hora de entrada y la de salida (la salida, después de la entrada).');
     const {id: _, ...antes} = v;
-    await put('operarios', id || uid('o'), {...antes, nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin, telefono: d.telefono, contrato});
-  }, null);
+    await put('operarios', id || uid('o'), {...antes, nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin, telefono: d.telefono, contrato,
+      archivado: d.activo !== 'no' ? null : antes.archivado || null});
+  }, id ? () => quitarPersona(id) : null);
+}
+// Quien se va de la empresa. Con fichajes, ausencias o documentos no se borra: la ley obliga a guardar el registro de
+// jornada cuatro años (art. 34.9 del Estatuto). Queda archivada: sin acceso a la app y fuera de la lista de Personas
+// (sigue en Jornada, para sacar sus registros). Sin nada guardado (dada de alta por error), se borra del todo.
+async function quitarPersona(id) {
+  const o = S.operarios[id];
+  const n = ['fichajes', 'ausencias', 'documentos', 'gastos', 'fotos'].reduce((a, c) => a + Object.values(S[c] || {}).filter(x => x.operarioId === id).length, 0)
+    + Object.values(S.partes).filter(p => p.autorId === id || (p.operarios || []).includes(id)).length;
+  if (!n) { await del('operarios', id); return 'Eliminado'; }
+  if (!window.confirm(o.nombre + ' tiene fichajes o documentos guardados. La ley obliga a conservar el registro de jornada cuatro años, así que no se borra: queda archivado, sin acceso a la app y fuera de la lista («Ver antiguos» lo enseña). ¿Archivar?')) throw new Error('No se ha archivado.');
+  const {id: _, ...datos} = o;
+  await put('operarios', id, {...datos, activo: false, archivado: today()});
+  return 'Archivado: ya no sale en la lista ni puede entrar en la app';
 }
 const num1 = n => (Math.round(n * 10) / 10).toLocaleString('es-ES');
 function textoContrato(c) {
@@ -1103,14 +1117,17 @@ function vEquipo() {
   if (equipoTab === 'stats') return cab + vEstadisticas();
   return cab + vPersonasJornada();
 }
+let verAntiguos = false;
 function vPersonasJornada() {
   const ops = Object.entries(S.operarios).sort(byNombre);
   if (!opJ || !S.operarios[opJ]) opJ = ops.length ? ops[0][0] : '';
-  const lista = ops.length ? `<div class="cards">${ops.map(([id, o]) => `<button class="card" data-act="edit-operario" data-id="${esc(id)}">
-      <b>${esc(o.nombre)}</b><span class="meta">${o.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario'}${o.activo === false ? ' · De baja' : ''}</span>
+  const antiguos = ops.filter(([, o]) => o.archivado).length, visibles = ops.filter(([, o]) => verAntiguos || !o.archivado);
+  const lista = (visibles.length ? `<div class="cards">${visibles.map(([id, o]) => `<button class="card" data-act="edit-operario" data-id="${esc(id)}">
+      <b>${esc(o.nombre)}</b><span class="meta">${o.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario'}${o.archivado ? ' · Ya no trabaja aquí (desde el ' + esc(fmtFecha(o.archivado)) + ')' : o.activo === false ? ' · De baja' : ''}</span>
       ${JORNADA.tiene(o.contrato) ? `<span class="meta">${esc(JORNADA.texto(o.contrato))}</span>` : ''}
       <span class="line">PIN: <b style="font-family:inherit;letter-spacing:.2em">${esc(o.pin)}</b></span></button>`).join('')}</div>`
-    : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.');
+    : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.'))
+    + (antiguos ? `<p style="margin:12px 0 0"><button class="btn small ghost" data-act="ver-antiguos">${verAntiguos ? 'Ocultar a quien ya no trabaja aquí' : 'Ver antiguos (' + antiguos + ')'}</button></p>` : '');
   const reg = opJ ? registro(opJ, mesJ) : [], aj = conContrato(jornadaAj(), opJ), dm = opJ ? diasDelMes(opJ, mesJ) : [];
   const total = reg.reduce((a, d) => a + d.ms, 0), extraMes = reg.reduce((a, d) => a + extraDia(d, aj), 0);
   const sinJust = dm.filter(x => x.falta).length, trabajo = dm.filter(x => x.trabajo).length;
@@ -1589,6 +1606,7 @@ document.addEventListener('click', e => {
       break;
     case 'borrar-ejemplos': borrarEjemplos(el); break;
     case 'new-operario': operarioSheet(null); break;
+    case 'ver-antiguos': verAntiguos = !verAntiguos; lastView = ''; render(); break;
     case 'ir-equipo': view = 'equipo'; equipoTab = el.dataset.v; lastView = ''; render(); break;
     case 'new-ausencia': ausenciaSheet(null); break;
     case 'edit-ausencia': ausenciaSheet(id); break;
@@ -1676,9 +1694,9 @@ form.addEventListener('click', async e => {
   if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = 'Pulsa otra vez para eliminar'; return; }
   el.disabled = true;
   try {
-    await sheetDel();
+    const msg = await sheetDel();
     closeSheet();
-    toast('Eliminado');
+    toast(typeof msg === 'string' ? msg : 'Eliminado');
   } catch (err) {
     toast(err.message || 'No se pudo eliminar.', true);
     el.disabled = false;

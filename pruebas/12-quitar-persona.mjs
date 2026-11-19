@@ -1,0 +1,27 @@
+// Quien se va de la empresa: sin nada guardado se borra; con fichajes se archiva (la ley obliga a guardar el registro).
+import { lanzar, pagina, ok, fin, T, G, CLAVE, entrarGestion, datos, nuevoOperario } from './comun.mjs';
+console.log('Quitar a quien se va');
+const nav = await lanzar(), g = await pagina(nav, {}, 'gestión'); await entrarGestion(g);
+const api = (m, ruta, cuerpo) => fetch(G + ruta, { method: m, headers: { 'X-Clave': CLAVE, 'content-type': 'application/json' }, body: cuerpo && JSON.stringify(cuerpo) });
+const error = 'Error ' + T, sale = 'Se va ' + T;
+await nuevoOperario(g, error); await nuevoOperario(g, sale);
+let D = await datos();
+const id = (n) => Object.entries(D.operarios).find(([, o]) => o.nombre === n)[0];
+const idE = id(error), idS = id(sale);
+await api('PUT', `/api/doc/fichajes/q${T}`, { operarioId: idS, operario: sale, tipo: 'entrada', ts: Date.now() - 864e5 });
+await g.reload(); await g.waitForSelector('.kpis');
+await g.click('[data-view=equipo]'); await g.click('[data-act=tab-equipo][data-v=personas]');
+const quitar = async (i) => { await g.click(`[data-act=edit-operario][data-id="${i}"]`); await g.click('#sheet-form [data-act=del]'); await g.click('#sheet-form [data-act=del]'); await g.waitForSelector('#overlay', { state: 'hidden' }); };
+await quitar(idE);
+g.once('dialog', (d) => d.accept());
+await quitar(idS);
+D = await datos();
+ok(!D.operarios[idE], 'quien no tiene nada guardado se borra');
+ok(D.operarios[idS] && D.operarios[idS].activo === false && D.operarios[idS].archivado && D.fichajes['q' + T], 'quien tiene fichajes se archiva: sin acceso a la app y con su registro guardado');
+const lista = await g.textContent('.cards').catch(() => '');
+ok(!lista.includes(sale) && await g.isVisible('[data-act=ver-antiguos]'), 'el archivado no sale en la lista de Personas');
+await g.click('[data-act=ver-antiguos]');
+ok((await g.textContent('.cards')).includes('Ya no trabaja aquí'), '«Ver antiguos» lo enseña');
+await g.click('[data-act=tab-equipo][data-v=jornada]');
+ok(await g.$eval('#op-j', (s, i) => [...s.options].some((o) => o.value === i), idS), 'sigue en Jornada, para sacar su registro');
+await fin(nav);
