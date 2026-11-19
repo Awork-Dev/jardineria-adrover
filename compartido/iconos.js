@@ -1,5 +1,5 @@
 // Iconos de la empresa para el navegador y para «Añadir a pantalla de inicio» (iPhone y Android).
-// El símbolo del logo de la empresa (la montaña), verde sobre blanco, en las tres apps. También va aquí el logo
+// El logo de la empresa (óvalo verde con el interior blanco) sobre blanco, en las tres apps. También va aquí el logo
 // completo (óvalo verde con el interior blanco): /logo-verde.png.
 // Los archivos están en compartido/iconos/<app>/; tras cambiarlos, ejecutar node compartido/generar-iconos.mjs.
 // Cada Worker importa sus iconos (compartido/iconos-<app>.js) y los pasa a icono().
@@ -10,7 +10,7 @@ export const COLOR = { web: "#1f3d2b", gestion: "#3e8b47", equipo: "#1f3d2b" };
 
 // Los móviles guardan los iconos por su dirección y no los vuelven a pedir aunque cambien (así la gestión
 // salía con el icono verde antiguo). Al cambiar un icono, sube este número: la dirección cambia y se piden de nuevo.
-export const VERSION_ICONOS = 4;
+export const VERSION_ICONOS = 5;
 const v = (ruta) => ruta + "?v=" + VERSION_ICONOS;
 
 // Devuelve la respuesta con el icono si la ruta es la de un icono; si no, null.
