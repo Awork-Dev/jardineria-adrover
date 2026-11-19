@@ -2,11 +2,13 @@ import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
 import { vozJS } from '../../compartido/voz.js';
 // El manual (docs/manual-equipo.md) va dentro de la página, en el botón «?»: se puede leer sin cobertura.
-const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA).replace('/*VOZ*/', () => vozJS());
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Equipo', 'equipo')).replace('<!--AYUDA-->', AYUDA).replace('/*VOZ*/', () => vozJS()).replace('/*JORNADA*/', () => jornadaJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-equipo.js';
 import { TAREAS, TIPOS_GASTO, PIN_TODAS } from '../../compartido/constantes.js';
+import { JORNADA, jornadaJS } from '../../compartido/jornada.js';
+import { leerArchivo, respuestaArchivo, huella } from '../../compartido/archivos.js';
 
 // Los datos se guardan en la tabla «docs» de la gestión (colecciones operarios, fichajes, partes, gastos,
 // fotos y clientes), las sesiones de los móviles en la tabla «sesiones» y las imágenes en el KV FOTOS.
@@ -87,6 +89,24 @@ async function fotosDe(env, yo, lista) {
   return ids.filter(id => hay.has(id));
 }
 
+// Avisos para fichar en el calendario del móvil: un evento cada día de trabajo a la hora de entrada y otro a la de
+// salida, con alarma. No lleva datos de nadie (solo días y horas), así que no hace falta sesión.
+const DIAS_ICS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
+function alarmasICS(dias, entrada, salida) {
+  const hoy = new Date().toISOString().slice(0, 10).replace(/-/g, ''), sello = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  const regla = 'RRULE:FREQ=WEEKLY;BYDAY=' + dias.map((d) => DIAS_ICS[d]).join(',');
+  const ev = (uid, hora, titulo) => ['BEGIN:VEVENT', 'UID:' + uid + '-' + dias.join('') + hora.replace(':', '') + '@equipo.jardineriaadrover', 'DTSTAMP:' + sello,
+    'DTSTART;TZID=Europe/Madrid:' + hoy + 'T' + hora.replace(':', '') + '00', 'DURATION:PT5M', regla, 'SUMMARY:' + titulo,
+    'DESCRIPTION:Abre la app del equipo y ficha: https://equipo.jardineriaadrover.workers.dev', 'TRANSP:TRANSPARENT',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + titulo, 'TRIGGER:PT0M', 'END:VALARM', 'END:VEVENT'];
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Jardineria Adrover//Equipo//ES', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VTIMEZONE', 'TZID:Europe/Madrid', 'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT',
+    'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD', 'END:VTIMEZONE',
+    ...ev('entrada', entrada, 'Fichar la entrada'), ...ev('salida', salida, 'Fichar la salida'), 'END:VCALENDAR'].join('\r\n') + '\r\n';
+}
+const TIPOS_AUS = ['vacaciones', 'baja', 'permiso', 'otro'];
+const publicaAus = ({id, tipo, desde, hasta, estado, nota, notaOficina, pagada, fotos}) => ({id, tipo, desde, hasta, estado, nota, notaOficina, pagada, fotos: (fotos || []).length});
+
 let CABECERAS;
 export default {
   async fetch(req, env) {
@@ -99,6 +119,12 @@ export default {
     if (ruta === '/sw.js') return new Response(SW, {headers: {'content-type': 'text/javascript;charset=utf-8', 'cache-control': 'no-cache'}});
     if (ruta === '/manifest.webmanifest') return manifiesto('Adrover Equipo', 'Equipo', '/', 'equipo');
     const ico = icono(ruta, ICONOS); if (ico) return ico;
+    if (ruta === '/alarmas.ics') {
+      const dias = [...new Set(String(url.searchParams.get('dias') || '').split(',').map(Number))].filter((d) => Number.isInteger(d) && d >= 0 && d <= 6);
+      const entrada = url.searchParams.get('entrada') || '', salida = url.searchParams.get('salida') || '';
+      if (!dias.length || !HORA.test(entrada) || !HORA.test(salida)) return new Response('Faltan los días o las horas', {status: 400});
+      return new Response(alarmasICS(dias, entrada, salida), {headers: {'content-type': 'text/calendar;charset=utf-8', 'content-disposition': 'inline; filename="fichar.ics"', 'cache-control': 'no-store'}});
+    }
     if (!ruta.startsWith('/api/')) return new Response('No encontrado', {status: 404});
 
     // Entrar con el PIN
@@ -173,7 +199,16 @@ export default {
       const clientes = (await coleccion(env, 'clientes')).map(c => ({id: c.id, nombre: c.nombre || '', lugar: [c.direccion, c.poblacion].filter(Boolean).join(', '),
         mapa: [c.direccion, c.cp, c.poblacion, c.provincia].filter(Boolean).join(', ')}))
         .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
-      const out = {yo: publico(yo), fichajes, gastos, clientes, tareas: TAREAS, tiposGasto: TIPOS_GASTO, servidor: Date.now()};
+      // Su horario, festivos, vacaciones y bajas (para el saldo y los avisos) y sus nóminas.
+      const c = yo.contrato || {}, aj = (await doc(env, 'ajustes', 'jornada')) || {};
+      const contrato = JORNADA.tiene(c) ? {dias: c.dias, entrada: c.entrada, salida: c.salida, alta: c.alta || '', vacaciones: c.vacaciones || 30, computo: c.computo || 'naturales'} : null;
+      const hace400 = new Date(Date.now() - 400 * DIA).toISOString().slice(0, 10);
+      const ausencias = (await deOperario(env, 'ausencias', yo.id)).filter((x) => (x.hasta || '') >= hace400).map(publicaAus);
+      const nominas = (await deOperario(env, 'documentos', yo.id)).filter((d) => d.tipo === 'nomina' && d.mes)
+        .map(({id, mes, nombre, transferida, firma, visto}) => ({id, mes, nombre, transferida: transferida || 0, firmada: firma ? firma.ts : 0, visto: visto || 0}))
+        .sort((a, b) => b.mes.localeCompare(a.mes)).slice(0, 24);
+      const festivos = (Array.isArray(aj.festivos) ? aj.festivos : []).filter((f) => f >= hace400);
+      const out = {yo: publico(yo), fichajes, gastos, clientes, tareas: TAREAS, tiposGasto: TIPOS_GASTO, servidor: Date.now(), contrato, festivos, ausencias, nominas};
       if (jefe) {
         out.equipo = (await coleccion(env, 'operarios')).filter(o => o.activo !== false).map(publico).sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
         const hace14 = new Date(Date.now() - 14 * DIA).toISOString().slice(0, 10);
@@ -229,6 +264,45 @@ export default {
         autorId: yo.id, autor: yo.nombre, origen: 'equipo', creado: previo?.creado || Date.now(),
       });
       return json({ok: true});
+    }
+
+    // Pedir vacaciones o justificar una ausencia (baja con la foto del parte médico, permiso…). Se puede cambiar
+    // mientras la oficina no la haya revisado.
+    if (ruta === '/api/ausencias' && req.method === 'POST') {
+      const b = await req.json().catch(() => ({}));
+      if (!ID.test(b.id || '') || !TIPOS_AUS.includes(b.tipo) || !FECHA.test(b.desde || '') || !FECHA.test(b.hasta || '') || b.hasta < b.desde) return json({error: 'Revisa el tipo y las fechas.'}, 400);
+      if (JORNADA.diasEntre(b.desde, b.hasta) > 366) return json({error: 'Como mucho, un año.'}, 400);
+      const previo = await doc(env, 'ausencias', b.id);
+      if (previo && previo.operarioId !== yo.id) return json({error: 'datos'}, 400);
+      if (previo && previo.estado && previo.estado !== 'pendiente') return json({error: 'La oficina ya la ha revisado. Para cambiarla, llama a la oficina.'}, 409);
+      const fotos = [...new Set([...(previo?.fotos || []), ...(await fotosDe(env, yo, b.fotos))])].slice(0, MAX_FOTOS);
+      if (b.tipo === 'baja' && !fotos.length) return json({error: 'Falta la foto del parte médico.'}, 400);
+      await guardar(env, 'ausencias', b.id, {...previo, operarioId: yo.id, operario: yo.nombre, tipo: b.tipo, desde: b.desde, hasta: b.hasta, nota: texto(b.nota, 500), fotos,
+        estado: 'pendiente', pagada: b.tipo !== 'otro', origen: 'equipo', creado: previo?.creado || Date.now()});
+      return json({ok: true});
+    }
+
+    // Sus nóminas: verla (queda apuntado que la ha abierto) y firmar el recibí.
+    const nm = ruta.match(/^\/api\/nominas\/([\w-]{6,60})(\/firmar)?$/);
+    if (nm) {
+      const d = await doc(env, 'documentos', nm[1]);
+      if (!d || d.tipo !== 'nomina' || d.operarioId !== yo.id) return json({error: 'no existe'}, 404);
+      if (!nm[2] && req.method === 'GET') {
+        const bytes = await leerArchivo(env, nm[1]);
+        if (!bytes) return json({error: 'no existe'}, 404);
+        if (!d.visto) await guardar(env, 'documentos', nm[1], {...d, visto: Date.now()});
+        return respuestaArchivo(bytes, d, url.searchParams.get('bajar') === '1');
+      }
+      if (nm[2] && req.method === 'POST') {
+        const b = await req.json().catch(() => ({}));
+        if (typeof b.firma !== 'string' || !/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(b.firma) || b.firma.length > 300000) return json({error: 'Firma no válida. Vuelve a firmar.'}, 400);
+        if (d.firma) return json({ok: true, ya: true});
+        const bytes = await leerArchivo(env, nm[1]);
+        if (!bytes) return json({error: 'no existe'}, 404);
+        await guardar(env, 'documentos', nm[1], {...d, visto: d.visto || Date.now(), firma: {img: b.firma, ts: Date.now(), huella: await huella(bytes), nombre: yo.nombre,
+          ip: req.headers.get('cf-connecting-ip') || '', navegador: texto(req.headers.get('user-agent'), 200)}});
+        return json({ok: true});
+      }
     }
 
     if (ruta === '/api/salir' && req.method === 'POST') {

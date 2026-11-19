@@ -12,6 +12,7 @@
 // Cloudflare limita lo que cabe en una pasada (peticiones a fuera y consultas a la base), así que se trabaja por
 // tandas: lo pendiente se apunta en una cola (google_cola) y cada pasada envía un trozo. Lo ya enviado se recuerda
 // con su huella (google_sinc) para no repetir lo que no ha cambiado.
+import { JORNADA } from '../../compartido/jornada.js';
 
 export const VUELTA = '/google/vuelta';
 // Colecciones cuyos cambios hay que llevar a Google.
@@ -344,7 +345,8 @@ const CAB_DIA = ['Persona', 'Día', 'Entrada y salida', 'Horas', 'Extra', 'Aviso
 export function tablaHoras(mes, operarios, fichajes, ajustes, hoy) {
   const aj = {horasDia: 8, festivos: [], ...(ajustes || {})}, festivos = Array.isArray(aj.festivos) ? aj.festivos : [];
   const horas = (ms) => Math.round(ms / 36e3) / 100;
-  const libre = (dia) => { const s = new Date(dia + 'T12:00:00Z').getUTCDay(); return s === 0 || s === 6 || festivos.includes(dia); };
+  // Quien tiene su horario en la ficha cuenta con el suyo (compartido/jornada.js), como en la gestión.
+  const ajF = {...aj, festivos};
   const porPersona = {};
   for (const f of fichajes) if (f && f.operarioId && Number(f.ts) && diaDe(f.ts).startsWith(mes)) (porPersona[f.operarioId] ||= []).push(f);
   const personas = Object.entries(operarios).filter(([id, o]) => o.activo !== false || porPersona[id])
@@ -353,7 +355,7 @@ export function tablaHoras(mes, operarios, fichajes, ajustes, hoy) {
   for (const [id, o] of personas) {
     const fs = (porPersona[id] || []).sort((a, b) => a.ts - b.ts), dias = {};
     for (const f of fs) (dias[diaDe(f.ts)] ||= []).push(f);
-    const r = {trabajadas: 0, lab: 0, libre: 0, incompletos: 0};
+    const r = {trabajadas: 0, lab: 0, libre: 0, incompletos: 0}, c = JORNADA.tiene(o.contrato) ? o.contrato : null, libre = (dia) => !!JORNADA.libre(dia, ajF, c);
     for (const dia of Object.keys(dias).sort()) {
       const tramos = []; let ab = null, raro = false;
       for (const f of dias[dia]) {
@@ -362,7 +364,7 @@ export function tablaHoras(mes, operarios, fichajes, ajustes, hoy) {
       }
       if (ab) { tramos.push([ab, null]); if (dia !== hoy) raro = true; }
       const ms = tramos.reduce((a, [e, s]) => a + (e && s ? s.ts - e.ts : 0), 0);
-      const extra = libre(dia) ? ms : Math.max(0, ms - (Number(aj.horasDia) || 0) * 3600e3);
+      const extra = JORNADA.extra(ms, dia, ajF, c);
       r.trabajadas += ms; r[libre(dia) ? 'libre' : 'lab'] += extra; if (raro) r.incompletos++;
       detalle.push([o.nombre || '', dia, tramos.map(([e, s]) => (e ? horaDe(e.ts) : '?') + '–' + (s ? horaDe(s.ts) : '?')).join(', '), horas(ms), horas(extra), raro ? 'Falta un fichaje' : '']);
     }

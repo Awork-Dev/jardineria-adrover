@@ -137,6 +137,22 @@ a.ubic{text-decoration:none;padding:2px}.sin-ubic{font-style:italic}
 .pill.pendiente{background:var(--pend-bg);color:var(--pend-ink)}
 .pill.cobrada{background:var(--brand);color:var(--brand-ink)}
 .pill.extra{background:var(--pend-bg);color:var(--pend-ink)}
+button.pill{border:0;cursor:pointer;font:inherit;font-size:.78rem;font-weight:600}
+.sub-ficha{margin:20px 0 10px;font-size:1.02rem;border-top:1px solid var(--line);padding-top:16px}
+.dias-sem{display:flex;gap:6px;flex-wrap:wrap}
+.dias-sem label{position:relative}.dias-sem input{position:absolute;opacity:0;inset:0}
+.dias-sem span{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--panel);font-weight:600;cursor:pointer}
+.dias-sem input:checked+span{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.dias-sem input:focus-visible+span{outline:2px solid var(--brand);outline-offset:2px}
+.saldo-vac{margin:0;padding:10px 14px;border-radius:12px;background:var(--soft)}
+.doc-fila{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.doc-fila>div:first-child{display:flex;flex-direction:column;min-width:0}
+.subir-doc{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.subir-doc select{padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit}
+.acciones-eq,.acciones-n{display:flex;gap:8px;flex-wrap:wrap}.acciones-eq{margin:0 0 12px}
+.estados{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.btn.peligro{color:var(--rej-ink)}
+label.btn{cursor:pointer}
 /* Horas extra: tabla que se desplaza de lado en el móvil, con el nombre siempre a la vista */
 .tabla-x{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px}
 .tabla-x table{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
@@ -333,6 +349,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
 <script src="/jspdf-4.2.1.umd.min.js" defer></script>
 <script>/*CONSTANTES*/</script>
 <script>/*VOZ*/</script>
+<script>/*JORNADA*/</script>
 <script>
 (function(){
 const $ = (s, r = document) => r.querySelector(s);
@@ -354,7 +371,7 @@ const DOCS = {
     estados: {pendiente: 'Pendiente de cobro', cobrada: 'Cobrada', anulada: 'Anulada'},
     aviso: 'Este documento no es una factura.'},
 };
-const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}, operarios:{}, fichajes:{}, gastos:{}, fotos:{}};
+const S = {clientes:{}, proveedores:{}, presupuestos:{}, notas:{}, partes:{}, ajustes:{}, operarios:{}, fichajes:{}, gastos:{}, fotos:{}, documentos:{}, ausencias:{}};
 const APP_EQUIPO = 'https://equipo.jardineriaadrover.workers.dev';
 const COLS = Object.keys(S);
 let db = null, loaded = 0, view = 'resumen', lastView = '', estadoF = 'todos', q = '', sheetSave = null, sheetDel = null;
@@ -628,10 +645,17 @@ function hoyEquipo() {
   const avisos = Object.entries(S.partes).filter(([, p]) => p.incidencias && !p.avisoAtendido).sort((a, b) => (b[1].fecha || '').localeCompare(a[1].fecha || ''));
   const gastos = Object.values(S.gastos).filter(g => g.estado !== 'pagado');
   if (!Object.keys(S.operarios).length) return '';
+  const ausP = Object.values(S.ausencias).filter(x => x.estado === 'pendiente').length;
+  const nomSin = Object.values(S.documentos).filter(d => d.tipo === 'nomina' && !d.operarioId).length;
+  const faltas = Object.keys(S.operarios).reduce((a, id) => a + faltasSinJustificar(id).length, 0);
+  const botones = [ausP && `<button class="btn small" data-act="ir-equipo" data-v="ausencias">${ausP} ${ausP === 1 ? 'ausencia' : 'ausencias'} por revisar</button>`,
+    nomSin && `<button class="btn small" data-act="ir-equipo" data-v="nominas">${nomSin} ${nomSin === 1 ? 'nómina' : 'nóminas'} sin asignar</button>`,
+    faltas && `<button class="btn small ghost" data-act="ir-equipo" data-v="ausencias">${faltas} ${faltas === 1 ? 'día' : 'días'} sin fichar ni justificar</button>`].filter(Boolean).join('');
   return `<section class="panel" style="margin-bottom:18px">
     <div class="pagehead" style="margin-bottom:10px"><h2>Hoy en el equipo</h2>${gastos.length ? `<button class="btn small" data-act="ir-gastos">${gastos.length} ${gastos.length === 1 ? 'gasto' : 'gastos'} por pagar · ${eur(gastos.reduce((a, g) => a + num(g.importe), 0))}</button>` : ''}</div>
     <p style="margin:0 0 ${avisos.length ? 14 : 0}px">${dentro.length ? '<b>Trabajando ahora:</b> ' + dentro.map(f => esc((S.operarios[f.operarioId] || {}).nombre || f.operario) + ' <span class="meta">desde las ' + horaDe(f.ts) + lugarF(f) + '</span>').join(' · ') : '<span class="meta">Ahora mismo nadie ha fichado la entrada.</span>'}
       <span class="meta"> · ${Object.keys(ultimo).length} de ${Object.values(S.operarios).filter(o => o.activo !== false).length} han fichado hoy</span></p>
+    ${botones ? `<div class="acciones-eq">${botones}</div>` : ''}
     ${avisos.length ? `<h3 style="margin:0 0 8px;font-size:1rem">Avisos del equipo (${avisos.length})</h3><div class="rows">${avisos.slice(0, 6).map(([id, p]) => `<div class="row" style="cursor:default">
       <div><b>${esc(clienteNombre(p.clienteId))}</b><span class="meta">${esc(fmtFecha(p.fecha))} · ${esc(p.autor || p.operario || '')}</span><span class="line">${esc(p.incidencias)}</span></div>
       <div class="rowr"><button class="btn small ghost" data-act="edit-parte" data-id="${esc(id)}">Ver parte</button><button class="btn small" data-act="aviso-ok" data-id="${esc(id)}">Atendido</button></div></div>`).join('')}</div>` : ''}
@@ -947,21 +971,90 @@ function pinLibre(excepto) {
   for (let i = 0; i < 200; i++) { const p = String(Math.floor(1000 + Math.random() * 9000)); if (!usados.has(p)) return p; }
   return '';
 }
+const DIAS_SEM = [[1, 'L'], [2, 'M'], [3, 'X'], [4, 'J'], [5, 'V'], [6, 'S'], [0, 'D']];
+const TIPOS_DOC = {contrato: 'Contrato', dni: 'DNI / NIE', ss: 'Seguridad Social', nomina: 'Nómina', justificante: 'Justificante', otro: 'Otro'};
+const tamano = n => n > 1048576 ? (n / 1048576).toLocaleString('es-ES', {maximumFractionDigits: 1}) + ' MB' : Math.max(1, Math.round(n / 1024)) + ' KB';
+// Contrato, documentos y vacaciones de una persona. Los documentos se suben al momento (no hace falta Guardar).
 function operarioSheet(id) {
-  const v = id ? S.operarios[id] || {} : {rol: 'operario', activo: true, pin: pinLibre()};
-  openSheet(id ? 'Editar operario' : 'Nuevo operario', `<div class="grid2">
-      ${fld('nombre', 'Nombre', {req:1, value:v.nombre, wide:1})}
+  const v = id ? S.operarios[id] || {} : {rol: 'operario', activo: true, pin: pinLibre()}, c = v.contrato || {};
+  const anyo = today().slice(0, 4), vac = id ? JORNADA.vacaciones(anyo, c, ausenciasDe(id), jornadaAj()) : null;
+  const docs = id ? Object.entries(S.documentos).filter(([, d]) => d.operarioId === id && d.tipo !== 'nomina').sort((a, b) => (b[1].subido || 0) - (a[1].subido || 0)) : [];
+  const dias = DIAS_SEM.map(([n, t]) => `<label><input type="checkbox" name="dias" value="${n}"${(c.dias || []).includes(n) ? ' checked' : ''}><span>${t}</span></label>`).join('');
+  openSheet(id ? 'Ficha de ' + v.nombre : 'Nuevo operario', `<div class="grid2">
+      ${fld('nombre', 'Nombre y apellidos', {req:1, value:v.nombre, wide:1})}
       ${fld('rol', 'Puesto', {options:[['operario', 'Operario'], ['jefe', 'Jefe de cuadrilla']], value:v.rol})}
       ${fld('activo', 'Acceso a la app', {options:[['si', 'Activo'], ['no', 'De baja']], value:v.activo === false ? 'no' : 'si'})}
       ${fld('pin', 'PIN (4 cifras)', {value:v.pin})}
+      ${fld('telefono', 'Móvil (para avisarle por WhatsApp)', {type:'tel', value:v.telefono})}
       <p class="meta wide" style="margin:0">Cambiar el PIN cierra la sesión en su móvil (útil si lo pierde). «De baja» le quita el acceso; sus fichajes y partes se conservan.</p>
-    </div>`, async fd => {
+    </div>
+    <h3 class="sub-ficha">Contrato</h3>
+    <div class="grid2">
+      <div class="fld wide"><span>Días que trabaja</span><div class="chips dias-sem">${dias}</div></div>
+      ${fld('entrada', 'Hora de entrada', {type:'time', value:c.entrada})}
+      ${fld('salida', 'Hora de salida', {type:'time', value:c.salida})}
+      ${fld('alta', 'Fecha de alta', {type:'date', value:c.alta})}
+      ${fld('categoria', 'Categoría o puesto en el contrato', {value:c.categoria})}
+      ${fld('convenio', 'Convenio', {value:c.convenio ?? 'Comercio de flores y plantas', wide:1})}
+      ${fld('vacaciones', 'Días de vacaciones al año', {type:'number', step:'0.5', value:c.vacaciones ?? 30})}
+      ${fld('computo', 'Cómo se cuentan', {options:[['naturales', 'Días naturales (todos los del calendario)'], ['laborables', 'Solo sus días de trabajo']], value:c.computo || 'naturales'})}
+      <p class="meta wide" style="margin:0" id="resumen-contrato">${esc(textoContrato(c))}</p>
+      ${vac ? `<p class="wide saldo-vac">Vacaciones ${anyo}: <b>le quedan ${num1(vac.quedan)} días ${vac.unidad}</b> de ${num1(vac.derecho)}${vac.usadas ? ` · disfrutadas ${num1(vac.usadas)}` : ''}${vac.pedidas ? ` · pedidas sin aceptar ${num1(vac.pedidas)}` : ''}</p>` : ''}
+    </div>
+    ${id ? `<h3 class="sub-ficha">Documentos <span class="meta" style="font-weight:400">· solo se ven aquí, en la gestión</span></h3>
+    <div class="docs-lista">${docs.length ? docs.map(([k, d]) => filaDoc(k, d)).join('') : '<p class="meta" style="margin:0">Aún no hay documentos.</p>'}</div>
+    <div class="subir-doc"><select id="tipo-doc" aria-label="Tipo de documento">${Object.entries(TIPOS_DOC).filter(([t]) => t !== 'nomina').map(([t, n]) => `<option value="${t}">${n}</option>`).join('')}</select>
+      <label class="btn small">Subir documento (PDF o foto)<input type="file" id="archivo-doc" data-op="${esc(id)}" accept="application/pdf,image/*" multiple hidden></label></div>` : '<p class="meta">Guarda la ficha y vuelve a abrirla para subir el contrato, el DNI y la Seguridad Social.</p>'}`, async fd => {
     const d = readObj(fd);
     if (!d.nombre) throw new Error('El nombre es obligatorio.');
     if (!/^\d{4}$/.test(d.pin)) throw new Error('El PIN debe tener 4 cifras.');
     if (Object.entries(S.operarios).some(([k, o]) => k !== id && o.pin === d.pin)) throw new Error('Ese PIN ya lo usa otra persona.');
-    await put('operarios', id || uid('o'), {nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin});
+    const contrato = {dias: fd.getAll('dias').map(Number), entrada: d.entrada, salida: d.salida, alta: d.alta, categoria: d.categoria, convenio: d.convenio,
+      vacaciones: num(d.vacaciones) || 30, computo: d.computo === 'laborables' ? 'laborables' : 'naturales'};
+    if (contrato.dias.length && !JORNADA.horasDia(contrato)) throw new Error('Pon la hora de entrada y la de salida (la salida, después de la entrada).');
+    const {id: _, ...antes} = v;
+    await put('operarios', id || uid('o'), {...antes, nombre: d.nombre, rol: d.rol, activo: d.activo !== 'no', pin: d.pin, telefono: d.telefono, contrato});
   }, null);
+}
+const num1 = n => (Math.round(n * 10) / 10).toLocaleString('es-ES');
+function textoContrato(c) {
+  if (!JORNADA.tiene(c)) return 'Sin horario: sus horas extra se cuentan con la jornada general (Horas extra → «Jornada y festivos»).';
+  const sem = JORNADA.horasSemana(c);
+  return 'Trabaja ' + JORNADA.texto(c) + ': ' + hm(JORNADA.horasDia(c) * 3600e3) + ' al día, ' + num1(sem) + ' h a la semana. Lo que pase de su horario en esos días, y todo lo que trabaje otro día o en festivo, sale como horas extra.'
+    + (sem < 40 ? ' Es una jornada a tiempo parcial: las horas de más se llaman «horas complementarias» y necesitan un pacto por escrito (consúltalo con la gestoría).' : '');
+}
+const filaDoc = (k, d) => `<div class="doc-fila"><div><b>${esc(TIPOS_DOC[d.tipo] || 'Documento')}${d.mes ? ' · ' + esc(nombreMes(d.mes)) : ''}</b><span class="meta">${esc(d.nombre)} · ${tamano(d.tamano || 0)} · ${esc(fmtFecha(diaDe(d.subido || Date.now())))}</span></div>
+  <div class="rowr"><button type="button" class="btn small ghost" data-act="ver-doc" data-id="${esc(k)}">Ver</button><button type="button" class="btn small ghost" data-act="bajar-doc" data-id="${esc(k)}">Descargar</button><button type="button" class="btn small ghost peligro" data-act="borrar-doc" data-id="${esc(k)}">Borrar</button></div></div>`;
+const nombreMes = m => new Date(m + '-15T12:00:00').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'});
+// Subir archivos: van tal cual al servidor (PDF o foto), con la clave.
+async function subirArchivo(archivo, datos) {
+  const mime = archivo.type || (/\.pdf$/i.test(archivo.name) ? 'application/pdf' : '');
+  if (archivo.size > 15 * 1048576) throw new Error(archivo.name + ': ocupa más de 15 MB.');
+  const qs = new URLSearchParams({nombre: archivo.name, ...datos});
+  const r = await fetch('/api/archivos?' + qs, {method: 'POST', headers: {'X-Clave': clave, 'Content-Type': mime}, body: archivo}).catch(() => null);
+  if (!r) throw new Error('Sin conexión. Revisa internet e inténtalo de nuevo.');
+  if (!r.ok) throw new Error(archivo.name + ': ' + (r.status === 413 ? 'demasiado grande.' : 'solo se pueden subir PDF o fotos.'));
+  return (await r.json()).id;
+}
+async function archivoURL(id) {
+  const r = await fetch('/api/archivos/' + encodeURIComponent(id), {headers: {'X-Clave': clave}}).catch(() => null);
+  if (!r || !r.ok) throw new Error('No se pudo abrir el documento.');
+  return URL.createObjectURL(await r.blob());
+}
+async function verDoc(id, bajar) {
+  const d = S.documentos[id]; if (!d) return;
+  const w = bajar ? null : window.open('', '_blank');
+  try {
+    const u = await archivoURL(id);
+    if (w) w.location = u; else { const a = document.createElement('a'); a.href = u; a.download = d.nombre || 'documento'; document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(() => URL.revokeObjectURL(u), 60e3);
+  } catch (e) { if (w) w.close(); toast(e.message, true); }
+}
+async function borrarDoc(id, el) {
+  if (!el.dataset.sure) { el.dataset.sure = '1'; el.textContent = '¿Seguro? Pulsa otra vez'; return; }
+  el.disabled = true;
+  try { await del('documentos', id); toast('Documento borrado'); const f = el.closest('.doc-fila'); if (f) f.remove(); else { lastView = ''; render(); } }
+  catch (e) { toast(e.message, true); el.disabled = false; }
 }
 function gastoSheet(id) {
   const v = S.gastos[id]; if (!v) return;
@@ -996,10 +1089,14 @@ function vFotos() {
       : '<div class="empty">No hay fotos en este mes.</div>'}</section>`;
 }
 function vEquipo() {
-  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['extra', 'Horas extra'], ['stats', 'Estadísticas'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
-    `<button class="chip${equipoTab === k ? ' on' : ''}" data-act="tab-equipo" data-v="${k}">${t}${k === 'gastos' ? ((n => n ? ' (' + n + ')' : '')(Object.values(S.gastos).filter(g => g.estado !== 'pagado').length)) : ''}</button>`).join('');
-  const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, jornada, horas extra, gastos y fotos que llegan desde la app</p></div>
-    ${equipoTab === 'personas' ? '<button class="btn primary" data-act="new-operario">+ Nuevo</button>' : ''}</header><div class="tabs">${tabs}</div>`;
+  const cuenta = {gastos: Object.values(S.gastos).filter(g => g.estado !== 'pagado').length, ausencias: Object.values(S.ausencias).filter(x => x.estado === 'pendiente').length,
+    nominas: Object.values(S.documentos).filter(d => d.tipo === 'nomina' && !d.operarioId).length};
+  const tabs = [['personas', 'Personas'], ['jornada', 'Jornada'], ['ausencias', 'Vacaciones y bajas'], ['nominas', 'Nóminas'], ['extra', 'Horas extra'], ['stats', 'Estadísticas'], ['gastos', 'Gastos'], ['fotos', 'Fotos']].map(([k, t]) =>
+    `<button class="chip${equipoTab === k ? ' on' : ''}" data-act="tab-equipo" data-v="${k}">${t}${cuenta[k] ? ' (' + cuenta[k] + ')' : ''}</button>`).join('');
+  const cab = `<header class="pagehead"><div><h1>Equipo</h1><p class="sub">Operarios, contratos, jornada, vacaciones, nóminas, horas extra, gastos y fotos</p></div>
+    ${equipoTab === 'personas' ? '<button class="btn primary" data-act="new-operario">+ Nuevo</button>' : equipoTab === 'ausencias' ? '<button class="btn primary" data-act="new-ausencia">+ Nueva</button>' : ''}</header><div class="tabs">${tabs}</div>`;
+  if (equipoTab === 'ausencias') return cab + vAusencias();
+  if (equipoTab === 'nominas') return cab + vNominas();
   if (equipoTab === 'gastos') return cab + vGastos();
   if (equipoTab === 'fotos') return cab + vFotos();
   if (equipoTab === 'extra') return cab + vHorasExtra();
@@ -1011,17 +1108,19 @@ function vPersonasJornada() {
   if (!opJ || !S.operarios[opJ]) opJ = ops.length ? ops[0][0] : '';
   const lista = ops.length ? `<div class="cards">${ops.map(([id, o]) => `<button class="card" data-act="edit-operario" data-id="${esc(id)}">
       <b>${esc(o.nombre)}</b><span class="meta">${o.rol === 'jefe' ? 'Jefe de cuadrilla' : 'Operario'}${o.activo === false ? ' · De baja' : ''}</span>
+      ${JORNADA.tiene(o.contrato) ? `<span class="meta">${esc(JORNADA.texto(o.contrato))}</span>` : ''}
       <span class="line">PIN: <b style="font-family:inherit;letter-spacing:.2em">${esc(o.pin)}</b></span></button>`).join('')}</div>`
     : empty('Aún no hay nadie dado de alta.', 'Pulsa «+ Nuevo» y apunta el PIN que sale: es con el que entrará en la app.');
-  const reg = opJ ? registro(opJ, mesJ) : [], aj = jornadaAj();
+  const reg = opJ ? registro(opJ, mesJ) : [], aj = conContrato(jornadaAj(), opJ), dm = opJ ? diasDelMes(opJ, mesJ) : [];
   const total = reg.reduce((a, d) => a + d.ms, 0), extraMes = reg.reduce((a, d) => a + extraDia(d, aj), 0);
+  const sinJust = dm.filter(x => x.falta).length, trabajo = dm.filter(x => x.trabajo).length;
   const fsMes = opJ ? fichajesDe(opJ, mesJ) : [], porValidar = fsMes.filter(f => !f.validado).length;
   const validado = Math.max(0, ...fsMes.map(f => f.validado || 0));
   const estadoVal = !fsMes.length ? '' : !porValidar ? ` · <b>Horas validadas</b> el ${esc(fmtFecha(diaDe(validado)))}`
     : validado ? ` · <b>${porValidar} ${porValidar === 1 ? 'fichaje nuevo' : 'fichajes nuevos'}</b> sin validar` : '';
-  const tabla = !opJ ? '' : reg.length ? `<div class="rows">${reg.map(d => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(d.dia))}</b>
-      <span class="meta">${d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ')}${d.raro ? ' · falta un fichaje' : ''}${d.sinConexion ? ' · alguno sin cobertura' : ''}${libreDia(d.dia, aj) ? ' · ' + libreDia(d.dia, aj) : ''}</span></div>
-      <div class="rowr">${extraDia(d, aj) ? `<span class="pill extra">+${hm(extraDia(d, aj))} extra</span>` : ''}<b class="amt">${hm(d.ms)}</b></div></div>`).join('')}</div>`
+  const tabla = !opJ ? '' : dm.length ? `<div class="rows">${dm.map(({dia, d, aus, falta}) => `<div class="row" style="cursor:default"><div><b>${esc(fmtFecha(dia))}</b>
+      <span class="meta">${d ? d.tramos.map(([e, s]) => (e ? horaDe(e.ts) + lugarF(e) : '¿?') + ' – ' + (s ? horaDe(s.ts) + lugarF(s) : '¿?')).join(' · ') : 'Sin fichajes'}${d && d.raro ? ' · falta un fichaje' : ''}${d && d.sinConexion ? ' · alguno sin cobertura' : ''}${libreDia(dia, aj) ? ' · ' + libreDia(dia, aj) : ''}</span></div>
+      <div class="rowr">${aus ? `<button class="pill ${aus.estado === 'aceptada' ? 'cobrada' : 'pendiente'}" data-act="edit-ausencia" data-id="${esc(aus.id)}">${esc(textoAusencia(aus))}</button>` : ''}${falta ? '<span class="pill rechazado">No fichó · sin justificar</span>' : ''}${d && extraDia(d, aj) ? `<span class="pill extra">+${hm(extraDia(d, aj))} extra</span>` : ''}<b class="amt">${d ? hm(d.ms) : '–'}</b></div></div>`).join('')}</div>`
     : '<div class="empty">No hay fichajes en este mes.</div>';
   if (equipoTab === 'personas') return `<section class="panel" style="margin-bottom:18px"><p style="margin:0 0 12px">App para los operarios: <a href="${APP_EQUIPO}" target="_blank" rel="noopener"><b>${APP_EQUIPO.replace('https://', '')}</b></a>
       · Que la abran en el móvil y la añadan a la pantalla de inicio.</p>${lista}</section>`;
@@ -1030,7 +1129,7 @@ function vPersonasJornada() {
       ${ops.length ? `<div class="grid2 par" style="margin-bottom:14px">
         <label class="fld"><span>Persona</span><select id="op-j">${ops.map(([id, o]) => `<option value="${esc(id)}"${id === opJ ? ' selected' : ''}>${esc(o.nombre)}</option>`).join('')}</select></label>
         <label class="fld"><span>Mes</span><input id="mes-j" type="month" value="${esc(mesJ)}"></label></div>
-        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}${extraMes ? ` · Horas extra: <b>${hm(extraMes)}</b>` : ''}${estadoVal}</p>
+        <p class="meta" style="margin:0 0 12px">Total del mes: <b>${hm(total)}</b> en ${reg.length} ${reg.length === 1 ? 'día' : 'días'}${extraMes ? ` · Horas extra: <b>${hm(extraMes)}</b>` : ''}${estadoVal}${aj.contrato ? `<br>Horario: ${esc(JORNADA.texto(aj.contrato))} · ${trabajo} ${trabajo === 1 ? 'día' : 'días'} de trabajo hasta hoy${sinJust ? ` · <b>${sinJust} sin fichar ni justificar</b>` : ''}` : ''}</p>
         ${porValidar ? '<p class="meta" style="margin:-6px 0 12px">Al validar las horas del mes se borra la ubicación de los fichajes (las horas se quedan). Si no se validan, se borra sola a los tres meses.</p>' : ''}${tabla}` : ''}
     </section>`;
 }
@@ -1043,22 +1142,210 @@ async function validarJornada(el) {
   try { await api('POST', '/api/validar', {ids}); await sincronizar(); toast('Horas validadas. Se ha borrado la ubicación de esos fichajes.'); }
   catch (e) { toast(e.message, true); el.disabled = false; delete el.dataset.sure; el.textContent = 'Validar horas'; }
 }
+/* ---------- Vacaciones, bajas y permisos ---------- */
+// Las pide o las justifica el trabajador desde su app (con foto del parte médico o del justificante) o las apunta
+// la oficina. La oficina las acepta o las deniega; el saldo de vacaciones sale del contrato (compartido/jornada.js).
+const TIPOS_AUS = {vacaciones: 'Vacaciones', baja: 'Baja médica', permiso: 'Permiso', otro: 'Otra ausencia'};
+const ESTADOS_AUS = {pendiente: 'Por revisar', aceptada: 'Aceptada', denegada: 'Denegada'};
+let anyoA = today().slice(0, 4), mesN = mesActual();
+const ausenciasDe = id => Object.values(S.ausencias).filter(x => x.operarioId === id);
+const finMes = m => { const [y, mm] = m.split('-').map(Number); return m + '-' + dos(new Date(y, mm, 0).getDate()); };
+const textoAusencia = x => (TIPOS_AUS[x.tipo] || 'Ausencia') + (x.estado === 'aceptada' ? (x.tipo === 'vacaciones' ? '' : x.pagada === false ? ' · justificada, no pagada' : ' · justificada') : x.estado === 'denegada' ? ' · denegada' : ' · por revisar');
+const rango = x => x.desde === x.hasta ? fmtFecha(x.desde) : fmtFecha(x.desde) + ' – ' + fmtFecha(x.hasta);
+// Días que salen en el registro de un mes: los fichados, los de trabajo según su contrato (hasta hoy) y los de ausencias.
+function diasDelMes(opId, mes) {
+  const reg = registro(opId, mes), por = Object.fromEntries(reg.map(d => [d.dia, d])), aj = conContrato(jornadaAj(), opId), aus = ausenciasDe(opId);
+  const hoy = today(), ini = mes + '-01', fin = finMes(mes), dias = new Set(reg.map(d => d.dia));
+  if (aj.contrato && ini <= hoy) for (const d of JORNADA.diasDeTrabajo(ini, fin < hoy ? fin : hoy, aj, aj.contrato)) dias.add(d);
+  for (const a of aus) if (a.estado !== 'denegada' && a.desde <= fin && a.hasta >= ini) JORNADA.cada(a.desde > ini ? a.desde : ini, a.hasta < fin ? a.hasta : fin, d => { if (!libreDia(d, aj)) dias.add(d); });
+  return [...dias].sort().map(dia => {
+    const d = por[dia] || null, au = JORNADA.ausenciaDe(dia, aus) || null;
+    const trabajo = !!aj.contrato && !libreDia(dia, aj) && (!aj.contrato.alta || dia >= aj.contrato.alta);
+    return {dia, d, aus: au, trabajo, falta: trabajo && !d && !au && dia < hoy};
+  });
+}
+// Días de trabajo de los últimos 30 días en que no fichó y no hay ausencia apuntada.
+function faltasSinJustificar(id) {
+  const o = S.operarios[id] || {}, aj = conContrato(jornadaAj(), id);
+  if (o.activo === false || !aj.contrato) return [];
+  const hoy = today(), desde = diaDe(Date.now() - 30 * 864e5), ayer = diaDe(Date.now() - 864e5);
+  const fichados = new Set(Object.values(S.fichajes).filter(f => f.operarioId === id).map(f => diaDe(f.ts))), aus = ausenciasDe(id);
+  return ayer < desde || ayer >= hoy ? [] : JORNADA.diasDeTrabajo(desde, ayer, aj, aj.contrato).filter(d => !fichados.has(d) && !JORNADA.ausenciaDe(d, aus));
+}
+function vAusencias() {
+  const ops = Object.entries(S.operarios).sort(byNombre), aj = jornadaAj();
+  const anyos = [...new Set([anyoA, today().slice(0, 4), ...Object.values(S.ausencias).map(x => (x.desde || '').slice(0, 4)).filter(Boolean)])].sort().reverse();
+  const pend = Object.values(S.ausencias).filter(x => x.estado === 'pendiente').sort((a, b) => (a.desde || '').localeCompare(b.desde || ''));
+  const delAnyo = Object.values(S.ausencias).filter(x => x.estado !== 'pendiente' && ((x.desde || '').startsWith(anyoA) || (x.hasta || '').startsWith(anyoA))).sort((a, b) => (b.desde || '').localeCompare(a.desde || ''));
+  const fila = x => `<button class="row" data-act="edit-ausencia" data-id="${esc(x.id)}"><div><b>${esc((S.operarios[x.operarioId] || {}).nombre || x.operario || '')} · ${esc(TIPOS_AUS[x.tipo] || 'Ausencia')}</b>
+      <span class="meta">${esc(rango(x))} · ${JORNADA.diasEntre(x.desde, x.hasta)} ${JORNADA.diasEntre(x.desde, x.hasta) === 1 ? 'día' : 'días'}${(x.fotos || []).length ? ' · 📎 justificante' : ''}${x.nota ? ' · ' + esc(x.nota) : ''}</span></div>
+      <div class="rowr"><span class="pill ${x.estado === 'aceptada' ? 'cobrada' : x.estado === 'denegada' ? 'rechazado' : 'pendiente'}">${ESTADOS_AUS[x.estado] || ''}</span></div></button>`;
+  const faltas = ops.map(([id, o]) => ({id, o, dias: faltasSinJustificar(id)})).filter(f => f.dias.length);
+  const saldo = ops.filter(([, o]) => o.activo !== false).map(([id, o]) => {
+    const c = o.contrato || {}, v = JORNADA.vacaciones(anyoA, c, ausenciasDe(id), aj);
+    const bajas = ausenciasDe(id).filter(x => x.tipo !== 'vacaciones' && x.estado !== 'denegada' && (x.desde || '').startsWith(anyoA)).reduce((a, x) => a + JORNADA.diasEntre(x.desde, x.hasta), 0);
+    return `<tr><td>${esc(o.nombre)}${c.alta && c.alta.startsWith(anyoA) ? `<div class="meta">alta el ${esc(fmtFecha(c.alta))}</div>` : ''}</td><td>${num1(v.derecho)} <span class="meta">${v.unidad}</span></td><td>${v.usadas ? num1(v.usadas) : '–'}</td><td>${v.pedidas ? num1(v.pedidas) : '–'}</td><td class="x">${num1(v.quedan)}</td><td>${bajas || '–'}</td></tr>`;
+  }).join('');
+  return `${pend.length ? `<section class="panel" style="margin-bottom:18px"><h2 style="margin:0 0 10px">Por revisar (${pend.length})</h2><div class="rows">${pend.map(fila).join('')}</div></section>` : ''}
+    ${faltas.length ? `<section class="panel" style="margin-bottom:18px"><h2 style="margin:0 0 4px">Días sin fichar ni justificar</h2>
+      <p class="meta" style="margin:0 0 10px">Días de su horario de los últimos 30 días sin fichajes ni ausencia apuntada. La app le pide que fiche o que suba el justificante; tú puedes apuntarlo aquí.</p>
+      <div class="rows">${faltas.map(f => `<div class="row" style="cursor:default"><div><b>${esc(f.o.nombre)} · ${f.dias.length} ${f.dias.length === 1 ? 'día' : 'días'}</b>
+        <div class="estados">${f.dias.map(dia => `<button class="pill pendiente" data-act="apuntar-falta" data-id="${esc(f.id)}" data-dia="${dia}" title="Apuntar una ausencia ese día">${esc(JORNADA.CORTOS[JORNADA.diaSemana(dia)])} ${esc(fmtFecha(dia))}</button>`).join('')}</div></div></div>`).join('')}</div>
+      <p class="meta" style="margin:8px 0 0">Pulsa un día para apuntar la ausencia.</p></section>` : ''}
+    <section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Vacaciones ${esc(anyoA)}</h2>
+      <label class="fld" style="min-width:120px"><span>Año</span><select id="anyo-a">${anyos.map(a => `<option${a === anyoA ? ' selected' : ''}>${a}</option>`).join('')}</select></label></div>
+      ${saldo ? `<div class="tabla-x"><table><thead><tr><th>Persona</th><th>Le corresponden</th><th>Disfrutadas</th><th>Pedidas sin aceptar</th><th>Le quedan</th><th>Bajas y permisos (días)</th></tr></thead><tbody>${saldo}</tbody></table></div>` : empty('Aún no hay nadie dado de alta.', 'Da de alta a los operarios en «Personas».')}
+      <p class="meta" style="margin:10px 0 14px">Salen del contrato de cada ficha: los días al año (30 naturales si no se cambia), proporcionales si entró ese año, y si se cuentan en días naturales o solo sus días de trabajo. La ley (art. 38 del Estatuto de los Trabajadores) fija un mínimo de 30 días naturales; el convenio puede mejorarlo, no bajarlo.</p>
+      <h3 style="margin:0 0 8px;font-size:1rem">Revisadas en ${esc(anyoA)}</h3>${delAnyo.length ? `<div class="rows">${delAnyo.map(fila).join('')}</div>` : '<p class="meta">Ninguna todavía.</p>'}</section>`;
+}
+function ausenciaSheet(id, base = {}) {
+  const v = id ? S.ausencias[id] || {} : {tipo: 'vacaciones', estado: 'aceptada', desde: today(), hasta: today(), ...base};
+  const ops = Object.entries(S.operarios).filter(([k, o]) => o.activo !== false || k === v.operarioId).sort(byNombre);
+  const c = contratoDe(v.operarioId), dias = v.desde && v.hasta ? JORNADA.diasEntre(v.desde, v.hasta) : 0;
+  openSheet(id ? (TIPOS_AUS[v.tipo] || 'Ausencia') + ' de ' + ((S.operarios[v.operarioId] || {}).nombre || v.operario || '') : 'Nueva ausencia', `
+    ${(v.fotos || []).length ? `<p class="meta" style="margin:0">Justificante que ha subido desde su móvil (pulsa para ampliarlo):</p>${miniaturas(v.fotos)}` : ''}
+    ${v.origen === 'equipo' ? `<p class="meta" style="margin:0">Lo pidió desde la app el ${esc(fmtFecha(diaDe(v.creado || Date.now())))}${v.nota ? ': «' + esc(v.nota) + '»' : ''}.</p>` : ''}
+    <div class="grid2">
+      ${fld('operarioId', 'Persona', {options: [['', 'Elige'], ...ops.map(([k, o]) => [k, o.nombre])], value: v.operarioId, wide: 1})}
+      ${fld('tipo', 'Tipo', {options: Object.entries(TIPOS_AUS), value: v.tipo})}
+      ${fld('estado', 'Estado', {options: Object.entries(ESTADOS_AUS), value: v.estado})}
+      ${fld('desde', 'Desde', {type: 'date', value: v.desde})}
+      ${fld('hasta', 'Hasta (incluido)', {type: 'date', value: v.hasta})}
+      ${fld('pagada', 'Esos días se pagan', {options: [['si', 'Sí (retribuidos)'], ['no', 'No (sin sueldo)']], value: v.pagada === false ? 'no' : 'si'})}
+      ${fld('notaOficina', 'Nota para el trabajador (la ve en su app)', {value: v.notaOficina})}
+      ${v.tipo === 'vacaciones' && dias ? `<p class="meta wide" style="margin:0">Cuenta ${JORNADA.cuenta(v.desde, v.hasta, jornadaAj(), c)} ${c && c.computo === 'laborables' ? 'días de trabajo' : 'días naturales'} de vacaciones.</p>` : ''}
+      <p class="meta wide" style="margin:0">Una baja médica la paga la Seguridad Social o la empresa según los días y el convenio: aquí solo queda justificada. Pásale a la gestoría el parte de baja y el de alta.</p>
+    </div>`, async fd => {
+    const d = readObj(fd);
+    if (!d.operarioId) throw new Error('Elige la persona.');
+    if (!d.desde || !d.hasta || d.hasta < d.desde) throw new Error('Revisa las fechas: «hasta» no puede ser antes que «desde».');
+    const {id: _, ...antes} = v;
+    const nuevo = {...antes, operarioId: d.operarioId, operario: (S.operarios[d.operarioId] || {}).nombre || '', tipo: d.tipo, estado: d.estado, desde: d.desde, hasta: d.hasta,
+      pagada: d.pagada !== 'no', notaOficina: d.notaOficina, origen: v.origen || 'oficina', creado: v.creado || Date.now()};
+    if (d.estado !== (v.estado || '')) nuevo.decidido = Date.now();
+    await put('ausencias', id || uid('au'), nuevo);
+  }, id ? () => del('ausencias', id) : null);
+}
+
+/* ---------- Nóminas ---------- */
+// Se suben en PDF (aquí, o llegan solas por correo: ver gestion/src/worker.js → email). Cada trabajador ve las suyas
+// en su app, las abre y firma el recibí con el dedo. Al marcar «Transferida», le sale el aviso en la app.
+const normalN = t => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+function quienNomina(texto) {
+  const t = ' ' + normalN(texto) + ' ';
+  const c = Object.entries(S.operarios).filter(([, o]) => { const ps = normalN(o.nombre).split(' ').filter(x => x.length > 1); return ps.length && ps.slice(0, 2).every(x => t.includes(' ' + x + ' ')); });
+  return c.length === 1 ? c[0][0] : '';
+}
+const MESES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+function mesNomina(texto) {
+  const t = normalN(texto);
+  let m = t.match(/\b(20\d\d) ?(0[1-9]|1[0-2])\b/); if (m) return m[1] + '-' + m[2];
+  m = t.match(/\b(0?[1-9]|1[0-2]) (20\d\d)\b/); if (m) return m[2] + '-' + dos(m[1]);
+  for (let i = 0; i < 12; i++) { const r = t.match(new RegExp('\\b' + MESES_L[i] + '\\b(?: (?:de )?(20\\d\\d))?')); if (r && r[1]) return r[1] + '-' + dos(i + 1); }
+  return '';
+}
+function vNominas() {
+  const ops = Object.entries(S.operarios).filter(([id, o]) => o.activo !== false || Object.values(S.documentos).some(d => d.tipo === 'nomina' && d.operarioId === id && d.mes === mesN)).sort(byNombre);
+  const nominas = Object.entries(S.documentos).filter(([, d]) => d.tipo === 'nomina');
+  const sinAsignar = nominas.filter(([, d]) => !d.operarioId || !S.operarios[d.operarioId] || !d.mes);
+  const delMes = nominas.filter(([, d]) => d.mes === mesN && S.operarios[d.operarioId]);
+  const estado = d => [d.transferida ? `<span class="pill cobrada">Transferida ${esc(fmtFecha(diaDe(d.transferida)))}</span>` : '',
+    d.firma ? `<span class="pill cobrada">Firmada ${esc(fmtFecha(diaDe(d.firma.ts)))}</span>` : d.visto ? '<span class="pill">Vista, sin firmar</span>' : '<span class="pill pendiente">Sin abrir</span>'].join('');
+  const filas = ops.map(([id, o]) => {
+    const suyas = delMes.filter(([, d]) => d.operarioId === id);
+    if (!suyas.length) return `<div class="row" style="cursor:default"><div><b>${esc(o.nombre)}</b><span class="meta">Sin nómina de este mes</span></div></div>`;
+    return suyas.map(([k, d]) => `<div class="row" style="cursor:default"><div><b>${esc(o.nombre)}</b><span class="meta">${esc(d.nombre)}${d.origen === 'correo' ? ' · llegó por correo' : ''}</span><div class="estados">${estado(d)}</div></div>
+      <div class="rowr acciones-n"><button class="btn small ghost" data-act="ver-doc" data-id="${esc(k)}">Ver</button>
+        ${d.firma ? `<button class="btn small ghost" data-act="recibi-pdf" data-id="${esc(k)}">Recibí firmado</button>` : ''}
+        ${d.transferida ? (o.telefono ? `<a class="btn small ghost" target="_blank" rel="noopener" href="${esc(enlaceWhatsApp(o, d))}">Avisar por WhatsApp</a>` : '') : `<button class="btn small" data-act="nomina-transferida" data-id="${esc(k)}">Marcar transferida</button>`}
+        <button class="btn small ghost peligro" data-act="borrar-doc" data-id="${esc(k)}">Borrar</button></div></div>`).join('');
+  }).join('');
+  const opts = [['', 'Elige persona'], ...Object.entries(S.operarios).sort(byNombre).map(([k, o]) => [k, o.nombre])];
+  return `${sinAsignar.length ? `<section class="panel" style="margin-bottom:18px"><h2 style="margin:0 0 4px">Sin asignar (${sinAsignar.length})</h2>
+      <p class="meta" style="margin:0 0 10px">No se ha reconocido de quién son o de qué mes. Elige y pulsa «Asignar».</p>
+      <div class="rows">${sinAsignar.map(([k, d]) => `<div class="row" style="cursor:default"><div><b>${esc(d.nombre)}</b><span class="meta">${d.asunto ? esc(d.asunto) + ' · ' : ''}${esc(fmtFecha(diaDe(d.subido || Date.now())))}</span>
+        <div class="grid2 par" style="margin-top:8px"><label class="fld"><span>Persona</span><select data-asig-op="${esc(k)}">${opts.map(([v, t]) => `<option value="${esc(v)}"${v === (S.operarios[d.operarioId] ? d.operarioId : '') ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
+        <label class="fld"><span>Mes</span><input type="month" data-asig-mes="${esc(k)}" value="${esc(d.mes || mesN)}"></label></div></div>
+        <div class="rowr acciones-n"><button class="btn small ghost" data-act="ver-doc" data-id="${esc(k)}">Ver</button><button class="btn small" data-act="nomina-asignar" data-id="${esc(k)}">Asignar</button><button class="btn small ghost peligro" data-act="borrar-doc" data-id="${esc(k)}">Borrar</button></div></div>`).join('')}</div></section>` : ''}
+    <section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Nóminas</h2>
+      <label class="btn small primary">Subir nóminas (PDF)<input type="file" id="archivo-nom" accept="application/pdf" multiple hidden></label></div>
+      <label class="fld" style="max-width:260px;margin-bottom:12px"><span>Mes</span><input id="mes-n" type="month" value="${esc(mesN)}"></label>
+      <p class="meta" style="margin:0 0 12px">Puedes subir varias a la vez: si el nombre del archivo lleva el nombre de la persona y el mes (como suelen hacer las gestorías), se asignan solas; si no, quedan «Sin asignar». Cada uno ve la suya en su app y firma el recibí con el dedo. Al pulsar «Marcar transferida» le sale el aviso en la app.</p>
+      ${ops.length ? `<div class="rows">${filas}</div>` : empty('Aún no hay nadie dado de alta.', 'Da de alta a los operarios en «Personas».')}</section>`;
+}
+const enlaceWhatsApp = (o, d) => {
+  const t = String(o.telefono || '').replace(/[^\d+]/g, ''), num = t.startsWith('+') ? t.slice(1) : t.length === 9 ? '34' + t : t;
+  return 'https://wa.me/' + num + '?text=' + encodeURIComponent('Hola ' + String(o.nombre || '').split(' ')[0] + ', te hemos transferido la nómina de ' + nombreMes(d.mes) + '. Puedes verla y firmar el recibí en la app del equipo: ' + APP_EQUIPO);
+};
+async function subirNominas(files) {
+  let ok = 0, sin = 0;
+  for (const f of files) {
+    try {
+      const operarioId = quienNomina(f.name), mes = mesNomina(f.name) || mesN;
+      await subirArchivo(f, {tipo: 'nomina', operarioId, mes});
+      ok++; if (!operarioId) sin++;
+    } catch (e) { toast(e.message, true); }
+  }
+  await sincronizar().catch(() => {});
+  if (ok) toast(ok + (ok === 1 ? ' nómina subida' : ' nóminas subidas') + (sin ? ' · ' + sin + ' sin asignar: elige de quién son' : ''));
+}
+async function asignarNomina(id, el) {
+  const d = S.documentos[id], op = document.querySelector(`[data-asig-op="${CSS.escape(id)}"]`).value, mes = document.querySelector(`[data-asig-mes="${CSS.escape(id)}"]`).value;
+  if (!op || !mes) return toast('Elige la persona y el mes.', true);
+  el.disabled = true;
+  const {id: _, ...datos} = d;
+  try { await put('documentos', id, {...datos, operarioId: op, mes}); toast('Asignada a ' + S.operarios[op].nombre); } catch (e) { toast(e.message, true); el.disabled = false; }
+}
+async function nominaTransferida(id, el) {
+  const d = S.documentos[id]; if (!d) return;
+  el.disabled = true;
+  const {id: _, ...datos} = d;
+  try {
+    await put('documentos', id, {...datos, transferida: Date.now()});
+    const o = S.operarios[d.operarioId] || {};
+    toast(o.telefono ? 'Marcada. Le sale el aviso en su app; si quieres, avísale también por WhatsApp.' : 'Marcada. Le sale el aviso en su app.');
+  } catch (e) { toast(e.message, true); el.disabled = false; }
+}
+// Justificante del recibí firmado en el móvil: quién, qué nómina (con la huella del PDF), cuándo y su firma.
+function recibiPDF(id) {
+  const J = window.jspdf && window.jspdf.jsPDF, d = S.documentos[id], o = S.operarios[d && d.operarioId];
+  if (!J || !d || !d.firma || !o) return toast('No se pudo generar el PDF.', true);
+  const e = S.ajustes.empresa || DEFAULT_EMPRESA, p = new J({unit: 'mm', format: 'a4'}), L = 20; let y = 24;
+  p.setFont('helvetica', 'bold'); p.setFontSize(15); p.text('Recibí de nómina', L, y);
+  p.setFont('helvetica', 'normal'); p.setFontSize(10.5);
+  const lineas = ['Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), 'Trabajador: ' + o.nombre, 'Nómina: ' + nombreMes(d.mes) + ' (' + d.nombre + ')',
+    'Huella del PDF (SHA-256): ' + (d.firma.huella || ''), 'Firmado desde la app del equipo el ' + new Date(d.firma.ts).toLocaleString('es-ES') + '.',
+    d.transferida ? 'Transferencia marcada por la oficina el ' + new Date(d.transferida).toLocaleString('es-ES') + '.' : ''].filter(Boolean);
+  for (const l of lineas) { y += 8; p.text(p.splitTextToSize(l, 170), L, y); if (l.length > 90) y += 5; }
+  y += 12; p.text('El trabajador declara haber recibido la nómina indicada.', L, y);
+  y += 8; try { p.addImage(d.firma.img, 'PNG', L, y, 80, 32); } catch (err) {}
+  y += 36; p.setDrawColor(150); p.line(L, y, L + 80, y); p.setFontSize(9); p.text('Firma del trabajador', L, y + 5);
+  const nombre = 'recibi-nomina-' + d.mes + '-' + normalN(o.nombre).replace(/ /g, '-') + '.pdf';
+  p.save(nombre);
+}
+
 /* ---------- Horas extra ---------- */
 // En un día laborable es extra lo que pasa de la jornada diaria; en sábado, domingo o festivo, todo lo trabajado.
 // La jornada y los festivos son los mismos para toda la plantilla (Ajustes → «Jornada y festivos»).
 const jornadaAj = () => ({horasDia: 8, festivos: [], ...(S.ajustes.jornada || {})});
 const MESES_C = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 let periodoX = 'mes', mesX = mesActual(), anyoX = mesActual().slice(0, 4);
-const libreDia = (dia, aj) => { const s = new Date(dia + 'T12:00:00').getDay(); return s === 0 ? 'domingo' : s === 6 ? 'sábado' : aj.festivos.includes(dia) ? 'festivo' : ''; };
-const extraDia = (d, aj) => libreDia(d.dia, aj) ? d.ms : Math.max(0, d.ms - num(aj.horasDia) * 3600e3);
+// Quien tiene su horario en la ficha (Contrato) cuenta con el suyo: es extra lo que pasa de su jornada en sus días
+// de trabajo y todo lo trabajado otro día o en festivo (compartido/jornada.js).
+const contratoDe = id => (S.operarios[id] || {}).contrato || null;
+const conContrato = (aj, id) => JORNADA.tiene(contratoDe(id)) ? {...aj, contrato: contratoDe(id)} : aj;
+const libreDia = (dia, aj) => JORNADA.libre(dia, aj, aj.contrato);
+const extraDia = (d, aj) => JORNADA.extra(d.ms, d.dia, aj, aj.contrato);
+const descExtra = aj => aj.contrato ? 'Horario de su contrato: ' + JORNADA.texto(aj.contrato) + '. Horas extra: lo que pasa de ' + hm(JORNADA.horasDia(aj.contrato) * 3600e3) + ' en esos días y todo lo trabajado otro día o en festivo.'
+  : 'Horas extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo.';
 const hc = ms => { const m = Math.round(ms / 60e3); return Math.floor(m / 60) + ':' + dos(m % 60); };
 // Una fila por persona (las de baja solo si ficharon en ese periodo): mes «2026-10» o año «2026».
 function filasExtra(periodo, aj) {
   return Object.entries(S.operarios).sort(byNombre).filter(([id, o]) => o.activo !== false || fichajesDe(id, periodo).length).map(([id, o]) => {
-    const r = {id, nombre: o.nombre, trabajadas: 0, lab: 0, libre: 0, incompletos: 0, porMes: Array(12).fill(0)};
+    const r = {id, nombre: o.nombre, trabajadas: 0, lab: 0, libre: 0, incompletos: 0, porMes: Array(12).fill(0)}, a = conContrato(aj, id);
     for (const d of registro(id, periodo)) {
-      const x = extraDia(d, aj);
-      r.trabajadas += d.ms; r[libreDia(d.dia, aj) ? 'libre' : 'lab'] += x; r.porMes[+d.dia.slice(5, 7) - 1] += x;
+      const x = extraDia(d, a);
+      r.trabajadas += d.ms; r[libreDia(d.dia, a) ? 'libre' : 'lab'] += x; r.porMes[+d.dia.slice(5, 7) - 1] += x;
       if (d.raro) r.incompletos++;
     }
     const fs = fichajesDe(id, periodo);
@@ -1079,7 +1366,7 @@ function vHorasExtra() {
     : periodoX === 'anyo' ? `<div class="tabla-x"><table><thead><tr><th>Persona</th>${MESES_C.map(m => `<th>${m}</th>`).join('')}<th>Total extra</th></tr></thead>
         <tbody>${filas.map(f => `<tr><td>${esc(f.nombre)}</td>${f.porMes.map(ms => celda(ms)).join('')}${celda(f.extra, 'x')}</tr>`).join('')}</tbody>
         <tfoot><tr><th>Total</th>${MESES_C.map((_, i) => celda(filas.reduce((a, f) => a + f.porMes[i], 0))).join('')}${celda(tot('extra'), 'x')}</tr></tfoot></table></div>`
-    : `<div class="tabla-x"><table><thead><tr><th>Persona</th><th>Trabajadas</th><th>Extra en laborables</th><th>Extra en sáb., dom. y festivos</th><th>Total extra</th><th>Estado</th></tr></thead>
+    : `<div class="tabla-x"><table><thead><tr><th>Persona</th><th>Trabajadas</th><th>Extra en días de trabajo</th><th>Extra en días libres</th><th>Total extra</th><th>Estado</th></tr></thead>
         <tbody>${filas.map(f => `<tr><td><button class="enlace" data-act="ver-jornada" data-id="${esc(f.id)}">${esc(f.nombre)}</button></td>${celda(f.trabajadas)}${celda(f.lab)}${celda(f.libre)}${celda(f.extra, 'x')}<td class="est">${estado(f)}</td></tr>`).join('')}</tbody>
         <tfoot><tr><th>Total</th>${celda(tot('trabajadas'))}${celda(tot('lab'))}${celda(tot('libre'))}${celda(tot('extra'), 'x')}<td></td></tr></tfoot></table></div>`;
   return `<section class="panel"><div class="pagehead" style="margin-bottom:12px"><h2>Horas extra</h2><div class="rowr acciones">
@@ -1090,6 +1377,7 @@ function vHorasExtra() {
       ${periodoX === 'anyo' ? `<label class="fld"><span>Año</span><select id="anyo-x">${anyos.map(a => `<option${a === anyo ? ' selected' : ''}>${a}</option>`).join('')}</select></label>`
         : `<label class="fld"><span>Mes</span><input id="mes-x" type="month" value="${esc(mesX)}"></label>`}</div>
     <p class="meta" style="margin:0 0 12px">Son extra las horas que pasan de <b>${hm(num(aj.horasDia) * 3600e3)}</b> en un día laborable y todas las de sábados, domingos y festivos.
+      Quien tiene su horario en la ficha cuenta con el suyo: lo que pase de su jornada y todo lo de sus días libres.
       ${fest ? `${fest} ${fest === 1 ? 'festivo marcado' : 'festivos marcados'} en ${anyo}.` : `<b>Aún no hay festivos marcados en ${anyo}:</b> pulsa «Jornada y festivos».`} Horas en formato horas:minutos.</p>
     ${tabla}</section>`;
 }
@@ -1188,7 +1476,7 @@ function csvExtra() {
   const periodo = periodoXActual(), anual = periodo.length === 4, filas = filasExtra(periodo, jornadaAj());
   const h = ms => (Math.round(ms / 36e3) / 100).toFixed(2).replace('.', ',');
   const q = v => /[;"\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : String(v);
-  const cab = anual ? ['Persona', ...MESES_C, 'Total extra'] : ['Persona', 'Horas trabajadas', 'Extra en laborables', 'Extra en sábados, domingos y festivos', 'Total extra', 'Días con un fichaje de menos', 'Validadas'];
+  const cab = anual ? ['Persona', ...MESES_C, 'Total extra'] : ['Persona', 'Horas trabajadas', 'Extra en días de trabajo', 'Extra en días libres (sábados, domingos, festivos y días fuera de su horario)', 'Total extra', 'Días con un fichaje de menos', 'Validadas'];
   const lineas = filas.map(f => anual ? [f.nombre, ...f.porMes.map(h), h(f.extra)]
     : [f.nombre, h(f.trabajadas), h(f.lab), h(f.libre), h(f.extra), f.incompletos, f.fichajes ? (f.sinValidar ? 'No' : 'Sí') : '']);
   bajarArchivo(new Blob(['\ufeff' + [cab, ...lineas].map(l => l.map(q).join(';')).join('\r\n')], {type: 'text/csv;charset=utf-8'}), 'horas-extra-' + periodo + '.csv');
@@ -1203,10 +1491,10 @@ function pdfExtra() {
   d.setFont('helvetica', 'bold'); d.setFontSize(14); d.text('Horas extra · ' + nombrePeriodo(periodo), L, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(10);
   y += 7; d.text('Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), L, y);
-  y += 5; d.setFontSize(8.5); d.text('Extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo. Horas en formato horas:minutos.', L, y);
+  y += 5; d.setFontSize(8.5); d.text('Extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo de sábados, domingos y festivos (o de su horario, si lo tiene en la ficha). Horas en h:min.', L, y);
   d.setFontSize(9.5);
   const cols = anual ? [...MESES_C.map((m, i) => [m, 82 + i * 16.5]), ['Total', R]]
-    : [['Trabajadas', 104], ['Extra lab.', 132], ['Extra sáb./dom./fest.', 166], ['Total extra', R]];
+    : [['Trabajadas', 104], ['Extra trabajo', 132], ['Extra días libres', 166], ['Total extra', R]];
   const fila = (nombre, vals, negrita) => {
     if (y > bajo) { d.addPage(); y = 18; }
     y += 6.5; d.setFont('helvetica', negrita ? 'bold' : 'normal');
@@ -1233,21 +1521,26 @@ function pdfJornada() {
   y += 7; d.text('Empresa: ' + (e.nombre || '') + (e.cif ? ' · CIF ' + e.cif : ''), L, y);
   y += 5; d.text('Trabajador: ' + o.nombre, L, y);
   y += 5; d.text('Mes: ' + nombreMes, L, y);
-  const aj = jornadaAj(), H = 164;
+  const aj = conContrato(jornadaAj(), opJ), H = 164, dm = diasDelMes(opJ, mesJ);
+  if (aj.contrato) {
+    const lc = d.splitTextToSize('Horario del contrato: ' + JORNADA.texto(aj.contrato) + (aj.contrato.categoria ? ' · ' + aj.contrato.categoria : '') + (aj.contrato.convenio ? ' · Convenio: ' + aj.contrato.convenio : ''), R - L);
+    y += 5; d.text(lc, L, y); y += 5 * (lc.length - 1);
+  }
   y += 10; d.setFont('helvetica', 'bold'); d.text('Día', L, y); d.text('Entrada – salida', 60, y); d.text('Horas', H, y, {align: 'right'}); d.text('Extra', R, y, {align: 'right'});
   d.setDrawColor(180); d.line(L, y + 2, R, y + 2); d.setFont('helvetica', 'normal');
-  for (const r of reg) {
-    const t = r.tramos.map(([a, b]) => (a ? horaDe(a.ts) : '¿?') + ' – ' + (b ? horaDe(b.ts) : '¿?')).join('   ');
-    const partes = d.splitTextToSize(t + (r.raro ? '  (falta un fichaje)' : '') + (libreDia(r.dia, aj) ? '  (' + libreDia(r.dia, aj) + ')' : ''), 78);
+  for (const {dia, d: r, aus, falta} of dm) {
+    const t = r ? r.tramos.map(([a, b]) => (a ? horaDe(a.ts) : '¿?') + ' – ' + (b ? horaDe(b.ts) : '¿?')).join('   ') : 'Sin fichajes';
+    const notas = [r && r.raro && 'falta un fichaje', libreDia(dia, aj), aus && textoAusencia(aus), falta && 'no fichó, sin justificar'].filter(Boolean);
+    const partes = d.splitTextToSize(t + (notas.length ? '  (' + notas.join('; ') + ')' : ''), 78);
     if (y + partes.length * 5 + 6 > 270) { d.addPage(); y = 20; }
-    const x = extraDia(r, aj);
-    y += 6; d.text(fmtFecha(r.dia), L, y); d.text(partes, 60, y); d.text(hm(r.ms), H, y, {align: 'right'}); d.text(x ? hm(x) : '–', R, y, {align: 'right'});
+    const x = r ? extraDia(r, aj) : 0;
+    y += 6; d.text(fmtFecha(dia), L, y); d.text(partes, 60, y); d.text(r ? hm(r.ms) : '–', H, y, {align: 'right'}); d.text(x ? hm(x) : '–', R, y, {align: 'right'});
     y += (partes.length - 1) * 5;
   }
   y += 8; d.setFont('helvetica', 'bold'); d.text('Total del mes', 60, y); d.text(hm(reg.reduce((a, r) => a + r.ms, 0)), H, y, {align: 'right'});
   d.text(hm(reg.reduce((a, r) => a + extraDia(r, aj), 0)), R, y, {align: 'right'});
   y += 6; d.setFont('helvetica', 'normal'); d.setFontSize(8.5);
-  d.text('Horas extra: lo que pasa de ' + hm(num(aj.horasDia) * 3600e3) + ' en un día laborable y todo lo trabajado en sábado, domingo o festivo.', L, y); d.setFontSize(10);
+  const nota = d.splitTextToSize(descExtra(aj), R - L); d.text(nota, L, y); y += (nota.length - 1) * 4; d.setFontSize(10);
   if (y > 240) { d.addPage(); y = 20; }
   y += 24; d.setFont('helvetica', 'normal'); d.text('Firma de la empresa', L, y); d.text('Firma del trabajador', 120, y);
   const nombreJ = 'jornada-' + o.nombre.replace(/\s+/g, '-').toLowerCase() + '-' + mesJ + '.pdf';
@@ -1296,6 +1589,16 @@ document.addEventListener('click', e => {
       break;
     case 'borrar-ejemplos': borrarEjemplos(el); break;
     case 'new-operario': operarioSheet(null); break;
+    case 'ir-equipo': view = 'equipo'; equipoTab = el.dataset.v; lastView = ''; render(); break;
+    case 'new-ausencia': ausenciaSheet(null); break;
+    case 'edit-ausencia': ausenciaSheet(id); break;
+    case 'apuntar-falta': ausenciaSheet(null, {operarioId: id, tipo: 'baja', estado: 'aceptada', desde: el.dataset.dia, hasta: el.dataset.dia}); break;
+    case 'ver-doc': verDoc(id); break;
+    case 'bajar-doc': verDoc(id, true); break;
+    case 'borrar-doc': borrarDoc(id, el); break;
+    case 'nomina-asignar': asignarNomina(id, el); break;
+    case 'nomina-transferida': nominaTransferida(id, el); break;
+    case 'recibi-pdf': recibiPDF(id); break;
     case 'edit-operario': operarioSheet(id); break;
     case 'pdf-jornada': pdfJornada(); break;
     case 'validar-jornada': validarJornada(el); break;
@@ -1495,7 +1798,24 @@ document.addEventListener('change', e => {
   if (e.target.id === 'mes-x') { mesX = e.target.value || mesActual(); anyoX = mesX.slice(0, 4); lastView = ''; render(); return; }
   if (e.target.id === 'anyo-x') { anyoX = e.target.value; lastView = ''; render(); return; }
   if (e.target.matches('.imp') && e.target.files[0]) importarCopia(e.target.files[0]);
+  if (e.target.id === 'anyo-a') { anyoA = e.target.value; lastView = ''; render(); return; }
+  if (e.target.id === 'mes-n') { mesN = e.target.value || mesActual(); lastView = ''; render(); return; }
+  if (e.target.id === 'archivo-nom' && e.target.files.length) { subirNominas([...e.target.files]); e.target.value = ''; return; }
+  if (e.target.id === 'archivo-doc' && e.target.files.length) { subirDocsFicha(e.target); return; }
 });
+
+// Documentos de la ficha: se suben al momento y la lista se pone al día sin cerrar la ficha.
+async function subirDocsFicha(input) {
+  const op = input.dataset.op, tipo = $('#tipo-doc').value, files = [...input.files];
+  input.value = ''; input.disabled = true;
+  let n = 0;
+  for (const f of files) { try { await subirArchivo(f, {tipo, operarioId: op}); n++; } catch (e) { toast(e.message, true); } }
+  await sincronizar().catch(() => {});
+  input.disabled = false;
+  const lista = $('.docs-lista');
+  if (lista) { const docs = Object.entries(S.documentos).filter(([, d]) => d.operarioId === op && d.tipo !== 'nomina').sort((a, b) => (b[1].subido || 0) - (a[1].subido || 0)); lista.innerHTML = docs.map(([k, d]) => filaDoc(k, d)).join(''); }
+  if (n) toast(n === 1 ? 'Documento guardado' : n + ' documentos guardados');
+}
 
 /* ---------- Copias automáticas (una cada noche, 60 días) ---------- */
 async function copiasSheet() {

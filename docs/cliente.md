@@ -45,8 +45,21 @@
    En la gestión, la sección **Equipo** da de alta a los operarios con su PIN y muestra el registro de
    jornada de cada uno por meses, con PDF para firmar; en sus pestañas **Gastos** (marcar como pagado) y
    **Fotos**. Los partes llegan a **Partes**.
-5. **Página de accesos** para el cliente.
-6. **Web app:** las tres se pueden añadir a la pantalla de inicio del móvil (iPhone y Android), cada una
+5. **Personal** (gestión → Equipo, y app del equipo):
+   - **Ficha con contrato:** días de trabajo, horario, alta, categoría, convenio y vacaciones (días al año y si se cuentan
+     en naturales o solo sus días de trabajo). Las horas extra de cada persona se cuentan con su horario
+     (`compartido/jornada.js`, que usan la gestión, la app y la hoja de Google).
+   - **Documentos** (contrato, DNI, Seguridad Social, justificantes…): solo en la gestión. Se guardan en la base D1 (UE),
+     troceados en la tabla `archivos` (`compartido/archivos.js`); sus datos, en la colección `documentos`.
+   - **Vacaciones y bajas:** el trabajador pide vacaciones o sube la foto del parte desde la app; la oficina acepta o
+     deniega. Saldo de vacaciones por persona y año. La app avisa de los días de su horario sin fichar ni justificar,
+     recuerda la hora de fichar y da un calendario con alarmas (`/alarmas.ics`).
+   - **Registro de jornada** con los días de contrato sin fichar y las ausencias (lo fichado de verdad: no se rellena nada).
+   - **Nóminas:** se suben en PDF (o llegan por correo) y se asignan por el nombre del archivo; el trabajador la ve y
+     firma el recibí con el dedo; al marcarla transferida le sale el aviso (y enlace de WhatsApp).
+   Pruebas: `pruebas/11-personal.mjs`.
+6. **Página de accesos** para el cliente.
+7. **Web app:** las tres se pueden añadir a la pantalla de inicio del móvil (iPhone y Android), cada una
    con el logo en su color: la web en verde («Adrover»), la gestión en dorado («Gestión») y la app del
    equipo en lima y negro («Equipo»).
 
@@ -66,6 +79,8 @@
 | Tabla de fotos subidas | `fotos_subidas` en la base D1 | quién subió cada foto (D1 lo ve al instante; KV puede tardar) |
 | Tabla de borrados | `borrados` en la base D1 | para que la gestión quite de pantalla lo borrado en otro sitio |
 | Secreto | `CLAVE` en `gestionadrover` | solo en Cloudflare |
+| Tabla de documentos del personal | `archivos` en la base D1 | la crea el Worker; no va en las copias nocturnas |
+| Variable (opcional) | `NOMINAS_DE` en `gestionadrover` | direcciones de las que se aceptan nóminas por correo, separadas por comas |
 
 Las fotos de la web están en Google Drive; sus IDs están en `web/src/datos.js`.
 
@@ -96,6 +111,20 @@ la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con un
 - Probado con cortes de cobertura, respuestas perdidas, servidor caído, rechazos, dos personas en el mismo
   móvil, dos ventanas abiertas y reloj del móvil desajustado.
 
+## Nóminas por correo (activar una vez)
+
+El Worker `gestionadrover` sabe leer correos (función `email` en `gestion/src/worker.js`): guarda cada PDF adjunto como
+nómina y la asigna a la persona cuyo nombre sale en el archivo. Para que le lleguen:
+
+1. En Cloudflare, abre el dominio **jardineriaadrover.es → Email → Email Routing** y actívalo. **Ojo:** si el dominio ya
+   recibe correo en otro sitio (por ejemplo, `zonesverdes@jardineriaadrover…`), no cambies sus registros MX: usa un
+   subdominio para esto (en Email Routing → **Settings → Subdomains**, por ejemplo `nominas.jardineriaadrover.es`).
+2. En **Routing rules**, crea la dirección (por ejemplo `nominas@nominas.jardineriaadrover.es`) con la acción
+   **Send to a Worker → gestionadrover**.
+3. Opcional pero recomendable: en **gestionadrover → Configuración → Variables**, añade `NOMINAS_DE` con la dirección
+   de la gestoría (y la de la empresa, si reenvía desde ella). Los correos de otras direcciones se rechazan.
+4. En el correo de la empresa, un filtro que **reenvíe** a esa dirección los correos de la gestoría con nóminas.
+
 ## Decisiones
 
 - **Facturas:** la gestión hace presupuestos y notas, no facturas. En España, los programas de facturación deben
@@ -103,6 +132,10 @@ la UE habría que pasarlos a R2 con jurisdicción UE (requiere activar R2 con un
   programa homologado y, si hace falta, importar los presupuestos aceptados.
 
 ## Pendiente
+
+- **Personal:** rellenar la ficha de cada persona (contrato, móvil y documentos) y confirmar con la gestoría el convenio
+  de cada una, cómo cuenta las vacaciones y el pacto de horas complementarias de quien trabaja a tiempo parcial.
+- **Nóminas por correo:** activar Email Routing (sección de arriba).
 
 - **Horario del vivero:** en cuanto lo tengamos, se pone en la web (contacto, vivero y pie) y en la ficha para Google.
 - **Fotos propias de las plantas:** mientras no las haya, cada ficha lleva una foto libre de Wikimedia Commons (o un dibujo

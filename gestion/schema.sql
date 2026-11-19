@@ -16,3 +16,6 @@ CREATE TABLE IF NOT EXISTS google_sinc (tipo TEXT NOT NULL, id TEXT NOT NULL, gi
 CREATE TABLE IF NOT EXISTS google_cola (tipo TEXT NOT NULL, id TEXT NOT NULL, intentos INTEGER NOT NULL DEFAULT 0, error TEXT, PRIMARY KEY (tipo, id));
 -- Para rehacer las citas de un cliente cuando cambia su nombre o su dirección.
 CREATE INDEX IF NOT EXISTS docs_cliente ON docs (coleccion, json_extract(data, '$.clienteId'));
+-- Documentos del personal (compartido/archivos.js): el archivo troceado en base64; sus datos, en la colección «documentos».
+-- Los Workers la crean solos si no existe.
+CREATE TABLE IF NOT EXISTS archivos (id TEXT NOT NULL, parte INTEGER NOT NULL, datos TEXT NOT NULL, PRIMARY KEY (id, parte));

@@ -40,6 +40,8 @@ compartido/
   iconos/<app>/         Iconos de cada app: web en verde, gestión en dorado, equipo en lima y negro
   iconos.js             Sirve los iconos y el manifiesto de la web app
   voz.js                Dictado por voz de la gestión y la app del equipo (micrófono y «Dictar parte completo»)
+  jornada.js            Horario de cada contrato, horas extra, días sin fichar y saldo de vacaciones (gestión, app y Google)
+  archivos.js           Documentos del personal troceados en D1 (UE) y lectura de las nóminas que llegan por correo
   iconos-<app>.js       Iconos en base64 de cada app (se generan con generar-iconos.mjs)
   generar-pngs.mjs      Dibuja los PNG de las tres apps a partir del logo
 pruebas/                Pruebas automáticas de la web, la gestión y la app del equipo (ver «Pruebas»)

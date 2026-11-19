@@ -2,15 +2,26 @@ import PAGINA from './index.html';
 import AYUDA from './ayuda.html';
 import { constantesJS, PIN_TODAS } from '../../compartido/constantes.js';
 import { vozJS } from '../../compartido/voz.js';
+import { jornadaJS } from '../../compartido/jornada.js';
+import { TIPOS_DOC, MIMES_DOC, MAX_ARCHIVO, guardarArchivo, leerArchivo, borrarArchivo, respuestaArchivo, adjuntosPDF, mesDe, quienEs } from '../../compartido/archivos.js';
 // El manual (docs/manual-oficina.md) va dentro de la página, en el botón «?».
-const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS()).replace('/*VOZ*/', () => vozJS());
+const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion')).replace('<!--AYUDA-->', AYUDA).replace('/*CONSTANTES*/', constantesJS()).replace('/*VOZ*/', () => vozJS()).replace('/*JORNADA*/', () => jornadaJS());
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
 import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
 import * as google from './google.js';
 
-const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos'];
+const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos', 'documentos', 'ausencias'];
+// Guarda un documento nuevo (su archivo y sus datos). Devuelve su id.
+async function nuevoDocumento(env, bytes, datos) {
+  const id = 'a' + crypto.randomUUID().replace(/-/g, '').slice(0, 20);
+  await guardarArchivo(env, id, bytes);
+  await env.DB.prepare('INSERT INTO docs (coleccion, id, data, actualizado) VALUES (?, ?, ?, ?)')
+    .bind('documentos', id, JSON.stringify({...datos, tamano: bytes.byteLength, subido: Date.now()}), new Date().toISOString()).run();
+  return id;
+}
+const binario = (buf) => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return s; };
 // Tras 10 claves incorrectas desde la misma conexión, se bloquea 15 minutos.
 const MAX_FALLOS = 10, VENTANA = 15 * 60e3;
 async function bloqueada(env, ip) {
@@ -74,6 +85,23 @@ async function caducarUbicaciones(env) {
 
 let CABECERAS;
 export default {
+  // Nóminas por correo: el correo que llega a la dirección de las nóminas (Cloudflare Email Routing → este Worker)
+  // se lee aquí y cada PDF adjunto se guarda como nómina, ya asignada a su trabajador si su nombre sale en el
+  // nombre del archivo o en el asunto. Si NOMINAS_DE tiene direcciones (separadas por comas), solo se aceptan de ellas.
+  async email(message, env) {
+    const permitidos = String(env.NOMINAS_DE || '').toLowerCase().split(',').map((x) => x.trim()).filter(Boolean);
+    if (permitidos.length && !permitidos.some((p) => String(message.from || '').toLowerCase().includes(p))) return message.setReject('No autorizado');
+    const crudo = binario(await new Response(message.raw).arrayBuffer());
+    const {asunto, pdfs} = adjuntosPDF(crudo);
+    const {results} = await env.DB.prepare("SELECT id, data FROM docs WHERE coleccion = 'operarios'").all();
+    const ops = Object.fromEntries(results.map((r) => [r.id, JSON.parse(r.data)]));
+    for (const p of pdfs) {
+      if (!p.bytes.length || p.bytes.length > MAX_ARCHIVO) continue;
+      const operarioId = quienEs(p.nombre, ops) || (pdfs.length === 1 ? quienEs(asunto, ops) : '');
+      await nuevoDocumento(env, p.bytes, {tipo: 'nomina', operarioId, nombre: p.nombre, mime: 'application/pdf', mes: mesDe(p.nombre) || mesDe(asunto), origen: 'correo', asunto: asunto.slice(0, 200)});
+    }
+  },
+
   async scheduled(event, env, ctx) {
     // Cada media hora solo se envía a Google lo que haya cambiado; de noche, además, la copia y la limpieza.
     if (event.cron === '*/30 * * * *') return ctx.waitUntil(google.sincronizar(env, {revisar: 'calendario'}));
@@ -206,6 +234,23 @@ export default {
       return json({ok: true});
     }
 
+    // Documentos del personal: subir (el archivo va en el cuerpo, sus datos en la dirección) y ver o descargar.
+    if (url.pathname === '/api/archivos' && req.method === 'POST') {
+      const q = (k) => String(url.searchParams.get(k) || '').trim(), mime = (req.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      const tipo = q('tipo'), operarioId = q('operarioId'), mes = q('mes');
+      if (!TIPOS_DOC.includes(tipo) || !MIMES_DOC.includes(mime) || operarioId.length > 60 || (mes && !/^\d{4}-\d{2}$/.test(mes))) return json({error: 'datos'}, 400);
+      const bytes = await req.arrayBuffer();
+      if (!bytes.byteLength || bytes.byteLength > MAX_ARCHIVO) return json({error: 'tamaño'}, 413);
+      const id = await nuevoDocumento(env, bytes, {tipo, operarioId, mes, mime, nombre: q('nombre').replace(/[\\/<>:"|?*\x00-\x1f]/g, '-').slice(0, 120) || 'documento', origen: 'oficina'});
+      return json({ok: true, id});
+    }
+    const ar = url.pathname.match(/^\/api\/archivos\/([\w-]{6,60})$/);
+    if (ar && req.method === 'GET') {
+      const fila = await env.DB.prepare("SELECT data FROM docs WHERE coleccion = 'documentos' AND id = ?").bind(ar[1]).first();
+      const bytes = fila && await leerArchivo(env, ar[1]);
+      return bytes ? respuestaArchivo(bytes, JSON.parse(fila.data), url.searchParams.get('bajar') === '1') : json({error: 'no existe'}, 404);
+    }
+
     const m = url.pathname.match(/^\/api\/doc\/([^/]+)\/([^/]+)$/);
     if (m) {
       const col = decodeURIComponent(m[1]), id = decodeURIComponent(m[2]);
@@ -236,6 +281,8 @@ export default {
           env.DB.prepare('DELETE FROM docs WHERE coleccion = ? AND id = ?').bind(col, id),
           env.DB.prepare('INSERT INTO borrados (coleccion, id, cuando) VALUES (?, ?, ?) ON CONFLICT(coleccion, id) DO UPDATE SET cuando = excluded.cuando').bind(col, id, cuando),
         ]);
+        // Al borrar un documento se borra también su archivo.
+        if (col === 'documentos') await borrarArchivo(env, id);
         if (google.SIGUE.includes(col)) aGoogle();
         return json({ok: true});
       }

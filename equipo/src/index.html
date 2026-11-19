@@ -121,6 +121,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .dictbtn svg{width:20px;height:20px}
 .dictbtn.rec{background:var(--rojo);color:#111}
 #dict-txt{margin:0;color:var(--muted);font-size:.9rem}
+/* Vacaciones, bajas y nóminas */
+.recordatorio{margin:12px 0 0;border-radius:14px;padding:10px 14px;font-size:.92rem;background:var(--panel2)}
+.recordatorio.ya{background:#3a2f12;color:#ffd98a;font-weight:700}
+.alarmas{display:inline-block;margin-top:12px;color:var(--lima);font-weight:700;text-decoration:none;font-size:.92rem}
+.faltas{border:2px solid #ffd98a}
+.dias-falta{display:flex;flex-wrap:wrap;gap:8px}.dias-falta button{border:2px solid #ffd98a;background:transparent;color:#ffd98a;border-radius:999px;padding:9px 14px;font-weight:700;font-size:.92rem}
+.saldo{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}.saldo b{font-size:2rem;color:var(--lima);line-height:1}
+.dos-btn{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.estado-g.denegada{background:#4a1f14;color:#ffb8a3}
+.aviso-nomina{background:var(--lima);color:var(--lima-ink);border-radius:16px;padding:14px 16px;margin-bottom:14px;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.aviso-nomina .btn{background:var(--lima-ink);color:var(--lima)}
+.firma-caja{background:#fff;border-radius:16px;touch-action:none;width:100%;height:220px;display:block}
 </style>
 </head>
 <body>
@@ -153,13 +165,22 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <button class="btn lima" id="reintentar" style="margin-top:12px">Reintentar todo</button>
     </section>
 
+    <div class="aviso-nomina" id="aviso-nomina" hidden></div>
     <section class="card" aria-labelledby="t-fichaje">
       <h2 id="t-fichaje">Jornada de hoy</h2>
       <div class="estado" id="estado"><i></i><span></span></div>
       <div class="meta" id="estado-sub"></div>
       <button class="btn lima" id="fichar"></button>
       <div class="hoy" id="hoy"></div>
+      <div class="recordatorio" id="recordatorio" hidden></div>
+      <a class="alarmas" id="alarmas" hidden>⏰ Poner alarmas para fichar en mi calendario</a>
       <p class="meta aviso-ubic">📍 Al fichar, la app guarda dónde estás en ese momento. Solo al fichar, nunca durante la jornada, y se borra cuando la oficina valida tus horas.</p>
+    </section>
+
+    <section class="card faltas" id="faltas" hidden aria-labelledby="t-faltas">
+      <h2 id="t-faltas">Días sin fichar</h2>
+      <p class="meta" style="margin:-4px 0 10px">Estos días de tu horario no fichaste. Pulsa un día para subir el justificante (foto del parte médico) si estuviste de baja o con permiso. Si trabajaste, avisa a la oficina.</p>
+      <div id="faltas-lista"></div>
     </section>
 
     <section class="card" id="partes-card" hidden aria-labelledby="t-partes">
@@ -179,6 +200,18 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <p class="meta" style="margin:-4px 0 12px">Gasolina, material, comidas… con la foto del ticket.</p>
       <button class="btn lima" id="nuevo-gasto">+ Nuevo gasto</button>
       <div id="gastos"></div>
+    </section>
+
+    <section class="card" aria-labelledby="t-aus">
+      <h2 id="t-aus">Vacaciones y bajas</h2>
+      <div class="saldo" id="saldo" hidden></div>
+      <div class="dos-btn"><button class="btn lima" id="pedir-vac">Pedir vacaciones</button><button class="btn" id="subir-baja">Subir baja o justificante</button></div>
+      <div id="ausencias"></div>
+    </section>
+
+    <section class="card" id="nom-card" hidden aria-labelledby="t-nom">
+      <h2 id="t-nom">Mis nóminas</h2>
+      <div id="nominas"></div>
     </section>
 
     <section class="card" aria-labelledby="t-horas">
@@ -232,6 +265,29 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <label class="campo"><span>Comentario</span><textarea name="nota" rows="2" placeholder="Opcional: antes, después, algo que deba ver la oficina…"></textarea></label>
   <div class="acciones"><button class="btn lima">Enviar fotos</button></div>
 </form>
+<form id="hoja-aus" class="hoja" hidden autocomplete="off">
+  <header class="top"><h1 id="aus-titulo">Vacaciones</h1><button type="button" class="btn borde peq" data-cerrar>Cancelar</button></header>
+  <fieldset class="campo" style="border:0;padding:0;margin:0 0 16px"><legend style="font-weight:700;margin-bottom:6px">Qué es</legend><div class="chips" id="tipos-aus">
+    <label><input type="radio" name="tipo" value="vacaciones" checked><span>Vacaciones</span></label>
+    <label><input type="radio" name="tipo" value="baja"><span>Baja médica</span></label>
+    <label><input type="radio" name="tipo" value="permiso"><span>Permiso (médico, boda…)</span></label>
+    <label><input type="radio" name="tipo" value="otro"><span>Otra ausencia</span></label></div></fieldset>
+  <div class="fila">
+    <label class="campo"><span>Desde</span><input type="date" name="desde" required></label>
+    <label class="campo"><span>Hasta (incluido)</span><input type="date" name="hasta" required></label>
+  </div>
+  <p class="meta" id="aus-cuenta" style="margin:-6px 0 14px"></p>
+  <div class="campo" id="aus-fotos"><span>Foto del parte médico o del justificante</span><div class="fotos" data-fotos><label class="btn">📷 Hacer o elegir fotos<input type="file" accept="image/*" multiple hidden></label><div class="miniaturas"></div></div></div>
+  <label class="campo"><span>Nota para la oficina</span><textarea name="nota" rows="2" placeholder="Opcional"></textarea></label>
+  <div class="acciones"><button class="btn lima">Enviar a la oficina</button></div>
+</form>
+<div id="hoja-firma" class="hoja" hidden>
+  <header class="top"><h1>Firmar el recibí</h1><button type="button" class="btn borde peq" id="firma-cancelar">Cancelar</button></header>
+  <p id="firma-texto" style="margin:0 0 12px"></p>
+  <canvas class="firma-caja" id="firma" aria-label="Firma aquí con el dedo"></canvas>
+  <p class="meta" style="margin:8px 0 16px">Firma con el dedo dentro del recuadro blanco.</p>
+  <div class="dos-btn"><button type="button" class="btn borde" id="firma-borrar">Borrar</button><button type="button" class="btn lima" id="firma-ok">Firmar</button></div>
+</div>
 <div id="ayuda" class="hoja" hidden>
   <header class="top"><h1>Ayuda</h1><button type="button" class="btn borde peq" data-cerrar-ayuda>Cerrar</button></header>
   <div class="ay"><!--AYUDA--></div>
@@ -240,6 +296,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div id="toast" role="status"></div>
 
 <script>/*VOZ*/</script>
+<script>/*JORNADA*/</script>
 <script>
 (function () {
 const $ = (s) => document.querySelector(s);
@@ -433,11 +490,11 @@ function pintarSync() {
   $('#sync').className = 'sync' + (todo && ult ? ' ok' : '');
   $('#sync-txt').textContent = (todo ? 'Todo enviado' : 'Hay datos sin enviar') + ' · actualizado ' + hace;
 }
-const QUE = {'/api/fichar': 'Fichaje', '/api/partes': 'Parte', '/api/gastos': 'Gasto', '/api/fotos-trabajo': 'Fotos del trabajo', '/api/fotos': 'Foto'};
+const QUE = {'/api/fichar': 'Fichaje', '/api/partes': 'Parte', '/api/gastos': 'Gasto', '/api/fotos-trabajo': 'Fotos del trabajo', '/api/fotos': 'Foto', '/api/ausencias': 'Vacaciones o baja'};
 function pintarFallidos() {
   const f = fallidos();
   $('#fallidos').hidden = !f.length;
-  $('#fallidos-lista').innerHTML = f.map((c) => `<div class="parte"><div><b>${QUE[c.ruta] || 'Dato'}${c.cuerpo.fecha ? ' · ' + esc(fecha(c.cuerpo.fecha)) : c.cuerpo.ts ? ' · ' + esc(fecha(diaDe(c.cuerpo.ts))) + ' ' + horaDe(c.cuerpo.ts) : ''}</b>
+  $('#fallidos-lista').innerHTML = f.map((c) => `<div class="parte"><div><b>${QUE[c.ruta] || 'Dato'}${c.cuerpo.desde ? ' · ' + esc(fecha(c.cuerpo.desde)) : c.cuerpo.fecha ? ' · ' + esc(fecha(c.cuerpo.fecha)) : c.cuerpo.ts ? ' · ' + esc(fecha(diaDe(c.cuerpo.ts))) + ' ' + horaDe(c.cuerpo.ts) : ''}</b>
     <small>${esc(c.motivo)}</small></div><button class="btn borde peq" data-descartar="${esc(c.k)}">Descartar</button></div>`).join('');
 }
 $('#reintentar').onclick = () => {
@@ -517,6 +574,10 @@ function pintar() {
   $('#envios').innerHTML = envios.map((x) => `<div class="parte"><b>${esc(cliN[x.clienteId] || 'Cliente')}</b>
     <span class="meta">${esc(fecha(x.fecha))} · ${x.fotos.length} ${x.fotos.length === 1 ? 'foto' : 'fotos'}</span>${x.pendiente ? '<div class="pend">Pendiente de enviar</div>' : ''}</div>`).join('');
 
+  pintarJornadaContrato(js, fsHoy, dentro);
+  pintarAusencias(js);
+  pintarNominas();
+
   const jefe = D.yo.rol === 'jefe';
   $('#partes-card').hidden = !jefe;
   if (jefe) {
@@ -529,6 +590,145 @@ function pintar() {
       : '<p class="meta" style="margin:12px 0 0">Los partes de las últimas dos semanas aparecerán aquí.</p>';
   }
 }
+
+
+// ---------- Horario, avisos para fichar, vacaciones y bajas ----------
+const TIPOS_AUS = {vacaciones: 'Vacaciones', baja: 'Baja médica', permiso: 'Permiso', otro: 'Otra ausencia'};
+const ajustes = () => ({festivos: (D && D.festivos) || []});
+// Las suyas: las del servidor más las que aún están en la cola.
+function misAusencias() {
+  const pend = cola.filter((c) => c.ruta === '/api/ausencias').map((c) => ({...c.cuerpo, estado: 'pendiente', fotos: (c.cuerpo.fotos || []).length, pendiente: true}));
+  const ids = new Set(pend.map((x) => x.id));
+  return [...pend, ...((D && D.ausencias) || []).filter((x) => !ids.has(x.id))].sort((a, b) => b.desde.localeCompare(a.desde));
+}
+const minDe = (h) => +h.slice(0, 2) * 60 + +h.slice(3);
+function pintarJornadaContrato(js, fsHoy, dentro) {
+  const c = D.contrato, r = $('#recordatorio'), a = $('#alarmas');
+  r.hidden = a.hidden = true;
+  if (!c) return;
+  a.hidden = false;
+  a.href = '/alarmas.ics?dias=' + c.dias.join(',') + '&entrada=' + c.entrada + '&salida=' + c.salida;
+  const hoy = hoyISO();
+  if (JORNADA.libre(hoy, ajustes(), c) || (c.alta && hoy < c.alta) || JORNADA.ausenciaDe(hoy, misAusencias())) return;
+  const n = new Date(), ahoraMin = n.getHours() * 60 + n.getMinutes();
+  r.hidden = false; r.className = 'recordatorio';
+  if (!fsHoy.length && ahoraMin >= minDe(c.entrada)) { r.className = 'recordatorio ya'; r.textContent = 'Hoy entrabas a las ' + c.entrada + ' y aún no has fichado la entrada.'; }
+  else if (dentro && ahoraMin >= minDe(c.salida)) { r.className = 'recordatorio ya'; r.textContent = 'Tu horario acababa a las ' + c.salida + ': no olvides fichar la salida.'; }
+  else r.textContent = 'Hoy te toca de ' + c.entrada + ' a ' + c.salida + '.';
+}
+// Días de su horario de los últimos 30 días sin fichajes y sin ausencia apuntada.
+function faltas(js) {
+  const c = D.contrato; if (!c) return [];
+  const fichados = new Set(js.map((j) => j.dia)), aus = misAusencias();
+  const desde = diaDe(Date.now() - 30 * 864e5), ayer = diaDe(Date.now() - 864e5);
+  return JORNADA.diasDeTrabajo(desde, ayer, ajustes(), c).filter((d) => !fichados.has(d) && !JORNADA.ausenciaDe(d, aus)).reverse();
+}
+function pintarAusencias(js) {
+  const f = faltas(js);
+  $('#faltas').hidden = !f.length;
+  $('#faltas-lista').innerHTML = `<div class="dias-falta">${f.map((d) => `<button data-justificar="${d}" aria-label="Justificar el ${esc(fecha(d))}">${esc(fecha(d))}</button>`).join('')}</div>`;
+  const c = D.contrato, lista = misAusencias(), anyo = hoyISO().slice(0, 4);
+  if (c) {
+    const v = JORNADA.vacaciones(anyo, c, lista, ajustes());
+    $('#saldo').hidden = false;
+    $('#saldo').innerHTML = `<b>${String(v.quedan).replace('.', ',')}</b><span class="meta">días de vacaciones te quedan en ${anyo}${v.pedidas ? ' (y ' + String(v.pedidas).replace('.', ',') + ' pedidos sin aceptar)' : ''} · ${v.unidad === 'laborables' ? 'cuentan solo tus días de trabajo' : 'días naturales'}</span>`;
+  } else $('#saldo').hidden = true;
+  const est = (x) => x.pendiente ? '<span class="pend">Pendiente de enviar</span>' : `<span class="estado-g ${x.estado === 'aceptada' ? 'pagado' : x.estado === 'denegada' ? 'denegada' : ''}">${x.estado === 'aceptada' ? 'Aceptada' : x.estado === 'denegada' ? 'Denegada' : 'La oficina la está revisando'}</span>`;
+  $('#ausencias').innerHTML = lista.slice(0, 12).map((x) => `<div class="parte"><b>${esc(TIPOS_AUS[x.tipo] || 'Ausencia')}</b>
+    <span class="meta">${esc(fecha(x.desde))}${x.hasta !== x.desde ? ' – ' + esc(fecha(x.hasta)) : ''}${x.fotos ? ' · 📎 justificante' : ''}</span>${x.notaOficina ? `<span class="meta" style="color:var(--lima);display:block">Oficina: ${esc(x.notaOficina)}</span>` : ''}
+    <div style="margin-top:6px">${est(x)}</div></div>`).join('');
+}
+const hAus = $('#hoja-aus');
+function abrirAusencia(tipo, dia) {
+  hAus.reset(); limpiarFotos(hAus);
+  hAus.querySelector(`input[name=tipo][value=${tipo}]`).checked = true;
+  hAus.desde.value = hAus.hasta.value = dia || hoyISO();
+  pintarHojaAus();
+  hAus.hidden = false; scrollTo(0, 0);
+}
+function pintarHojaAus() {
+  const tipo = new FormData(hAus).get('tipo'), d = hAus.desde.value, h = hAus.hasta.value;
+  $('#aus-titulo').textContent = tipo === 'vacaciones' ? 'Pedir vacaciones' : 'Justificar una ausencia';
+  $('#aus-fotos').hidden = tipo === 'vacaciones';
+  const c = D && D.contrato;
+  $('#aus-cuenta').textContent = d && h && h >= d ? (tipo === 'vacaciones' && c ? 'Son ' + JORNADA.cuenta(d, h, ajustes(), c) + (c.computo === 'laborables' ? ' días de trabajo' : ' días naturales') + ' de vacaciones.' : JORNADA.diasEntre(d, h) + (JORNADA.diasEntre(d, h) === 1 ? ' día.' : ' días.')) : '';
+}
+hAus.addEventListener('change', (e) => { if (e.target.name === 'tipo' || e.target.name === 'desde' || e.target.name === 'hasta') { if (e.target.name === 'desde' && hAus.hasta.value < hAus.desde.value) hAus.hasta.value = hAus.desde.value; pintarHojaAus(); } });
+$('#pedir-vac').onclick = () => abrirAusencia('vacaciones');
+$('#subir-baja').onclick = () => abrirAusencia('baja');
+$('#faltas-lista').onclick = (e) => { const b = e.target.closest('[data-justificar]'); if (b) abrirAusencia('baja', b.dataset.justificar); };
+hAus.onsubmit = async (e) => {
+  e.preventDefault();
+  const fd = new FormData(hAus), x = {id: uid(), tipo: fd.get('tipo'), desde: fd.get('desde'), hasta: fd.get('hasta'), nota: String(fd.get('nota') || '').trim()};
+  if (!x.desde || !x.hasta || x.hasta < x.desde) return toast('Revisa las fechas.', true);
+  if (x.tipo === 'baja' && !(elegidas.get(hAus) || []).length) return toast('Haz una foto del parte médico.', true);
+  try { x.fotos = x.tipo === 'vacaciones' ? [] : await encolarFotos(hAus); } catch (err) { return toast(err.message, true); }
+  if (!encolar('/api/ausencias', x)) return;
+  hAus.hidden = true; pintar(); toast(x.tipo === 'vacaciones' ? 'Vacaciones pedidas: la oficina te dirá si se aceptan.' : 'Enviado a la oficina');
+};
+
+// ---------- Nóminas ----------
+const nombreMes = (m) => new Date(m + '-15T12:00:00').toLocaleDateString('es-ES', {month: 'long', year: 'numeric'});
+function pintarNominas() {
+  const ns = (D && D.nominas) || [], vistas = guardado('avisosNomina', []);
+  $('#nom-card').hidden = !ns.length;
+  $('#nominas').innerHTML = ns.map((n) => `<div class="parte"><b>Nómina de ${esc(nombreMes(n.mes))}</b>
+    <span class="meta">${n.transferida ? 'Transferida el ' + esc(fecha(diaDe(n.transferida))) : 'Aún no transferida'}${n.firmada ? ' · Recibí firmado' : ''}</span>
+    <div class="acciones" style="margin-top:8px"><button class="btn peq" data-ver-nomina="${esc(n.id)}">Ver nómina</button>${n.firmada ? '' : `<button class="btn lima peq" data-firmar="${esc(n.id)}">Firmar el recibí</button>`}</div></div>`).join('');
+  const nueva = ns.find((n) => n.transferida && !vistas.includes(n.id));
+  $('#aviso-nomina').hidden = !nueva;
+  if (nueva) $('#aviso-nomina').innerHTML = `<span>💶 Te hemos transferido la nómina de ${esc(nombreMes(nueva.mes))}</span><button class="btn peq" data-visto-nomina="${esc(nueva.id)}">Vale</button>`;
+}
+document.addEventListener('click', async (e) => {
+  const v = e.target.closest('[data-visto-nomina]');
+  if (v) { guardar('avisosNomina', [...guardado('avisosNomina', []), v.dataset.vistoNomina].slice(-50)); pintarNominas(); return; }
+  const n = e.target.closest('[data-ver-nomina]');
+  if (n) {
+    n.disabled = true;
+    try {
+      const r = await fetch('/api/nominas/' + encodeURIComponent(n.dataset.verNomina), {headers: {authorization: 'Bearer ' + token}});
+      if (!r.ok) throw new Error();
+      const u = URL.createObjectURL(await r.blob()), a = document.createElement('a');
+      a.href = u; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 120e3);
+    } catch (err) { toast('Para ver la nómina hace falta cobertura.', true); }
+    n.disabled = false; return;
+  }
+  const f = e.target.closest('[data-firmar]');
+  if (f) abrirFirma(f.dataset.firmar);
+});
+// Firma con el dedo en un recuadro blanco (se guarda como imagen PNG).
+let firmando = '', trazos = 0;
+const lienzo = $('#firma');
+function abrirFirma(id) {
+  const n = ((D && D.nominas) || []).find((x) => x.id === id); if (!n) return;
+  firmando = id; trazos = 0;
+  $('#firma-texto').textContent = 'Yo, ' + D.yo.nombre + ', he recibido la nómina de ' + nombreMes(n.mes) + '.';
+  $('#hoja-firma').hidden = false; scrollTo(0, 0);
+  const r = lienzo.getBoundingClientRect(), k = devicePixelRatio || 1;
+  lienzo.width = r.width * k; lienzo.height = r.height * k;
+  const g = lienzo.getContext('2d'); g.setTransform(k, 0, 0, k, 0, 0); g.fillStyle = '#fff'; g.fillRect(0, 0, r.width, r.height);
+  g.lineWidth = 2.6; g.lineCap = g.lineJoin = 'round'; g.strokeStyle = '#111';
+}
+let ultimo = null;
+lienzo.addEventListener('pointerdown', (e) => { lienzo.setPointerCapture(e.pointerId); const r = lienzo.getBoundingClientRect(); ultimo = [e.clientX - r.left, e.clientY - r.top]; trazos++; });
+lienzo.addEventListener('pointermove', (e) => {
+  if (!ultimo) return;
+  const r = lienzo.getBoundingClientRect(), p = [e.clientX - r.left, e.clientY - r.top], g = lienzo.getContext('2d');
+  g.beginPath(); g.moveTo(ultimo[0], ultimo[1]); g.lineTo(p[0], p[1]); g.stroke(); ultimo = p;
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => lienzo.addEventListener(t, () => { ultimo = null; }));
+$('#firma-borrar').onclick = () => abrirFirma(firmando);
+$('#firma-cancelar').onclick = () => { $('#hoja-firma').hidden = true; };
+$('#firma-ok').onclick = async () => {
+  if (!trazos) return toast('Firma dentro del recuadro.', true);
+  $('#firma-ok').disabled = true;
+  try {
+    await api('/api/nominas/' + encodeURIComponent(firmando) + '/firmar', {firma: lienzo.toDataURL('image/png')});
+    $('#hoja-firma').hidden = true; toast('Recibí firmado'); await actualizar();
+  } catch (err) { toast(err.message === 'Failed to fetch' ? 'Para firmar hace falta cobertura.' : err.message, true); }
+  $('#firma-ok').disabled = false;
+};
 
 // ---------- Fichar ----------
 $('#fichar').onclick = () => {

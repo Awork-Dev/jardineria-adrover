@@ -88,18 +88,38 @@ Los hacen los jefes de cuadrilla desde el móvil y llegan solos, como mucho en u
 2. Nombre y puesto: **Operario** o **Jefe de cuadrilla** (solo los jefes hacen partes).
 3. Apunta el **PIN** que sale y pulsa **Guardar**. Dale el PIN y el enlace de la app del equipo.
 
+**Ficha de cada persona** (pulsa su tarjeta en **Personas**)
+
+- **Contrato:** marca los **días que trabaja**, la **hora de entrada y de salida**, la **fecha de alta**, la categoría y el convenio. Con eso la gestión sabe sus horas al día y a la semana, y cuenta sus horas extra con **su** horario: lo que pase de su jornada en sus días y todo lo que trabaje otro día o en festivo. Si su jornada es de menos de 40 h a la semana es a **tiempo parcial**: las horas de más se llaman **horas complementarias** y necesitan un pacto por escrito (consúltalo con la gestoría).
+- **Vacaciones:** los **días al año** (30 si no lo cambias) y **cómo se cuentan**: en **días naturales** (todos los del calendario, también fines de semana) o **solo sus días de trabajo**, según diga su convenio. La ley fija un mínimo de 30 días naturales al año; el convenio puede mejorarlo, no bajarlo. Si entró a mitad de año, le tocan los proporcionales.
+- **Móvil:** para avisarle por WhatsApp cuando le transfieras la nómina.
+- **Documentos:** elige el tipo (**Contrato, DNI / NIE, Seguridad Social, Justificante u Otro**) y pulsa **Subir documento** (PDF o foto, hasta 15 MB). Se guardan al momento, en la base de datos de la Unión Europea, y **solo se ven en la gestión**: el trabajador no los ve en su app. **Ver**, **Descargar** o **Borrar** (pulsa dos veces).
 - **Si pierde el móvil o se va:** cámbiale el PIN o ponlo **De baja**. Pierde el acceso al momento; sus datos se conservan.
 - **Aviso de PIN incorrectos (en el Resumen):** si alguien prueba muchos PIN en la app del equipo, sale un aviso. Tras 60 fallos en un día la entrada con PIN se bloquea sola (quien ya tenía la app abierta sigue trabajando): si ha sido un despiste, pulsa **Desbloquear**; si no sabéis quién ha sido, cambiad antes los PIN.
 - **La web (en el Resumen):** visitas a jardineriaadrover.es de los últimos 30 días (por día, página, país e idioma) y las plantas que la gente busca en la web y no están en la guía, para saber qué fichas añadir. Se cuenta sin cookies y sin guardar ningún dato de quien entra.
-- **Jornada:** elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. **Descargar PDF** para firmar. Hay que guardarlo 4 años.
+- **Jornada:** elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. Si tiene su horario en la ficha, salen también sus **días de trabajo sin fichar** («No fichó · sin justificar») y sus **vacaciones, bajas y permisos**. **Descargar PDF** para firmar: es el registro de jornada que pide la Inspección de Trabajo, con lo que fichó de verdad. Hay que guardarlo 4 años.
 - **Horas extra:** elige un mes o un año entero y sale cada persona con sus horas trabajadas y sus horas extra. Son extra las que pasan de la jornada diaria en un día laborable y todas las de sábados, domingos y festivos. **Descargar Excel** (para la gestoría) o **Descargar PDF**. Pulsa un nombre para ver sus días.
 - **Estadísticas:** de un mes o de un año, las horas trabajadas y extra del equipo, la media al día, las horas de cada persona y de cada mes (gráficos), los trabajos más hechos según los partes y, por persona, días trabajados, horas en partes, clientes y gastos.
 - **Jornada y festivos** (en Horas extra): las horas de la jornada diaria y los festivos. **Apunta los festivos de cada año** (nacionales, de Baleares y locales de Capdepera): si falta uno, lo trabajado ese día no sale como extra.
 - **📍 junto a cada hora:** dónde estaba al fichar; púlsalo para verlo en el mapa. **«(sin ubicación)»** si su móvil no dio permiso o no tenía señal GPS. La app solo la guarda al fichar, y así se lo dice al trabajador junto al botón.
 - **Validar horas:** cuando hayas comprobado las horas del mes (por ejemplo, para pagar las horas extra), pulsa **Validar horas**. Se borra la ubicación de esos fichajes y las horas se quedan. Si no se validan, la ubicación se borra sola a los tres meses. Las copias de seguridad no guardan la ubicación.
 - Antes de usar la ubicación, cada trabajador tiene que firmar el aviso que lo explica (lo exige el art. 90 de la LOPDGDD). Quien fiche con su propio móvil no está obligado a darla.
+- **Vacaciones y bajas:** arriba, lo **Por revisar**: vacaciones que piden desde la app y bajas o permisos con la **foto del justificante**. Ábrelo, pon **Aceptada** o **Denegada** y, si quieres, una nota: el trabajador lo ve en su app. Debajo, los **días sin fichar ni justificar** de los últimos 30 días (pulsa uno para apuntar la ausencia) y el **saldo de vacaciones** del año de cada persona: le corresponden, disfrutadas, pedidas sin aceptar y le quedan. Con **+ Nueva** apuntas tú una ausencia. Una baja médica queda **justificada**; quién la paga (Seguridad Social o empresa) lo dicen la ley y el convenio: pásale a la gestoría los partes.
+- **Nóminas:** ver la sección **Nóminas**.
 - **Gastos:** cada uno con la foto del ticket. Al pagarlo, ábrelo, pon **Pagado** y, si quieres, una **nota de la oficina** (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.
 - **Fotos:** las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.
+
+## Nóminas
+
+En **Equipo → Nóminas**, elige el mes.
+
+1. **Subir nóminas (PDF):** puedes elegir varias a la vez. Si el nombre del archivo lleva el **nombre y apellido** de la persona y el **mes** (por ejemplo `NOMINA_Anabel_Garcia_202610.pdf` u «octubre 2026»), se asignan solas. Si no, quedan en **Sin asignar**: elige la persona y el mes y pulsa **Asignar**.
+2. Cada trabajador ve **la suya** en su app, la abre y **firma el recibí con el dedo**. Aquí ves si está **Sin abrir**, **Vista, sin firmar** o **Firmada**. **Recibí firmado** descarga el justificante en PDF con su firma, la fecha y la huella del PDF de la nómina.
+3. Cuando hagas la transferencia, pulsa **Marcar transferida**: le sale el aviso en su app. Si tiene el móvil en la ficha, sale además **Avisar por WhatsApp** con el mensaje ya escrito.
+
+**Que lleguen solas por correo:** las nóminas que se reenvían a la dirección de nóminas de la gestión entran solas, con cada PDF asignado a su persona si su nombre sale en el archivo (o en el asunto, si solo hay un PDF). Para activarlo hay que hacer una vez lo de **«Nóminas por correo»** en `docs/cliente.md`. Después, en el correo de la empresa, crea un filtro que **reenvíe** los correos de la gestoría a esa dirección.
+
+El recibí firmado en la app sirve como constancia de que la nómina se ha entregado; no es una firma electrónica cualificada.
 
 ## Google
 

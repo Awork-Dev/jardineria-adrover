@@ -1,5 +1,5 @@
 <!-- Generado por compartido/generar-ayuda.py desde docs/manual-oficina.md: no editar a mano. -->
-<nav class="ay-indice"><a href="#ay1">Las tres apps</a><a href="#ay2">Entrar</a><a href="#ay3">Resumen</a><a href="#ay4">Clientes y proveedores</a><a href="#ay5">Presupuestos</a><a href="#ay6">Notas</a><a href="#ay7">Partes</a><a href="#ay8">Equipo</a><a href="#ay9">Google</a><a href="#ay10">Copias de seguridad</a><a href="#ay11">Si algo falla</a></nav><h3 id="ay1">Las tres apps</h3>
+<nav class="ay-indice"><a href="#ay1">Las tres apps</a><a href="#ay2">Entrar</a><a href="#ay3">Resumen</a><a href="#ay4">Clientes y proveedores</a><a href="#ay5">Presupuestos</a><a href="#ay6">Notas</a><a href="#ay7">Partes</a><a href="#ay8">Equipo</a><a href="#ay9">Nóminas</a><a href="#ay10">Google</a><a href="#ay11">Copias de seguridad</a><a href="#ay12">Si algo falla</a></nav><h3 id="ay1">Las tres apps</h3>
 <p>Jardinería Adrover funciona con tres apps: la <b>web</b> para los clientes, la <b>gestión</b> para la oficina y la <b>app del equipo</b> para los operarios. Se abren en el navegador y se pueden poner en el móvil como una app más.</p>
 <div class="ay-tabla"><table><thead><tr><th>App</th><th>Para quién</th><th>Enlace</th><th>Icono</th></tr></thead><tbody><tr><td>Web</td><td>Clientes y público</td><td><a href="https://jardineriaadrover.es" target="_blank" rel="noopener">jardineriaadrover.es</a></td><td>Verde</td></tr><tr><td>Gestión</td><td>Oficina (con clave)</td><td><a href="https://gestionadrover.jardineriaadrover.workers.dev" target="_blank" rel="noopener">gestionadrover.jardineriaadrover.workers.dev</a></td><td>Dorado</td></tr><tr><td>Equipo</td><td>Operarios (con PIN)</td><td><a href="https://equipo.jardineriaadrover.workers.dev" target="_blank" rel="noopener">equipo.jardineriaadrover.workers.dev</a></td><td>Lima y negro</td></tr></tbody></table></div>
 <p><b>Ponerla en el móvil:</b> ábrela en Safari (iPhone) y pulsa <b>Compartir → Añadir a pantalla de inicio</b>; en Android, menú <b>⋮ → Añadir a pantalla de inicio</b>.</p>
@@ -72,21 +72,37 @@
 <li>Nombre y puesto: <b>Operario</b> o <b>Jefe de cuadrilla</b> (solo los jefes hacen partes).</li>
 <li>Apunta el <b>PIN</b> que sale y pulsa <b>Guardar</b>. Dale el PIN y el enlace de la app del equipo.</li>
 </ol>
+<p><b>Ficha de cada persona</b> (pulsa su tarjeta en <b>Personas</b>)</p>
 <ul>
+<li><b>Contrato:</b> marca los <b>días que trabaja</b>, la <b>hora de entrada y de salida</b>, la <b>fecha de alta</b>, la categoría y el convenio. Con eso la gestión sabe sus horas al día y a la semana, y cuenta sus horas extra con <b>su</b> horario: lo que pase de su jornada en sus días y todo lo que trabaje otro día o en festivo. Si su jornada es de menos de 40 h a la semana es a <b>tiempo parcial</b>: las horas de más se llaman <b>horas complementarias</b> y necesitan un pacto por escrito (consúltalo con la gestoría).</li>
+<li><b>Vacaciones:</b> los <b>días al año</b> (30 si no lo cambias) y <b>cómo se cuentan</b>: en <b>días naturales</b> (todos los del calendario, también fines de semana) o <b>solo sus días de trabajo</b>, según diga su convenio. La ley fija un mínimo de 30 días naturales al año; el convenio puede mejorarlo, no bajarlo. Si entró a mitad de año, le tocan los proporcionales.</li>
+<li><b>Móvil:</b> para avisarle por WhatsApp cuando le transfieras la nómina.</li>
+<li><b>Documentos:</b> elige el tipo (<b>Contrato, DNI / NIE, Seguridad Social, Justificante u Otro</b>) y pulsa <b>Subir documento</b> (PDF o foto, hasta 15 MB). Se guardan al momento, en la base de datos de la Unión Europea, y <b>solo se ven en la gestión</b>: el trabajador no los ve en su app. <b>Ver</b>, <b>Descargar</b> o <b>Borrar</b> (pulsa dos veces).</li>
 <li><b>Si pierde el móvil o se va:</b> cámbiale el PIN o ponlo <b>De baja</b>. Pierde el acceso al momento; sus datos se conservan.</li>
 <li><b>Aviso de PIN incorrectos (en el Resumen):</b> si alguien prueba muchos PIN en la app del equipo, sale un aviso. Tras 60 fallos en un día la entrada con PIN se bloquea sola (quien ya tenía la app abierta sigue trabajando): si ha sido un despiste, pulsa <b>Desbloquear</b>; si no sabéis quién ha sido, cambiad antes los PIN.</li>
 <li><b>La web (en el Resumen):</b> visitas a jardineriaadrover.es de los últimos 30 días (por día, página, país e idioma) y las plantas que la gente busca en la web y no están en la guía, para saber qué fichas añadir. Se cuenta sin cookies y sin guardar ningún dato de quien entra.</li>
-<li><b>Jornada:</b> elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. <b>Descargar PDF</b> para firmar. Hay que guardarlo 4 años.</li>
+<li><b>Jornada:</b> elige persona y mes; sale cada día con entradas, salidas, total y, si las hay, las horas extra. Si tiene su horario en la ficha, salen también sus <b>días de trabajo sin fichar</b> («No fichó · sin justificar») y sus <b>vacaciones, bajas y permisos</b>. <b>Descargar PDF</b> para firmar: es el registro de jornada que pide la Inspección de Trabajo, con lo que fichó de verdad. Hay que guardarlo 4 años.</li>
 <li><b>Horas extra:</b> elige un mes o un año entero y sale cada persona con sus horas trabajadas y sus horas extra. Son extra las que pasan de la jornada diaria en un día laborable y todas las de sábados, domingos y festivos. <b>Descargar Excel</b> (para la gestoría) o <b>Descargar PDF</b>. Pulsa un nombre para ver sus días.</li>
 <li><b>Estadísticas:</b> de un mes o de un año, las horas trabajadas y extra del equipo, la media al día, las horas de cada persona y de cada mes (gráficos), los trabajos más hechos según los partes y, por persona, días trabajados, horas en partes, clientes y gastos.</li>
 <li><b>Jornada y festivos</b> (en Horas extra): las horas de la jornada diaria y los festivos. <b>Apunta los festivos de cada año</b> (nacionales, de Baleares y locales de Capdepera): si falta uno, lo trabajado ese día no sale como extra.</li>
 <li><b>📍 junto a cada hora:</b> dónde estaba al fichar; púlsalo para verlo en el mapa. <b>«(sin ubicación)»</b> si su móvil no dio permiso o no tenía señal GPS. La app solo la guarda al fichar, y así se lo dice al trabajador junto al botón.</li>
 <li><b>Validar horas:</b> cuando hayas comprobado las horas del mes (por ejemplo, para pagar las horas extra), pulsa <b>Validar horas</b>. Se borra la ubicación de esos fichajes y las horas se quedan. Si no se validan, la ubicación se borra sola a los tres meses. Las copias de seguridad no guardan la ubicación.</li>
 <li>Antes de usar la ubicación, cada trabajador tiene que firmar el aviso que lo explica (lo exige el art. 90 de la LOPDGDD). Quien fiche con su propio móvil no está obligado a darla.</li>
+<li><b>Vacaciones y bajas:</b> arriba, lo <b>Por revisar</b>: vacaciones que piden desde la app y bajas o permisos con la <b>foto del justificante</b>. Ábrelo, pon <b>Aceptada</b> o <b>Denegada</b> y, si quieres, una nota: el trabajador lo ve en su app. Debajo, los <b>días sin fichar ni justificar</b> de los últimos 30 días (pulsa uno para apuntar la ausencia) y el <b>saldo de vacaciones</b> del año de cada persona: le corresponden, disfrutadas, pedidas sin aceptar y le quedan. Con <b>+ Nueva</b> apuntas tú una ausencia. Una baja médica queda <b>justificada</b>; quién la paga (Seguridad Social o empresa) lo dicen la ley y el convenio: pásale a la gestoría los partes.</li>
+<li><b>Nóminas:</b> ver la sección <b>Nóminas</b>.</li>
 <li><b>Gastos:</b> cada uno con la foto del ticket. Al pagarlo, ábrelo, pon <b>Pagado</b> y, si quieres, una <b>nota de la oficina</b> (por ejemplo, «pagado con la nómina»). El operario lo ve en su app.</li>
 <li><b>Fotos:</b> las de cada trabajo, por cliente y fecha. Púlsala para ampliarla.</li>
 </ul>
-<h3 id="ay9">Google</h3>
+<h3 id="ay9">Nóminas</h3>
+<p>En <b>Equipo → Nóminas</b>, elige el mes.</p>
+<ol>
+<li><b>Subir nóminas (PDF):</b> puedes elegir varias a la vez. Si el nombre del archivo lleva el <b>nombre y apellido</b> de la persona y el <b>mes</b> (por ejemplo <code>NOMINA_Anabel_Garcia_202610.pdf</code> u «octubre 2026»), se asignan solas. Si no, quedan en <b>Sin asignar</b>: elige la persona y el mes y pulsa <b>Asignar</b>.</li>
+<li>Cada trabajador ve <b>la suya</b> en su app, la abre y <b>firma el recibí con el dedo</b>. Aquí ves si está <b>Sin abrir</b>, <b>Vista, sin firmar</b> o <b>Firmada</b>. <b>Recibí firmado</b> descarga el justificante en PDF con su firma, la fecha y la huella del PDF de la nómina.</li>
+<li>Cuando hagas la transferencia, pulsa <b>Marcar transferida</b>: le sale el aviso en su app. Si tiene el móvil en la ficha, sale además <b>Avisar por WhatsApp</b> con el mensaje ya escrito.</li>
+</ol>
+<p><b>Que lleguen solas por correo:</b> las nóminas que se reenvían a la dirección de nóminas de la gestión entran solas, con cada PDF asignado a su persona si su nombre sale en el archivo (o en el asunto, si solo hay un PDF). Para activarlo hay que hacer una vez lo de <b>«Nóminas por correo»</b> en <code>docs/cliente.md</code>. Después, en el correo de la empresa, crea un filtro que <b>reenvíe</b> los correos de la gestoría a esa dirección.</p>
+<p>El recibí firmado en la app sirve como constancia de que la nómina se ha entregado; no es una firma electrónica cualificada.</p>
+<h3 id="ay10">Google</h3>
 <p>El botón <b>Google</b> (junto a «Copias de seguridad») conecta la gestión con la cuenta de Google de la empresa:</p>
 <ul>
 <li><b>Partes de trabajo → calendario «Trabajos Adrover»</b>, con el cliente, el lugar, el horario, quién va y las tareas. Al conectar se envían los de los últimos tres meses y, después, cada parte nuevo o cambiado.</li>
@@ -106,12 +122,12 @@
 <li>En la gestión, <b>Google</b> → <b>Conectar con Google</b> y entra con la cuenta de la empresa. Google avisa de que la app «no está verificada»: es normal, porque es solo para la empresa. Pulsa «Configuración avanzada» → «Ir a Gestión Jardinería Adrover», deja marcadas todas las casillas y continúa.</li>
 </ol>
 <p><b>Desconectar</b> retira el permiso. Lo ya enviado se queda en Google; al volver a conectar la misma cuenta, no se duplica nada.</p>
-<h3 id="ay10">Copias de seguridad</h3>
+<h3 id="ay11">Copias de seguridad</h3>
 <p>Cada noche se guarda sola una copia de todo y se conserva 60 días.</p>
 <ul>
 <li><b>Copias de seguridad:</b> lista por fecha para <b>Descargar</b> o <b>Recuperar</b> (vuelve a poner lo de ese día; lo creado después se mantiene). <b>Hacer copia ahora</b> antes de un cambio grande.</li>
 <li><b>Descargar copia / Cargar copia:</b> baja todo a un archivo o lo vuelve a subir.</li>
 </ul>
-<h3 id="ay11">Si algo falla</h3>
+<h3 id="ay12">Si algo falla</h3>
 <div class="ay-tabla"><table><thead><tr><th>Qué pasa</th><th>Qué hacer</th></tr></thead><tbody><tr><td>No carga en el ordenador</td><td>Ctrl + F5 (Mac: Cmd + Mayús + R) o prueba otro navegador</td></tr><tr><td>No sale un cambio nuevo</td><td><b>Forzar actualización</b>, junto a <b>Cerrar sesión</b> (en el móvil, en Resumen → Copias y sesión)</td></tr><tr><td>El micrófono no funciona</td><td>La primera vez, permite el micrófono cuando el navegador lo pida. Si no lo pide, usa Chrome o Safari, o el micrófono del teclado</td></tr><tr><td>No llega un parte o un gasto</td><td>Espera un minuto. Si no sale, el operario verá «Hay datos sin enviar»: que abra la app con cobertura y pulse <b>Sincronizar</b></td></tr><tr><td>Un operario no puede entrar</td><td>Revisa su PIN en <b>Equipo → Personas</b> y que no esté <b>De baja</b></td></tr><tr><td>El icono del móvil sale antiguo</td><td>Borra el acceso y vuelve a añadirlo</td></tr><tr><td>«No se ha guardado: mientras lo editabas…»</td><td>Otra persona o la app del equipo lo cambió a la vez. Vuelve a abrirlo, verás lo último, y repite tu cambio</td></tr></tbody></table></div>
 <p><b>Dónde están los datos:</b> en Cloudflare, en una base de datos con jurisdicción de la Unión Europea, con copia cada noche.</p>
