@@ -9,7 +9,6 @@ const HTML = PAGINA.replace('<!--ICONOS-->', cabeceraIconos('Gestión', 'gestion
 import { icono, manifiesto, cabeceraIconos } from '../../compartido/iconos.js';
 import { cabecerasPagina } from '../../compartido/cabeceras.js';
 import { ICONOS } from '../../compartido/iconos-gestion.js';
-import { ICONOS as ICONOS_WEB } from '../../compartido/iconos-web.js';
 import * as google from './google.js';
 
 const COLECCIONES = ['clientes', 'proveedores', 'presupuestos', 'notas', 'partes', 'ajustes', 'operarios', 'fichajes', 'gastos', 'fotos', 'documentos', 'ausencias'];
@@ -118,7 +117,7 @@ export default {
     }
     if (url.pathname === '/manifest.webmanifest') return manifiesto('Gestión Jardinería Adrover', 'Gestión', '/', 'gestion');
     // Los PDF para clientes llevan el logo verde de la empresa, no el dorado de la gestión.
-    if (url.pathname === '/logo.png') return icono('/icon-192.png', ICONOS_WEB);
+    if (url.pathname === '/logo.png') return icono('/logo-verde.png', ICONOS);
     const ico = icono(url.pathname, ICONOS); if (ico) return ico;
     // Vuelta de Google tras pedir el permiso: no trae la clave de la gestión, vale por el código de un solo uso
     // que se dio al empezar (google.empezar).

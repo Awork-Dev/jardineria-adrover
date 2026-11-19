@@ -24,14 +24,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .btn:disabled{opacity:.5}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 14px}
 .top small{display:block;color:var(--muted);font-size:.85rem}
-.marca{display:flex;align-items:center;gap:12px}.marca img{width:42px;height:42px;border-radius:12px}
+.marca{display:flex;align-items:center;gap:12px}.marca img{width:64px;height:auto}
 .card{background:var(--panel);border-radius:22px;padding:20px;margin-bottom:14px}
 .card h2{margin-bottom:12px}
 .meta{color:var(--muted);font-size:.9rem}
 .aviso{background:#3a2f12;color:#ffd98a;border-radius:14px;padding:10px 14px;font-size:.9rem;margin-bottom:14px}
 /* Acceso con PIN */
 #acceso{min-height:90vh;display:flex;flex-direction:column;justify-content:center;gap:22px;text-align:center}
-#acceso img{width:84px;height:84px;border-radius:22px;margin:0 auto}
+#acceso img{width:150px;height:auto;margin:0 auto;display:block}
 .puntos{display:flex;justify-content:center;gap:16px;min-height:22px}
 .puntos i{width:18px;height:18px;border-radius:50%;border:2px solid var(--lima)}
 .puntos i.on{background:var(--lima)}
@@ -138,7 +138,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <body>
 <main>
   <section id="acceso" hidden>
-    <img src="/icon-192.png" alt="">
+    <img src="/logo-blanco.png?v=3" alt="Jardinería Adrover">
     <div><h1>Adrover Equipo</h1><p class="meta" style="margin:6px 0 0">Escribe tu PIN de 4 cifras</p></div>
     <button class="ay-btn" data-ayuda aria-label="Ayuda" title="Ayuda">?</button>
     <div class="puntos" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
@@ -153,7 +153,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
   <section id="app" hidden>
     <header class="top">
-      <div class="marca"><img src="/icon-192.png" alt=""><div><h1 id="nombre"></h1><small id="rol"></small></div></div>
+      <div class="marca"><img src="/logo-blanco.png?v=3" alt="Jardinería Adrover"><div><h1 id="nombre"></h1><small id="rol"></small></div></div>
       <div style="display:flex;gap:8px;align-items:center"><button class="ay-btn" data-ayuda aria-label="Ayuda" title="Ayuda">?</button><button class="btn borde peq" id="salir">Salir</button></div>
     </header>
     <div class="sync" id="sync"><span id="sync-txt"></span><button class="btn borde peq" id="sincronizar">Sincronizar</button></div>

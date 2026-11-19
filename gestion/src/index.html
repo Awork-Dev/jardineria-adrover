@@ -47,7 +47,7 @@ h2{font-size:1.2rem;margin:0}
 .sync:before{content:"● ";color:var(--muted)}.sync.ok:before{color:var(--brand)}.sync.mal:before{color:var(--rej-ink)}
 .sync:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media (max-width:760px){.side .sync{display:none}}
-.mark{width:40px;height:40px;border-radius:12px;display:block}
+.mark{width:68px;height:auto;display:block}
 .brand b{display:block;font-family:"Fraunces",Georgia,serif;font-size:1rem}
 .brand small{color:var(--muted);font-size:.8rem}
 .side nav{display:flex;flex-direction:column;gap:4px}
@@ -301,7 +301,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
 <div class="app">
   <aside class="side">
     <div class="brand">
-      <img class="mark" src="/icon-192.png" alt="">
+      <img class="mark" src="/logo-verde.png?v=3" alt="Jardinería Adrover">
       <div><b>Jardinería Adrover</b><small>Zones Verdes S.L.</small></div>
     </div>
     <button class="sync" id="sync" data-act="sincronizar" title="Actualizar ahora"><span id="sync-txt">Cargando…</span></button>
@@ -336,7 +336,7 @@ button.enlace{all:unset;cursor:pointer;color:var(--brand);font-weight:600;text-d
 </div>
 <div id="login" class="overlay" hidden>
   <form class="sheet" id="login-form" autocomplete="on">
-    <div class="brand"><img class="mark" src="/icon-192.png" alt=""><div><b>Jardinería Adrover</b><small>Gestión</small></div></div>
+    <div class="brand"><img class="mark" src="/logo-verde.png?v=3" alt="Jardinería Adrover"><div><b>Jardinería Adrover</b><small>Gestión</small></div></div>
     <input type="text" name="usuario" value="gestion" autocomplete="username" hidden>
     <label class="fld"><span>Clave de acceso</span><input type="password" name="clave" autocomplete="current-password" required></label>
     <p id="login-err" role="alert"></p>
@@ -2004,7 +2004,7 @@ function generarPDF(kind, id) {
 
   // Empresa
   let x0 = L;
-  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 20, 20); x0 = L + 25; } catch (err) {} }
+  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 31, 20); x0 = L + 35; } catch (err) {} }
   let y = 20;
   d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE);
   txt(e.nombre || '', x0, y);
@@ -2120,7 +2120,7 @@ async function pdfPartes(ids) {
 
   // Cabecera: empresa a la izquierda, título a la derecha
   let x0 = L;
-  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 20, 20); x0 = L + 25; } catch (err) {} }
+  if (LOGO) { try { d.addImage(LOGO, 'PNG', L, 12, 31, 20); x0 = L + 35; } catch (err) {} }
   d.setFont('helvetica', 'bold'); d.setFontSize(16); d.setTextColor(...VERDE); txt(e.nombre || '', x0, y);
   d.setFont('helvetica', 'normal'); d.setFontSize(9); d.setTextColor(60, 60, 60);
   [e.cif && 'CIF ' + e.cif, e.direccion, [e.cp, e.poblacion].filter(Boolean).join(' '), conPrefijo(e.telefono), e.email].filter(Boolean).forEach(t => { y += 5; txt(t, x0, y); });
