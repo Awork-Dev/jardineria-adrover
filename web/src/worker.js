@@ -52,8 +52,8 @@ const ICO = {
   lupa: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m20 20-4.2-4.2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>',
 };
-// Logo de la empresa (óvalo con el nombre): blanco sobre la foto de cabecera y verde cuando la barra se vuelve clara.
-const LOGO_IMG = `<img class="lb" src="/logo-blanco.png?v=3" alt="Jardinería Adrover" width="720" height="465"><img class="lv" src="/logo-verde.png?v=3" alt="Jardinería Adrover" width="720" height="465">`;
+// Logo de la empresa: óvalo verde con el interior blanco.
+const LOGO_IMG = `<img src="/logo-verde.png?v=4" alt="Jardinería Adrover" width="720" height="465">`;
 // Teléfono fijo del vivero para llamar desde el móvil, y la dirección con su enlace a Google Maps.
 const TEL_LLAMAR = "tel:+34" + TEL_FIJO.replace(/\s/g, "");
 // Los teléfonos se enseñan con el +34: los clientes con móvil extranjero (alemanes, ingleses…) tienen que marcarlo.
@@ -499,7 +499,7 @@ h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;line-height:1.1;marg
 header.nav{position:fixed;inset:0 0 auto;z-index:50;transition:.3s;color:#fff}
 header.nav.solid{background:rgba(246,242,234,.96);backdrop-filter:blur(8px);color:var(--tinta);box-shadow:0 1px 0 rgba(0,0,0,.06)}
 header .wrap{display:flex;align-items:center;justify-content:space-between;height:88px}
-.logo{display:flex;align-items:center;gap:14px;text-decoration:none}.logo img{display:block;width:118px;height:auto;flex:none;transition:transform .4s}.logo .lb{filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}.logo .lv{display:none}header.nav.solid .logo .lb{display:none}header.nav.solid .logo .lv{display:block}.logo:hover img{transform:scale(1.04)}.logo b{display:block;font-family:Fraunces,serif;font-weight:600;font-size:1.85rem;letter-spacing:.08em;line-height:1}.logo i{display:block;font-family:Fraunces,serif;font-style:italic;font-weight:400;font-size:1.3rem;letter-spacing:.02em;line-height:1;margin-bottom:5px;opacity:.92}@media(max-width:600px){.logo img{width:92px}.logo b{font-size:1.45rem}.logo i{font-size:1.05rem}}
+.logo{display:flex;align-items:center;gap:14px;text-decoration:none}.logo img{display:block;width:118px;height:auto;flex:none;transition:transform .4s}.logo img{filter:drop-shadow(0 2px 6px rgba(0,0,0,.25))}.logo:hover img{transform:scale(1.04)}.logo b{display:block;font-family:Fraunces,serif;font-weight:600;font-size:1.85rem;letter-spacing:.08em;line-height:1}.logo i{display:block;font-family:Fraunces,serif;font-style:italic;font-weight:400;font-size:1.3rem;letter-spacing:.02em;line-height:1;margin-bottom:5px;opacity:.92}@media(max-width:600px){.logo img{width:92px}.logo b{font-size:1.45rem}.logo i{font-size:1.05rem}}
 nav a{text-decoration:none;margin-left:26px;font-weight:500;font-size:.95rem;opacity:.9}nav a:hover{opacity:1;color:var(--hoja)}
 .btn{display:inline-block;background:var(--hoja);color:#10220f;padding:14px 26px;border-radius:999px;text-decoration:none;font-weight:600;transition:.2s;border:0;cursor:pointer}
 .btn:hover{transform:translateY(-2px);background:#93c27d}.btn.lin{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.7);margin-left:10px}
